@@ -59,18 +59,12 @@ bool ARM7TDMI::handle_halt() {
 
 
 void ARM7TDMI::cycle() {
-	if(mem_read8(0x0) == 0x22) {
-		log("BIOS corrupted!");
-		dump_memory_around_pc();
-		ASSERT_NOT_REACHED();
-	}
-
 	m_cycles++;
 	m_timers.cycle();
 
-	if (handle_halt())
-		return;
 	if (dma_cycle_all())
+		return;
+	if (handle_halt())
 		return;
 	if (handle_exceptions())
 		return;
@@ -116,7 +110,7 @@ void ARM7TDMI::exec_opcode() {
 		pc_increment();
 	}
 
-//	logDebug();
+	logDebug();
 }
 
 
@@ -338,11 +332,13 @@ void ARM7TDMI::dump_memory_around_pc() const {
 }
 
 void ARM7TDMI::logDebug() {
-	return;
+	if constexpr(kill_debug())
+		return;
 
-	static bool seen_rom {false};
-	static std::ofstream log_file {"debug_gabber.log"};
-	if(!log_file.good()) return;
+	if(!log_file) {
+		log_file = new std::ofstream{"debug_gabber.log"};
+	}
+	if(!log_file->good()) return;
 
 	if(!seen_rom) {
 		if(const_pc() == 0x08000000+8)
@@ -353,7 +349,7 @@ void ARM7TDMI::logDebug() {
 
 	for(unsigned i = 0; i < 16; ++i) {
 		const uint32 v = creg(i) - (i == 15 ? current_instr_len() : 0);
-		log_file << fmt::format("{:08x},", v);
+		*log_file << fmt::format("{:08x},", v);
 	}
-	log_file << fmt::format("{:08x}\n", cspr().raw());
+	*log_file << fmt::format("{:08x}\n", cspr().raw());
 }

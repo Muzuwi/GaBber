@@ -81,6 +81,7 @@ void ARM7TDMI::dma_cycle() {
 
 		if(s.m_ctrl.reg().dest_ctl == DMADestCtrl::Reload) {
 			s.m_destination_ptr = s.m_original_destination_ptr;
+//			s.m_destination_ptr = s.m_destination.raw();
 		}
 	}
 }
@@ -116,22 +117,22 @@ void ARM7TDMI::dma_start_vblank() {
 
 	if(dma0.m_ctrl.reg().enable && dma0.m_ctrl.reg().start_timing == DMAStartTiming::VBlank) {
 		dma_start<0>();
-		return;
+//		return;
 	}
 
 	if(dma1.m_ctrl.reg().enable && dma1.m_ctrl.reg().start_timing == DMAStartTiming::VBlank) {
 		dma_start<1>();
-		return;
+//		return;
 	}
 
-	if(dma2.m_ctrl.reg().enable && dma1.m_ctrl.reg().start_timing == DMAStartTiming::VBlank) {
+	if(dma2.m_ctrl.reg().enable && dma2.m_ctrl.reg().start_timing == DMAStartTiming::VBlank) {
 		dma_start<2>();
-		return;
+//		return;
 	}
 
-	if(dma3.m_ctrl.reg().enable && dma1.m_ctrl.reg().start_timing == DMAStartTiming::VBlank) {
+	if(dma3.m_ctrl.reg().enable && dma3.m_ctrl.reg().start_timing == DMAStartTiming::VBlank) {
 		dma_start<3>();
-		return;
+//		return;
 	}
 }
 
@@ -143,21 +144,21 @@ void ARM7TDMI::dma_start_hblank() {
 
 	if(dma0.m_ctrl.reg().enable && dma0.m_ctrl.reg().start_timing == DMAStartTiming::HBlank) {
 		dma_start<0>();
-		return;
+//		return;
 	}
 
 	if(dma1.m_ctrl.reg().enable && dma1.m_ctrl.reg().start_timing == DMAStartTiming::HBlank) {
 		dma_start<1>();
-		return;
+//		return;
 	}
 
-	if(dma2.m_ctrl.reg().enable && dma1.m_ctrl.reg().start_timing == DMAStartTiming::HBlank) {
+	if(dma2.m_ctrl.reg().enable && dma2.m_ctrl.reg().start_timing == DMAStartTiming::HBlank) {
 		dma_start<2>();
-		return;
+//		return;
 	}
 
-	if(dma3.m_ctrl.reg().enable && dma1.m_ctrl.reg().start_timing == DMAStartTiming::HBlank) {
+	if(dma3.m_ctrl.reg().enable && dma3.m_ctrl.reg().start_timing == DMAStartTiming::HBlank) {
 		dma_start<3>();
-		return;
+//		return;
 	}
 }
