@@ -47,7 +47,11 @@ protected:
 	POSTFLG m_POSTFLG;
 
 
-	class : public IOReg<0x04000088, _DummyReg<uint32>, IOAccess::RW> {} m_soundbias;
+	class : public IOReg<0x04000088, _DummyReg<uint32>, IOAccess::RW> {
+		void reload() override {
+			raw() = 0x0200;
+		}
+	} m_soundbias;
 
 	Timers m_timers;
 

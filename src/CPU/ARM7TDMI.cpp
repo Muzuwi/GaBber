@@ -21,21 +21,6 @@ void ARM7TDMI::reset() {
 		}
 	}
 
-
-	m_soundbias.raw() = 0x0200;
-	m_POSTFLG.raw() = 0;
-	m_IE.raw() = 0;
-	m_IF.raw() = 0;
-
-//	m_registers.m_gSVC[0] = 0x03007fe0; //  SP_svc
-//	m_registers.m_gIRQ[0] = 0x03007fa0; //  SP_irq
-//	m_registers.m_base[13] = 0x03007f00; //  SP_usr
-//
-//	cspr().set_mode(PRIV_MODE::SYS);
-//	cspr().set_state(INSTR_MODE::ARM);
-//	m_registers.m_base[15] = 0x08000000 + 8;
-//	lr() = 0x08000000;
-
 	pc() = 0x0 + 8;
 	m_pc_dirty = false;
 }

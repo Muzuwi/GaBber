@@ -201,6 +201,10 @@ public:
 		m_register.m_raw = new_value;
 	}
 
+	void reload() override {
+		m_register.m_raw = RawType {};
+	}
+
 	std::string identify() const override { return "I/O Register"; }
 
 	IOReg& operator=(RawType const& val) {

@@ -57,7 +57,7 @@ int GaBber::start() {
 		m_pak.load_pak(std::move(*rom), {});
 	}
 
-	m_cpu.reset();
+	emulator_reset();
 
 	if(m_test_mode) {
 		m_test_harness.run_emulator_tests();
@@ -132,3 +132,7 @@ void GaBber::toggle_debug_mode() {
 	}
 }
 
+void GaBber::emulator_reset() {
+	m_cpu.reset();
+	m_mmu.reload_all();
+}

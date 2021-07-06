@@ -49,6 +49,7 @@ class GaBber {
 	bool display_initialize();
 	bool display_is_closed() const { return m_closed; }
 
+	void emulator_reset();
 	void emulator_loop();
 	void clock_cycle();
 public:

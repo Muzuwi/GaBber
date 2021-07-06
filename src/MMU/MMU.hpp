@@ -42,5 +42,7 @@ public:
 	uint64 hits() const { return cache_hit; }
 	uint64 misses() const { return cache_miss; }
 
+	void reload_all();
+
 	void debug();
 };

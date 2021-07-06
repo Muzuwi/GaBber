@@ -266,3 +266,10 @@ void MMU::poke(uint32 addr, uint8 val) {
 	if(!dev) return;
 	dev->write8(addr - dev->start(), val);
 }
+
+
+void MMU::reload_all() {
+	for(auto& dev : s_devices) {
+		dev->reload();
+	}
+}

@@ -24,13 +24,13 @@ enum class IRQType : uint8 {
 
 class IE final : public IOReg<0x04000200, IEReg, IOAccess::RW> {
 public:
-	virtual void on_write(uint16 val) override {
+	void on_write(uint16 val) override {
 		m_register.m_raw = (val & ~0xc000);
 	}
 };
 
 class IF final : public IOReg<0x04000202, IFReg, IOAccess::RW> {
-	virtual void on_write(uint16 val) override {
+	void on_write(uint16 val) override {
 		m_register.m_raw &= ~val;
 	}
 };
@@ -43,7 +43,7 @@ public:
 };
 
 class HALTCNT final : public IOReg<0x04000301, _DummyReg<uint8>, IOAccess::RW> {
-	virtual void on_write(uint8 val) override {
+	void on_write(uint8 val) override {
 		//  Halt
 		if(val == 0) {
 			m_halt = true;
