@@ -31,6 +31,18 @@ class Timers {
 	Timer<3> m_timer3;
 
 	template<unsigned timer_num>
+	Timer<timer_num>& timer_for_num() {
+		if constexpr(timer_num == 0)
+			return m_timer0;
+		else if constexpr(timer_num == 1)
+			return m_timer1;
+		else if constexpr(timer_num == 2)
+			return m_timer2;
+		else
+			return m_timer3;
+	}
+
+	template<unsigned timer_num>
 	void cycle_timer(Timer<timer_num>& timer);
 
 	template<unsigned timer_num>
