@@ -6,9 +6,9 @@
 void ARM7TDMI::reset() {
 	cspr().set_state(INSTR_MODE::ARM);
 	cspr().set_mode(PRIV_MODE::SVC);
-	cspr().set_register(CSPR_REGISTERS::IRQn, true);
-	cspr().set_register(CSPR_REGISTERS::FIQn, true);
-	cspr().set_register(CSPR_REGISTERS::State, false);
+	cspr().set(CSPR_REGISTERS::IRQn, true);
+	cspr().set(CSPR_REGISTERS::FIQn, true);
+	cspr().set(CSPR_REGISTERS::State, false);
 
 	for (unsigned i = 0; i < 16; ++i) {
 		m_registers.m_base[i] = 0;

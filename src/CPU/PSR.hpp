@@ -62,14 +62,16 @@ public:
 	CSPR() = default;
 
 	void set_raw(uint32 v) {
-//			std::cout << "CSPR set raw dword " << std::hex << v << std::dec << "\n";
-//		fmt::print("CSPR set raw={:08x}, current_mode={}\n", v, mode_str());
-		if(!verify_mode(v)) {
+		if(mode() != PRIV_MODE::USR && !verify_mode(v)) {
 			fmt::print("PSR/ Tried writing invalid mode bits! {:08x}\n", v);
-//			ASSERT_NOT_REACHED();
+			v = (v & ~0x1f) | (uint32)mode();
 		}
-		data = v;
-//		data = (v & ~0b100000u);
+
+		if(mode() == PRIV_MODE::USR) {
+			data = (v & 0xF0000000) | (data & ~0xF0000000);
+		} else {
+			data = v;
+		}
 	}
 
 	uint32 raw() const {
@@ -107,7 +109,7 @@ public:
 		if(C && mode() != PRIV_MODE::USR) {
 			if(!verify_mode(flags)) {
 				fmt::print("PSR/ Tried writing invalid mode bits! {:08x}\n", flags);
-//				ASSERT_NOT_REACHED();
+				flags = (flags & ~0x1f) | (uint32)mode();
 			}
 
 			data &= ~0x000000ff;
@@ -146,7 +148,7 @@ public:
 		data = (data & ~0b11111u) | ((uint32)mode & 0b11111u);
 	}
 
-	bool evaluate_condition(ARM::InstructionCondition condition) {
+	bool evaluate_condition(ARM::InstructionCondition condition) const {
 		switch (condition) {
 			case ARM::InstructionCondition::EQ:
 				return is_set(CSPR_REGISTERS::Zero);
@@ -180,12 +182,6 @@ public:
 			default:
 				return true;
 		}
-	}
-
-	void set_register(CSPR_REGISTERS reg, bool value) {
-		const uint32 mask = static_cast<uint32>(reg);
-		const uint32 or_mask = value ? mask : 0;
-		data = (data & ~mask) | or_mask;
 	}
 };
 
