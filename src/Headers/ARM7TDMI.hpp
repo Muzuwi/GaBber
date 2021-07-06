@@ -179,12 +179,9 @@ protected:
 	inline void pc_increment() { m_registers.m_base[15] += current_instr_len(); }
 
 
-	uint8 m_exception_lines {0};
-	[[nodiscard]] bool is_ime_enabled() const { return m_IME.raw() & 1u; }
-	[[nodiscard]] bool irqs_enabled_globally() const { return is_ime_enabled() && !cspr().is_set(CSPR_REGISTERS::IRQn); }
-	[[nodiscard]] bool is_irq_enabled(IRQType type) { return m_IE.raw() & (1u << static_cast<unsigned>(type)); }
-	[[nodiscard]] bool is_irq_requested(IRQType type) { return m_IF.raw() & (1u << static_cast<unsigned>(type)); }
-	bool handle_exceptions();
+	[[nodiscard]] bool irqs_enabled_globally() const { return m_IME.enabled() && !cspr().is_set(CSPR_REGISTERS::IRQn); }
+	void enter_irq();
+	void enter_swi();
 	bool handle_halt();
 	void handle_interrupts();
 
@@ -369,7 +366,6 @@ public:
     void dump_regs();
 
 	void raise_irq(IRQType);
-	void raise_exception(ExceptionVector);
 	void dma_start_vblank();
 	void dma_start_hblank();
 

@@ -40,24 +40,6 @@ void ARM7TDMI::reset() {
 	m_pc_dirty = false;
 }
 
-
-bool ARM7TDMI::handle_halt() {
-	if (!m_HALTCNT.m_halt && !m_HALTCNT.m_stop) return false;
-
-	if (m_HALTCNT.m_halt) {
-		if ((m_IE.raw() & m_IF.raw()) != 0) {
-//			log("Exit HALT, IE={:04x}, IF={:04x}, pc_raw={:08x}", m_IE.raw(), m_IF.raw(), const_pc());
-			m_HALTCNT.m_halt = false;
-			return false;
-		} else {
-			return true;
-		}
-	}
-
-	ASSERT_NOT_REACHED();
-}
-
-
 void ARM7TDMI::cycle() {
 	m_cycles++;
 	m_timers.cycle();
@@ -66,8 +48,7 @@ void ARM7TDMI::cycle() {
 		return;
 	if (handle_halt())
 		return;
-	if (handle_exceptions())
-		return;
+	handle_interrupts();
 
 	exec_opcode();
 }
@@ -81,16 +62,8 @@ uint32 ARM7TDMI::fetch_instruction() {
 
 
 void ARM7TDMI::exec_opcode() {
-//	if(const_pc() >= 0x02000000 && const_pc() < 0x04000000) {
-//		log("Executing from WRAM detected");
-//		ASSERT_NOT_REACHED();
-//	}
-
 	const auto opcode = fetch_instruction();
-	const auto old_pc = const_pc();
 
-
-//	log("Fetch opcode={:08x} from pc={:08x}", opcode, const_pc() - 2*current_instr_len());
 	if (cspr().state() == INSTR_MODE::ARM)
 		execute_ARM(opcode);
 	else
@@ -103,9 +76,6 @@ void ARM7TDMI::exec_opcode() {
 				? ~3u
 				: ~1u;
 		m_pc_dirty = false;
-//		if(old_pc != const_pc()) {
-//			log("Jumped from {:08x} to {:08x}, state={}", old_pc, const_pc(), cspr().state());
-//		}
 	} else {
 		pc_increment();
 	}
@@ -143,8 +113,6 @@ void ARM7TDMI::execute_ARM(uint32 opcode) {
 
 
 void ARM7TDMI::execute_THUMB(uint16 opcode) {
-//	log("Execute thumb opcode={:04x}", opcode);
-
 	auto op = THUMB::opcode_decode(opcode);
 	switch(op) {
 		case THUMB::InstructionType::FMT1:  THUMB_FMT1(THUMB::InstructionFormat1(opcode)); return;
@@ -189,106 +157,6 @@ uint32 ARM7TDMI::stack_pop32() {
 	return val;
 }
 
-
-void ARM7TDMI::raise_irq(IRQType type) {
-	auto irq_num = static_cast<unsigned>(type);
-	m_IF.raw() |= (1u << irq_num);
-}
-
-
-void ARM7TDMI::handle_interrupts() {
-	if (!irqs_enabled_globally())
-		return;
-
-	//  Find first (?) available IRQ
-	for (unsigned i = 0; i < 14; ++i) {
-		const auto type = static_cast<IRQType>(i);
-		if (is_irq_enabled(type) && is_irq_requested(type)) {
-			// log("IRQ {} is raised\n", static_cast<IRQType>(i));
-			raise_exception(ExceptionVector::IRQ);
-			return;
-		}
-	}
-}
-
-
-bool ARM7TDMI::handle_exceptions() {
-	handle_interrupts();
-
-	if (m_exception_lines == 0) return false;
-
-	for (unsigned i = 0; i < 8; ++i) {
-		if (m_exception_lines & (1u << i)) {
-			const auto vector = static_cast<ExceptionVector>(i);
-			switch (vector) {
-				case ExceptionVector::IRQ: {
-//					log("Exception enter IRQ, return_pc={:08x}, cspr={:08x}", const_pc()-current_instr_len(), cspr().raw());
-//					m_excepts.push_back({.return_pc = static_cast<uint32>(const_pc() - current_instr_len()), .entry_mode = cspr().mode(), .saved_psr = cspr()});
-
-					m_last_mode_change.cycle = m_cycles;
-					m_last_mode_change.pc = const_pc() - 2*current_instr_len();
-					m_last_mode_change.prev = cspr().state();
-					m_last_mode_change.reason = "Exception - IRQ";
-					m_last_mode_change.neu = INSTR_MODE::ARM;
-
-					m_registers.m_gIRQ[1] = const_pc() - current_instr_len();
-					m_saved_status.m_IRQ = cspr();
-					cspr().set_state(INSTR_MODE::ARM);
-					cspr().set_mode(PRIV_MODE::IRQ);
-					cspr().set(CSPR_REGISTERS::IRQn, true);
-					pc() = 0x18 + 8;
-					m_pc_dirty = false;
-
-
-
-
-					break;
-				}
-
-				case ExceptionVector::SWI: {
-//					log("Exception enter SWI, return_pc={:08x}, cspr={:08x}", const_pc()-current_instr_len(), cspr().raw());
-//					m_excepts.push_back({.return_pc = static_cast<uint32>(const_pc() - current_instr_len()), .entry_mode = cspr().mode(), .saved_psr = cspr()});
-
-					m_last_mode_change.cycle = m_cycles;
-					m_last_mode_change.pc = const_pc() - 2*current_instr_len();
-					m_last_mode_change.prev = cspr().state();
-					m_last_mode_change.reason = "Exception - SWI";
-					m_last_mode_change.neu = INSTR_MODE::ARM;
-
-					m_registers.m_gSVC[1] = const_pc() - current_instr_len();
-					m_saved_status.m_SVC = cspr();
-					cspr().set_state(INSTR_MODE::ARM);
-					cspr().set_mode(PRIV_MODE::SVC);
-					cspr().set(CSPR_REGISTERS::IRQn, true);
-					pc() = 0x08 + 8;
-					m_pc_dirty = false;
-
-					break;
-				}
-
-				case ExceptionVector::Reset:
-				case ExceptionVector::DataAbort:
-				case ExceptionVector::FIQ:
-				case ExceptionVector::PrefetchAbort:
-				case ExceptionVector::UndefinedInstr:
-				case ExceptionVector::Reserved:
-				default:
-					ASSERT_NOT_REACHED();
-			}
-
-			m_exception_lines &= ~(1u << i);
-
-			return false;
-		}
-	}
-
-	return false;
-}
-
-
-void ARM7TDMI::raise_exception(ExceptionVector exception) {
-	m_exception_lines |= (1u << static_cast<unsigned>(exception));
-}
 
 void ARM7TDMI::dump_memory_around_pc() const {
 	const uint32 pc = const_pc() - 2*current_instr_len();

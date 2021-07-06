@@ -387,21 +387,7 @@ void ARM7TDMI::THUMB_FMT16(THUMB::InstructionFormat16 instr) {
 }
 
 void ARM7TDMI::THUMB_FMT17(THUMB::InstructionFormat17) {
-	//  FIXME: Really, fix this
-	//	m_excepts.push_back({.return_pc = static_cast<uint32>(const_pc() - current_instr_len()), .entry_mode = cspr().mode(), .saved_psr = cspr()});
-	m_last_mode_change.cycle = m_cycles;
-	m_last_mode_change.pc = const_pc() - 2*current_instr_len();
-	m_last_mode_change.prev = cspr().state();
-	m_last_mode_change.reason = "SWI - THUMB";
-	m_last_mode_change.neu = INSTR_MODE::ARM;
-
-	m_registers.m_gSVC[1] = const_pc() - current_instr_len();
-	m_saved_status.m_SVC = cspr();
-	cspr().set_state(INSTR_MODE::ARM);
-	cspr().set_mode(PRIV_MODE::SVC);
-	cspr().set(CSPR_REGISTERS::IRQn, true);
-	pc() = 0x08;
-
+	enter_swi();
 }
 
 void ARM7TDMI::THUMB_FMT18(THUMB::InstructionFormat18 instr) {

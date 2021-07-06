@@ -36,6 +36,10 @@ class IF final : public IOReg<0x04000202, IFReg, IOAccess::RW> {
 };
 
 class IME final : public IOReg<0x04000208, _DummyReg<uint16>, IOAccess::RW> {
+public:
+	inline bool enabled() const {
+		return this->raw() & 1u;
+	}
 };
 
 class HALTCNT final : public IOReg<0x04000301, _DummyReg<uint8>, IOAccess::RW> {
