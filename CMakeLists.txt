@@ -5,8 +5,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "-fno-exceptions -Wall -Wextra -Werror=reorder -Werror=return-type -Wno-packed-bitfield-compat")
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -no-pie -fno-pic -g")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -ggdb -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -no-pie -fno-pic -g")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -ggdb -g")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -ggdb -g --coverage")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb -g --sanitize=address -fsanitize=undefined")
 
@@ -28,7 +28,7 @@ add_executable(GaBber
                src/Debugger/Debugger.cpp
                src/GaBberDisplay.cpp
                src/Tests/Harness.cpp
-               src/CPU/DMA.cpp src/Devices/DebugBackdoor.hpp src/CPU/Timer.cpp src/PPU/BG.hpp src/PPU/BG.cpp)
+               src/CPU/DMA.cpp src/Devices/DebugBackdoor.hpp src/CPU/Timer.cpp src/PPU/BG.hpp src/PPU/BG.cpp src/Debugger/Screen.cpp src/Debugger/MemoryEditor.cpp src/Debugger/Registers.cpp src/Debugger/DebuggerWindow.cpp)
 
 target_link_libraries(GaBber
     fmt

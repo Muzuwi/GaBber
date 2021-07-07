@@ -30,8 +30,7 @@ class MMU;
  */
 class ARM7TDMI {
 protected:
-	friend class Debugger;
-	friend class GaBber;
+	friend class GPRs;
 	friend class TestHarness;
 
 	MMU& m_mmu;

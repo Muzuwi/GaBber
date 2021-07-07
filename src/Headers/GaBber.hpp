@@ -14,8 +14,6 @@
 #include "Tests/Harness.hpp"
 
 class GaBber {
-	friend class Debugger;
-
 	std::string m_rom_filename;
 
 	MMU m_mmu;
@@ -62,4 +60,8 @@ public:
     MMU& mmu() { return m_mmu; }
 	ARM7TDMI& cpu() { return m_cpu; }
 	PPU& ppu() { return m_ppu; }
+	Debugger& debugger() { return m_debugger; }
+
+	unsigned window_scale() const { return m_window_scale; }
+	GLuint gba_texture() const { return m_gba_texture; }
 };

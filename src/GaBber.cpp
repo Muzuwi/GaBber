@@ -105,12 +105,6 @@ void GaBber::emulator_loop() {
 void GaBber::clock_cycle() {
 	m_cpu.cycle();
 	m_ppu.cycle();
-
-	if(m_debugger.handle_break()) {
-		m_debugger.set_step(false);
-		m_debugger.set_continue_mode(false);
-	}
-
 }
 
 
