@@ -3,6 +3,7 @@
 #include "PPU/BG.hpp"
 #include "Devices/VRAM.hpp"
 #include "PPU/Unions.hpp"
+#include "PPU/Keypad.hpp"
 
 class MMU;
 class ARM7TDMI;
@@ -18,8 +19,8 @@ class PPU {
 	PaletteRAM m_palette_ram;
 	OAM m_oam;
 	Backgrounds m_backgrounds;
-	IOReg<0x04000130, _DummyReg<uint16>, IOAccess::R> m_keypad;
-	IOReg<0x04000132, KEYCNTReg, IOAccess::RW> m_keypadcnt;
+	Keypad m_keypad;
+	KeypadCnt m_keypadcnt;
 
 	uint32 m_framebuffer[240 * 160];
 	bool m_frame_ready { false };

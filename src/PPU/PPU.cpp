@@ -4,7 +4,6 @@
 
 PPU::PPU(ARM7TDMI& a,MMU& b)
 : cpu(a), mmu(b), m_backgrounds(*this) {
-	m_keypad = 0x3ff;
 }
 
 bool PPU::is_HBlank() const {
@@ -66,14 +65,12 @@ void PPU::draw_scanline() {
 }
 
 void PPU::handle_key_down(KeypadKey key) {
-	auto key_bit = 1u << static_cast<uint32>(key);
-	m_keypad.raw() &= ~key_bit;
+	m_keypad.set(key, Keypad::State::Pressed);
 	handle_key_irq();
 }
 
 void PPU::handle_key_up(KeypadKey key) {
-	auto key_bit = 1u << static_cast<uint32>(key);
-	m_keypad.raw() |= key_bit;
+	m_keypad.set(key, Keypad::State::Released);
 	handle_key_irq();
 }
 
@@ -85,16 +82,17 @@ void PPU::handle_key_irq() {
 
 	bool raise_irq = cond_and;
 	for(unsigned i = 0; i < 10; ++i) {
-		if(!(m_keypadcnt.raw() & (1u << i)))
+		const auto key = static_cast<KeypadKey>(i);
+		if(!m_keypadcnt.selected(key))
 			continue;
 
 		//  AND
 		if(cond_and) {
-			raise_irq &= !(m_keypad.raw() & (1u << i));
+			raise_irq &= m_keypad.pressed(key);
 		}
 		//  OR
 		else {
-			raise_irq |= !(m_keypad.raw() & (1u << i));
+			raise_irq |= m_keypad.pressed(key);
 		}
 	}
 

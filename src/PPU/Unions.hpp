@@ -15,41 +15,6 @@ enum class KeypadKey {
 	L = 9
 };
 
-union KeyInputReg {
-	struct {
-		bool key_A : 1;
-		bool key_B : 1;
-		bool key_Sel : 1;
-		bool key_Start : 1;
-		bool key_Right : 1;
-		bool key_Left : 1;
-		bool key_Up : 1;
-		bool key_Down : 1;
-		bool key_R : 1;
-		bool key_L : 1;
-		uint8 _unused : 6;
-	} __attribute__((packed)) m_reg;
-	uint16 m_raw;
-};
-
-union KeyCtrlReg {
-	struct {
-		bool key_A : 1;
-		bool key_B : 1;
-		bool key_Sel : 1;
-		bool key_Start : 1;
-		bool key_Right : 1;
-		bool key_Left : 1;
-		bool key_Up : 1;
-		bool key_Down : 1;
-		bool key_R : 1;
-		bool key_L : 1;
-		uint8 _unused : 4;
-		bool irq_enabled : 1;
-		bool irq_condition : 1;
-	} __attribute__((packed)) m_reg;
-	uint16 m_raw;
-};
 
 union KEYCNTReg {
 	struct {
