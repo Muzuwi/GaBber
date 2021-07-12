@@ -91,14 +91,14 @@ namespace DMA {
 template<unsigned x>
 class DMASrc final : public IOReg<DMA::reg_base<x>(), _DummyReg<uint32>, IOAccess::RW> {
 public:
-	virtual void on_write(uint32 new_value) {
+	void on_write(uint32 new_value) override {
 		this->m_register.m_raw = new_value & DMA::source_mask<x>();
 	}
 };
 
 template<unsigned x>
 class DMADest final : public IOReg<DMA::reg_base<x>() + 4, _DummyReg<uint32>, IOAccess::RW> {
-	virtual void on_write(uint32 new_value) {
+	void on_write(uint32 new_value) override {
 		this->m_register.m_raw = new_value & DMA::destination_mask<x>();
 	}
 };

@@ -16,6 +16,7 @@
 class GaBber {
 	std::string m_rom_filename;
 
+	Debugger m_debugger;
 	MMU m_mmu;
 	ARM7TDMI m_cpu;
 	PPU m_ppu;
@@ -27,7 +28,6 @@ class GaBber {
 	Backdoor m_backdoor;
 	bool m_test_mode;
 
-    Debugger m_debugger;
 	void toggle_debug_mode();
 
 	bool m_closed;
@@ -52,7 +52,7 @@ class GaBber {
 	void clock_cycle();
 public:
 	GaBber()
-	: m_mmu(), m_cpu(m_mmu), m_ppu(m_cpu, m_mmu), m_test_harness(*this), m_debugger(*this) {}
+	: m_debugger(*this), m_mmu(), m_cpu(m_mmu, m_debugger), m_ppu(m_cpu, m_mmu), m_test_harness(*this) {}
 
 	void parse_args(int argc, char** argv);
     int start();

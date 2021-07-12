@@ -24,6 +24,7 @@ enum class ExceptionVector {
 
 
 class MMU;
+class Debugger;
 
 /*
  *  Implementation of the ARM7TDMI processor
@@ -31,9 +32,11 @@ class MMU;
 class ARM7TDMI {
 protected:
 	friend class GPRs;
+	friend class IORegisters;
 	friend class TestHarness;
 
 	MMU& m_mmu;
+	Debugger& m_debugger;
 
 	CSPR m_status;
 	SPSR m_saved_status;
@@ -359,8 +362,8 @@ protected:
 	template<unsigned x> inline bool dma_is_finished() { return m_dma.get_data<x>().m_finished; }
 	bool dma_cycle_all();
 public:
-	explicit ARM7TDMI(MMU& v)
-	: m_mmu(v), m_registers(), m_timers(*this) {}
+	explicit ARM7TDMI(MMU& v, Debugger& dbg)
+	: m_mmu(v), m_debugger(dbg), m_registers(), m_timers(*this) {}
 	MMU& mmu() { return m_mmu; }
 
 	void cycle();

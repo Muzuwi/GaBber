@@ -29,3 +29,26 @@ public:
 	Screen(GaBber& emu)
 	: DebuggerWindow("Screen", emu) {}
 };
+
+class IORegisters : public DebuggerWindow {
+	enum class WindowTab {
+		Interrupts,
+		DMA,
+		PPU,
+		Sound
+	};
+
+	WindowTab m_which_tab;
+
+	void draw_window() override;
+public:
+	IORegisters(GaBber& emu)
+	: DebuggerWindow("I/O Registers", emu) {
+		m_which_tab = WindowTab::Interrupts;
+	}
+
+	void draw_interrupts();
+	void draw_ppu();
+	void draw_sound();
+	void draw_dma();
+};

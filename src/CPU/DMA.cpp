@@ -68,7 +68,6 @@ void ARM7TDMI::dma_cycle() {
 	}
 
 	if(s.m_count == 0) {
-//		fmt::print("DMA{}: Transfer finished\n", x);
 		s.m_is_running = false;
 		s.m_fetched = false;
 		s.m_finished = true;
@@ -91,6 +90,10 @@ template<unsigned int x>
 void ARM7TDMI::dma_start() {
 	DMAx<x>& s = m_dma.get_data<x>();
 
+	fmt::print("DMA{} starting at cycle {}\n", x, m_cycles);
+
+	if(s.m_is_running) return;
+
 	//  FIXME: Split loading SAD,DAD,CTN_L from actually starting the dma
 	s.m_is_running = true;
 	s.m_finished = false;
@@ -103,7 +106,9 @@ void ARM7TDMI::dma_start() {
 	if(s.m_count == 0)
 		s.m_count = DMA::max_count<x>();
 
-//	fmt::print("DMA{}: Transfer started - src={:08x}, dest={:08x}, size={}\n", x, m_source.raw(), m_destination.raw(), (m_ctl.reg().transfer_size ? 4 : 2) * m_ctl.reg().word_count);
+	fmt::print("DMA{} started, src={:08x} dest={:08x} count={} mode={} repeat={} irq={} srcctl={} dstctl={}\n",
+			   x, s.m_source_ptr, s.m_destination_ptr, s.m_count, (unsigned)s.m_ctrl.reg().start_timing, (bool)s.m_ctrl.reg().repeat, (bool)s.m_ctrl.reg().irq_on_finish, (unsigned)s.m_ctrl.reg().src_ctl, (unsigned)s.m_ctrl.reg().dest_ctl
+			   );
 }
 
 

@@ -28,7 +28,7 @@ add_executable(GaBber
                src/Debugger/Debugger.cpp
                src/GaBberDisplay.cpp
                src/Tests/Harness.cpp
-               src/CPU/DMA.cpp src/Devices/DebugBackdoor.hpp src/CPU/Timer.cpp src/PPU/BG.hpp src/PPU/BG.cpp src/Debugger/Screen.cpp src/Debugger/MemoryEditor.cpp src/Debugger/Registers.cpp src/Debugger/DebuggerWindow.cpp)
+               src/CPU/DMA.cpp src/Devices/DebugBackdoor.hpp src/CPU/Timer.cpp src/PPU/BG.hpp src/PPU/BG.cpp src/Debugger/Screen.cpp src/Debugger/MemoryEditor.cpp src/Debugger/Registers.cpp src/Debugger/DebuggerWindow.cpp src/Debugger/IORegisters.cpp)
 
 target_link_libraries(GaBber
     fmt

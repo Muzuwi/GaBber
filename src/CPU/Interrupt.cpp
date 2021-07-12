@@ -1,13 +1,11 @@
 #include "Headers/ARM7TDMI.hpp"
+#include "Debugger/Debugger.hpp"
 
 void ARM7TDMI::enter_irq() {
-	m_last_mode_change.cycle = m_cycles;
-	m_last_mode_change.pc = const_pc() - 2*current_instr_len();
-	m_last_mode_change.prev = cspr().state();
-	m_last_mode_change.reason = "Exception - IRQ";
-	m_last_mode_change.neu = INSTR_MODE::ARM;
+	log("Entering IRQ from {}", cspr().state() == INSTR_MODE::ARM ? "ARM" : "THUMB");
 
-	m_registers.m_gIRQ[1] = const_pc() - current_instr_len();
+	const uint32 offset = cspr().state() == INSTR_MODE::ARM ? 4 : 0;
+	m_registers.m_gIRQ[1] = const_pc() - offset;
 	m_saved_status.m_IRQ = cspr();
 	cspr().set_state(INSTR_MODE::ARM);
 	cspr().set_mode(PRIV_MODE::IRQ);
@@ -17,19 +15,14 @@ void ARM7TDMI::enter_irq() {
 }
 
 void ARM7TDMI::enter_swi() {
-	m_last_mode_change.cycle = m_cycles;
-	m_last_mode_change.pc = const_pc() - 2*current_instr_len();
-	m_last_mode_change.prev = cspr().state();
-	m_last_mode_change.reason = "Exception - SWI";
-	m_last_mode_change.neu = INSTR_MODE::ARM;
+	log("Entering SWI");
 
 	m_registers.m_gSVC[1] = const_pc() - current_instr_len();
 	m_saved_status.m_SVC = cspr();
 	cspr().set_state(INSTR_MODE::ARM);
 	cspr().set_mode(PRIV_MODE::SVC);
 	cspr().set(CSPR_REGISTERS::IRQn, true);
-	pc() = 0x08 + 8;
-	m_pc_dirty = false;
+	pc() = 0x08;
 }
 
 void ARM7TDMI::raise_irq(IRQType type) {
