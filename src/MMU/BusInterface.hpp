@@ -4,7 +4,7 @@
 
 class BusDevice;
 
-class MMU {
+class BusInterface {
 	friend class BusDevice;
 	friend class TestHarness;
 

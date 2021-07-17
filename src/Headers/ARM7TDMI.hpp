@@ -23,7 +23,7 @@ enum class ExceptionVector {
 };
 
 
-class MMU;
+class BusInterface;
 class Debugger;
 
 /*
@@ -35,7 +35,7 @@ protected:
 	friend class IORegisters;
 	friend class TestHarness;
 
-	MMU& m_mmu;
+	BusInterface& m_mmu;
 	Debugger& m_debugger;
 
 	CSPR m_status;
@@ -354,9 +354,9 @@ protected:
 	template<unsigned x> inline bool dma_is_finished() { return m_dma.get_data<x>().m_finished; }
 	bool dma_cycle_all();
 public:
-	explicit ARM7TDMI(MMU& v, Debugger& dbg)
+	explicit ARM7TDMI(BusInterface& v, Debugger& dbg)
 	: m_mmu(v), m_debugger(dbg), m_registers(), m_timers(*this) {}
-	MMU& mmu() { return m_mmu; }
+	BusInterface& mmu() { return m_mmu; }
 
 	void cycle();
 	void reset();

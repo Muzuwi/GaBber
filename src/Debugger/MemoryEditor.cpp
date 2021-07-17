@@ -1,9 +1,9 @@
 #include "Debugger/WindowDefinitions.hpp"
 #include "Headers/GaBber.hpp"
-#include "MMU/MMU.hpp"
+#include "MMU/BusInterface.hpp"
 
 void MemEditor::draw_window() {
-	static MMU& mmu = this->m_emu.mmu();
+	static BusInterface& mmu = this->m_emu.mmu();
 
 	m_editor.ReadFn = [](const ImU8* addr, size_t off) -> ImU8 {
 		return mmu.peek((uint64)addr + off);

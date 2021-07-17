@@ -1,6 +1,6 @@
 #pragma once
 #include "Headers/StdTypes.hpp"
-#include "MMU/MMU.hpp"
+#include "MMU/BusInterface.hpp"
 
 enum class IOAccess {
 	R,
@@ -14,7 +14,7 @@ class BusDevice {
 public:
 	BusDevice(uint32 start, uint32 end)
 	: m_start(start), m_end(end) {
-		MMU::register_device(*this);
+		BusInterface::register_device(*this);
 	}
 
 	virtual ~BusDevice() {};

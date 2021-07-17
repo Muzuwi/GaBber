@@ -18,8 +18,8 @@ add_executable(GaBber
                src/CPU/ARM7TDMI.cpp
                src/main.cpp
                src/GaBber.cpp
-               src/Headers/ARM_Instruction.hpp src/MMU/MMU.hpp src/MMU/BusDevice.hpp src/Devices/SystemBIOS.hpp src/PPU/PPU.hpp src/CPU/Interrupt.hpp src/MMU/IOReg.hpp src/Headers/THUMB_Instruction.hpp src/Devices/GamePak.hpp
-               src/MMU/MMU.cpp
+               src/Headers/ARM_Instruction.hpp src/MMU/BusInterface.hpp src/MMU/BusDevice.hpp src/Devices/SystemBIOS.hpp src/PPU/PPU.hpp src/CPU/Interrupt.hpp src/MMU/IOReg.hpp src/Headers/THUMB_Instruction.hpp src/Devices/GamePak.hpp
+    src/MMU/BusInterface.cpp
     src/CPU/OpcodesARM.cpp
                src/PPU/PPU.cpp
                src/CPU/OpcodesTHUMB.cpp

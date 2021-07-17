@@ -1,20 +1,20 @@
 #include <iostream>
-#include "MMU/MMU.hpp"
+#include "MMU/BusInterface.hpp"
 #include "MMU/BusDevice.hpp"
 
-Vector<BusDevice*> MMU::s_devices {};
+Vector<BusDevice*> BusInterface::s_devices {};
 
 //#define SPLIT_DEBUG
 
 
-void MMU::debug() {
+void BusInterface::debug() {
 	log("Device dump:");
 	for(auto& device: s_devices) {
 		log("Device @{}: start={:08x} end={:08x} (size={})", (void*)device, device->start(), device->end(), device->size());
 	}
 }
 
-bool MMU::register_device(BusDevice& dev) {
+bool BusInterface::register_device(BusDevice& dev) {
 	for(auto& device : s_devices) {
 		bool device_overlaps_center = dev.start() >= device->start() && dev.end() <= device->end();
 
@@ -46,7 +46,7 @@ uint32 ensure_align(uint32 address, uint8 alignment) {
     return ret;
 }
 
-uint32 MMU::read32(uint32 address) {
+uint32 BusInterface::read32(uint32 address) {
 	address = ensure_align(address, 4);
 //	address = _handle_memory_images(address);
 
@@ -90,7 +90,7 @@ uint32 MMU::read32(uint32 address) {
 	return data;
 }
 
-uint16 MMU::read16(uint32 address) {
+uint16 BusInterface::read16(uint32 address) {
 	address = ensure_align(address, 2);
 //	address = _handle_memory_images(address);
 
@@ -127,7 +127,7 @@ uint16 MMU::read16(uint32 address) {
 	return data;
 }
 
-uint8 MMU::read8(uint32 address) {
+uint8 BusInterface::read8(uint32 address) {
 //	address = _handle_memory_images(address);
 
 	auto* dev = find_device(address);
@@ -139,7 +139,7 @@ uint8 MMU::read8(uint32 address) {
 	return dev->read8(address - dev->start());
 }
 
-void MMU::write32(uint32 address, uint32 value) {
+void BusInterface::write32(uint32 address, uint32 value) {
 	address = ensure_align(address, 4);
 //	address = _handle_memory_images(address);
 
@@ -181,7 +181,7 @@ void MMU::write32(uint32 address, uint32 value) {
 	}
 }
 
-void MMU::write16(uint32 address, uint16 value) {
+void BusInterface::write16(uint32 address, uint16 value) {
 	address = ensure_align(address, 2);
 //	address = _handle_memory_images(address);
 
@@ -216,7 +216,7 @@ void MMU::write16(uint32 address, uint16 value) {
 	}
 }
 
-void MMU::write8(uint32 address, uint8 value) {
+void BusInterface::write8(uint32 address, uint8 value) {
 //	address = _handle_memory_images(address);
 
 //	log("Write8 {:08x} <- {:02x}", address, value);
@@ -230,7 +230,7 @@ void MMU::write8(uint32 address, uint8 value) {
 	dev->write8(address - dev->start(), value);
 }
 
-uint8 MMU::peek(uint32 address) {
+uint8 BusInterface::peek(uint32 address) {
 //	address = _handle_memory_images(address);
 
 	auto* dev = find_device(address);
@@ -241,7 +241,7 @@ uint8 MMU::peek(uint32 address) {
 	return dev->read8(address - dev->start());
 }
 
-BusDevice* MMU::find_device(uint32 address) {
+BusDevice* BusInterface::find_device(uint32 address) {
 	static BusDevice* cache {nullptr};
 
 	if(cache && cache->contains(address)) {
@@ -261,14 +261,14 @@ BusDevice* MMU::find_device(uint32 address) {
 }
 
 
-void MMU::poke(uint32 addr, uint8 val) {
+void BusInterface::poke(uint32 addr, uint8 val) {
 	auto* dev = find_device(addr);
 	if(!dev) return;
 	dev->write8(addr - dev->start(), val);
 }
 
 
-void MMU::reload_all() {
+void BusInterface::reload_all() {
 	for(auto& dev : s_devices) {
 		dev->reload();
 	}

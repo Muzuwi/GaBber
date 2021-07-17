@@ -1,8 +1,8 @@
 #include "Headers/ARM7TDMI.hpp"
-#include "MMU/MMU.hpp"
+#include "MMU/BusInterface.hpp"
 #include "PPU/PPU.hpp"
 
-PPU::PPU(ARM7TDMI& a,MMU& b)
+PPU::PPU(ARM7TDMI& a,BusInterface& b)
 : cpu(a), mmu(b), m_backgrounds(*this) {
 }
 

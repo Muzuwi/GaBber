@@ -5,14 +5,14 @@
 #include "PPU/Unions.hpp"
 #include "PPU/Keypad.hpp"
 
-class MMU;
+class BusInterface;
 class ARM7TDMI;
 
 class PPU {
 	friend class Backgrounds;
 
 	ARM7TDMI& cpu;
-	MMU& mmu;
+	BusInterface& mmu;
 
 	LCDCtl m_lcd_ctl;
 	VRAM m_vram;
@@ -107,7 +107,7 @@ class PPU {
 	void objects_draw_obj(uint16 ly, OBJAttr obj);
 
 public:
-	PPU(ARM7TDMI&, MMU&);
+	PPU(ARM7TDMI&, BusInterface&);
 	void cycle();
 	bool frame_ready() const { return m_frame_ready; }
 	void clear_frame_ready() { m_frame_ready = false; }

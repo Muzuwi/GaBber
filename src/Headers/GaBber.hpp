@@ -9,7 +9,7 @@
 #include "Devices/SystemBIOS.hpp"
 #include "Devices/DebugBackdoor.hpp"
 #include "Headers/ARM7TDMI.hpp"
-#include "MMU/MMU.hpp"
+#include "MMU/BusInterface.hpp"
 #include "PPU/PPU.hpp"
 #include "Tests/Harness.hpp"
 
@@ -17,7 +17,7 @@ class GaBber {
 	std::string m_rom_filename;
 
 	Debugger m_debugger;
-	MMU m_mmu;
+	BusInterface m_mmu;
 	ARM7TDMI m_cpu;
 	PPU m_ppu;
     OnboardWRAM m_onboard_wram;
@@ -57,7 +57,7 @@ public:
 	void parse_args(int argc, char** argv);
     int start();
 
-    MMU& mmu() { return m_mmu; }
+    BusInterface& mmu() { return m_mmu; }
 	ARM7TDMI& cpu() { return m_cpu; }
 	PPU& ppu() { return m_ppu; }
 	Debugger& debugger() { return m_debugger; }

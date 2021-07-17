@@ -36,6 +36,8 @@ bool GaBber::display_initialize() {
 	ImGui_ImplOpenGL3_Init();
 	ImGui::StyleColorsDark();
 
+	ImGui::GetIO().Fonts->AddFontFromFileTTF("Roboto-Medium.ttf", 18);
+
 	SDL_GL_SetSwapInterval(1);
 
 	_disp_create_gl_state();

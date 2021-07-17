@@ -1,7 +1,8 @@
 #include <fstream>
 #include "Headers/ARM7TDMI.hpp"
 #include "Headers/ARM_Instruction.hpp"
-#include "MMU/MMU.hpp"
+#include "MMU/BusInterface.hpp"
+#include "Debugger/Debugger.hpp"
 
 void ARM7TDMI::reset() {
 	cspr().set_state(INSTR_MODE::ARM);
