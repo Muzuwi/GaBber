@@ -33,9 +33,9 @@ void IORegisters::draw_window() {
 
 void IORegisters::draw_interrupts() {
 	auto& cpu = m_emu.cpu();
-	ImGui::Text("IF: %04x", cpu.m_IF.raw());
-	ImGui::Text("IE: %04x", cpu.m_IE.raw());
-	ImGui::Text("IME: %08x", cpu.m_IME.raw());
+	ImGui::Text("IF: %04x", *cpu.m_IF);
+	ImGui::Text("IE: %04x", *cpu.m_IE);
+	ImGui::Text("IME: %08x", *cpu.m_IME);
 
 }
 
@@ -56,9 +56,9 @@ void IORegisters::draw_dma() {
 
 
 	auto draw_dma_stats = [](auto& dma) {
-		ImGui::Text("Source: %08x", dma.m_source.raw());
-		ImGui::Text("Dest: %08x", dma.m_destination.raw());
-		ImGui::Text("Words: %d", dma.m_ctrl.reg().word_count);
+		ImGui::Text("Source: %08x", *dma.m_source);
+		ImGui::Text("Dest: %08x", *dma.m_destination);
+		ImGui::Text("Words: %d", dma.m_ctrl->word_count);
 	};
 
 	ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0, 5.0));

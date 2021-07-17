@@ -2,150 +2,85 @@
 #include <fmt/format.h>
 #include "MMU/BusDevice.hpp"
 
-template<typename T>
-concept Register = requires(T v) {
-	v.m_raw;
-	v.m_reg;
-	sizeof(v.m_raw) == sizeof(v.m_reg);
-	sizeof(v.m_raw) > 0;
-};
-
-template<typename T>
-union _DummyReg {
-	T m_reg;
-	T m_raw;
-};
-
-template<unsigned n>
-struct __SizeStuff;
+template<unsigned n> struct __TypeForNumericSize;
 
 template<>
-struct __SizeStuff<1> {
+struct __TypeForNumericSize<1> {
 	typedef uint8 RawType;
 };
 
 template<>
-struct __SizeStuff<2> {
+struct __TypeForNumericSize<2> {
 	typedef uint16 RawType;
 };
 
 template<>
-struct __SizeStuff<4> {
+struct __TypeForNumericSize<4> {
 	typedef uint32 RawType;
 };
 
+template<uint32 base_address, unsigned reg_size>
+class __IORegister : public BusDevice {
+protected:
+	static_assert(reg_size == 4 || reg_size == 2 || reg_size == 1, "Unsupported register size");
+	using T = typename __TypeForNumericSize<reg_size>::RawType;
 
-template<uint32 base_address, class T, IOAccess access>
-class IORegister : public BusDevice {
 	T m_register;
-
-	static_assert(sizeof(T) == 4 || sizeof(T) == 2 || sizeof(T) == 1, "Unsupported register size");
-	using RawType = __SizeStuff<sizeof(T)>;
 
 	template<typename V>
 	V _read_typed(uint32 offset) {
-		if constexpr(sizeof(T) < sizeof(V) || access == IOAccess::W) {
-			fmt::print("IOReg ${:08x}/ Incompatible read{} on register of size {}\n", this->start(), sizeof(V),
-			           sizeof(T));
-			return (1ul << (sizeof(V)*8)) - 1;
-		} else {
-			if (offset + sizeof(V) > sizeof(T)) {
-				fmt::print("IOReg ${:08x}/ Out of bounds read{} on register of size {} with offset {:08x}\n",
-				           this->start(), sizeof(V)*8, sizeof(T), offset);
-				return (1ul << (sizeof(V)*8)) - 1;
-			} else {
-				//  FIXME: This is probably not portable
-				return *reinterpret_cast<V*>(reinterpret_cast<uint8*>(&m_register.m_raw) + offset);
-			}
-		}
+		constexpr unsigned struct_size = sizeof(V);
+		assert(reg_size >= struct_size);
+		assert(offset + struct_size <= reg_size);
+
+		//  FIXME: This is probably not portable
+		T value = on_read();
+		return *reinterpret_cast<V const*>(reinterpret_cast<uint8 const*>(&value) + offset);
 	}
 
 	template<typename V>
 	void _write_typed(uint32 offset, V value) {
-		if constexpr(sizeof(T) < sizeof(V) || access == IOAccess::R) {
-			fmt::print("IOReg ${:08x}/ Incompatible write{} on register of size {}\n", this->start(), sizeof(V),
-			           sizeof(T));
-			return;
-		} else {
-			if (offset + sizeof(V) > sizeof(T)) {
-				fmt::print("IOReg ${:08x}/ Out of bounds write{} on register of size {} with offset {:08x}\n",
-				           this->start(), sizeof(V)*8, sizeof(T), offset);
-			} else {
-				//  FIXME: This is probably not portable
-				T new_value = m_register;
-				*reinterpret_cast<V*>(reinterpret_cast<uint8*>(&new_value) + offset) = value;
-				this->on_write(new_value);
-			}
-		}
+		constexpr unsigned struct_size = sizeof(V);
+		assert(reg_size >= struct_size);
+		assert(offset + struct_size <= reg_size);
+
+		//  FIXME: This is probably not portable
+		T new_value = m_register;
+		*reinterpret_cast<V*>(reinterpret_cast<uint8*>(&new_value) + offset) = value;
+		this->on_write(new_value);
+	}
+
+	virtual void on_write(T new_value) {
+		m_register = new_value;
+	}
+
+	virtual T on_read() {
+		return m_register;
 	}
 public:
+	__IORegister() noexcept
+	: BusDevice(base_address, base_address + reg_size), m_register() {
+		this->reload();
+	}
+
 	T& operator*() {
 		return m_register;
 	}
 
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-template<uint32 base_address, typename T, IOAccess access> requires Register<T>
-class IOReg : public BusDevice {
-protected:
-	T m_register;
-
-	using RawType = typeof(T::m_raw);
-	using UnionType = typeof(T::m_reg);
-
-	template<typename V>
-	V _read_typed(uint32 offset) {
-		if constexpr(sizeof(T) < sizeof(V) || access == IOAccess::W) {
-			fmt::print("IOReg ${:08x}/ Incompatible read{} on register of size {}\n", this->start(), sizeof(V),
-			           sizeof(T));
-			return (1ul << (sizeof(V)*8)) - 1;
-		} else {
-			if (offset + sizeof(V) > sizeof(T)) {
-				fmt::print("IOReg ${:08x}/ Out of bounds read{} on register of size {} with offset {:08x}\n",
-				           this->start(), sizeof(V)*8, sizeof(T), offset);
-				return (1ul << (sizeof(V)*8)) - 1;
-			} else {
-				//  FIXME: This is probably not portable
-				return *reinterpret_cast<V*>(reinterpret_cast<uint8*>(&m_register.m_raw) + offset);
-			}
-		}
+	T const& operator*() const {
+		return m_register;
 	}
 
-	template<typename V>
-	void _write_typed(uint32 offset, V value) {
-		if constexpr(sizeof(T) < sizeof(V) || access == IOAccess::R) {
-			fmt::print("IOReg ${:08x}/ Incompatible write{} on register of size {}\n", this->start(), sizeof(V),
-			           sizeof(T));
-			return;
-		} else {
-			if (offset + sizeof(V) > sizeof(T)) {
-				fmt::print("IOReg ${:08x}/ Out of bounds write{} on register of size {} with offset {:08x}\n",
-				           this->start(), sizeof(V)*8, sizeof(T), offset);
-			} else {
-				//  FIXME: This is probably not portable
-				RawType new_value = m_register.m_raw;
-				*reinterpret_cast<V*>(reinterpret_cast<uint8*>(&new_value) + offset) = value;
-				this->on_write(new_value);
-			}
-		}
+	template<class S>
+	S* as() {
+		static_assert(sizeof(S) == reg_size, "Template argument for 'as<T>()' must be of the same size as the register.");
+		return reinterpret_cast<S*>(&m_register);
 	}
 
-public:
-	IOReg(RawType val = {})
-	: BusDevice(base_address, base_address+sizeof(T)), m_register() {
-		m_register.m_raw = val;
+	template<class S>
+	S const* as() const {
+		static_assert(sizeof(S) == reg_size, "Template argument for 'as<T>() const' must be of the same size as the register.");
+		return reinterpret_cast<S const*>(&m_register);
 	}
 
 	uint32 read32(uint32 offset) override {
@@ -173,43 +108,16 @@ public:
 		_write_typed<uint8>(offset, value);
 	}
 
-	RawType& raw() {
-		return m_register.m_raw;
-	}
-
-	const RawType& raw() const {
-		return m_register.m_raw;
-	}
-
-	UnionType& reg() {
-		return m_register.m_reg;
-	}
-
-	const UnionType& reg() const {
-		return m_register.m_reg;
-	}
-
-	T& union_type() {
-		return m_register;
-	}
-
-	T const& union_type() const {
-		return m_register;
-	}
-
-	virtual void on_write(RawType new_value) {
-		m_register.m_raw = new_value;
-	}
-
 	void reload() override {
-		m_register.m_raw = RawType {};
+		m_register = T {};
 	}
-
-	std::string identify() const override { return "I/O Register"; }
-
-	IOReg& operator=(RawType const& val) {
-		m_register.m_raw = val;
-		return *this;
-	}
-
 };
+
+template<uint32 base_address>
+using IOReg32 = __IORegister<base_address, 4>;
+
+template<uint32 base_address>
+using IOReg16 = __IORegister<base_address, 2>;
+
+template<uint32 base_address>
+using IOReg8  = __IORegister<base_address, 1>;

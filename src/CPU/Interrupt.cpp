@@ -27,7 +27,7 @@ void ARM7TDMI::enter_swi() {
 
 void ARM7TDMI::raise_irq(IRQType type) {
 	auto irq_num = static_cast<unsigned>(type);
-	m_IF.raw() |= (1u << irq_num);
+	*m_IF |= (1u << irq_num);
 }
 
 bool ARM7TDMI::handle_halt() {
@@ -36,7 +36,7 @@ bool ARM7TDMI::handle_halt() {
 		return false;
 
 	if(m_HALTCNT.m_halt) {
-		if ((m_IE.raw() & m_IF.raw()) != 0) {
+		if ((*m_IE & *m_IF) != 0) {
 			m_HALTCNT.m_halt = false;
 			return false;
 		} else {
@@ -51,7 +51,7 @@ void ARM7TDMI::handle_interrupts() {
 	if (!irqs_enabled_globally())
 		return;
 
-	const uint16 result = m_IF.raw() & m_IE.raw();
+	const uint16 result = *m_IF & *m_IE;
 	if(result)
 		enter_irq();
 }

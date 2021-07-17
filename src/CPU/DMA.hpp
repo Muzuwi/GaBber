@@ -22,22 +22,18 @@ enum class DMAStartTiming : uint8 {
 	Special = 3
 };
 
-union DMACtrlReg {
-	struct {
-		uint16 word_count   : 16;
-		uint8 _unused       : 5;
-		DMADestCtrl dest_ctl      : 2;
-		DMASrcCtrl src_ctl        : 2;
-		uint8 repeat        : 1;
-		uint8 transfer_size : 1;
-		uint8 game_pak_drq  : 1;
-		DMAStartTiming start_timing  : 2;
-		uint8 irq_on_finish : 1;
-		uint8 enable        : 1;
-	} __attribute__((packed)) m_reg;
-
-	uint32 m_raw;
-};
+struct DMACtrlReg {
+	uint16 word_count   : 16;
+	uint8 _unused       : 5;
+	DMADestCtrl dest_ctl      : 2;
+	DMASrcCtrl src_ctl        : 2;
+	uint8 repeat        : 1;
+	uint8 transfer_size : 1;
+	uint8 game_pak_drq  : 1;
+	DMAStartTiming start_timing  : 2;
+	uint8 irq_on_finish : 1;
+	uint8 enable        : 1;
+} __attribute__((packed));
 
 
 namespace DMA {
@@ -88,23 +84,38 @@ namespace DMA {
 	}
 }
 
+
 template<unsigned x>
-class DMASrc final : public IOReg<DMA::reg_base<x>(), _DummyReg<uint32>, IOAccess::RW> {
+class DMASrc final : public IOReg32<DMA::reg_base<x>()> {
+protected:
+	void on_write(uint32 new_value) override {
+		this->m_register = new_value & DMA::source_mask<x>();
+	}
+	uint32 on_read() override { return 0x00000000; }
+};
+
+template<unsigned x>
+class DMADest final : public IOReg32<DMA::reg_base<x>() + 4> {
+protected:
+	void on_write(uint32 new_value) override {
+		this->m_register = new_value & DMA::destination_mask<x>();
+	}
+	uint32 on_read() override { return 0x00000000; }
+};
+
+template<unsigned x>
+class DMACtrl final : public IOReg32<DMA::reg_base<x>() + 8> {
 public:
-	void on_write(uint32 new_value) override {
-		this->m_register.m_raw = new_value & DMA::source_mask<x>();
+	DMACtrlReg* operator->() {
+		return this->template as<DMACtrlReg>();
 	}
-};
 
-template<unsigned x>
-class DMADest final : public IOReg<DMA::reg_base<x>() + 4, _DummyReg<uint32>, IOAccess::RW> {
-	void on_write(uint32 new_value) override {
-		this->m_register.m_raw = new_value & DMA::destination_mask<x>();
+	DMACtrlReg const* operator->() const {
+		return this->template as<DMACtrlReg>();
 	}
-};
 
-template<unsigned x>
-class DMACtrl final : public IOReg<DMA::reg_base<x>() + 8, DMACtrlReg, IOAccess::RW> {};
+	uint32 on_read() override { return this->m_register & 0xffff0000; }
+};
 
 
 template<unsigned x>
@@ -143,45 +154,3 @@ struct DMAData final {
 			return m_dma3;
 	}
 };
-
-
-//template<unsigned x>
-//class DMA {
-//
-//
-//	ARM7TDMI& m_cpu;
-//
-//	IOReg<reg_base + 8, DMACtrlReg, IOAccess::RW> m_ctl;
-//
-//	bool m_is_running {false};
-//
-//	uint32 m_destination_ptr {};
-//	uint32 m_source_ptr {};
-//	unsigned m_count {};
-//
-//	uint32 m_fetched_data {};
-//	bool m_fetched {false};
-//	bool m_finished {false};
-//public:
-//	static_assert(x < 4, "Invalid DMA number");
-//	static constexpr IRQType irq_type() {
-//		if constexpr (x == 0)
-//			return IRQType::DMA0;
-//		else if constexpr(x == 1)
-//			return IRQType::DMA1;
-//		else if constexpr(x == 2)
-//			return IRQType::DMA2;
-//		else
-//			return IRQType::DMA3;
-//	}
-//
-//	explicit DMA(ARM7TDMI& v)
-//	: m_cpu(v) {}
-//
-//	void start();
-//	void cycle();
-//
-//	bool running() const;
-//	[[nodiscard]] bool finished();
-//};
-

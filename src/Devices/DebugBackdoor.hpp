@@ -22,10 +22,10 @@ public:
 	}
 };
 
-class Backdoor final : public IOReg<0x04fff700, _DummyReg<uint16>, IOAccess::RW> {
+class Backdoor final : public IOReg16<0x04fff700> {
 	DebugBackdoor m_backdoor;
 public:
-	void on_write(RawType) override {
+	void on_write(uint16) override {
 		fmt::print("Backdoor: \u001b[96m{}", m_backdoor.to_string());
 		fmt::print("\u001b[0m\n");
 	}

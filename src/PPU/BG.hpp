@@ -13,23 +13,44 @@ struct __BGExtraVars {
 
 template<>
 struct __BGExtraVars<2> {
-	IOReg<0x04000020, _DummyReg<uint16>, IOAccess::W> m_dx;
-	IOReg<0x04000022, _DummyReg<uint16>, IOAccess::W> m_dmx;
-	IOReg<0x04000024, _DummyReg<uint16>, IOAccess::W> m_dy;
-	IOReg<0x04000026, _DummyReg<uint16>, IOAccess::W> m_dmy;
-	IOReg<0x04000028, _DummyReg<uint32>, IOAccess::W> m_refx;
-	IOReg<0x0400002C, _DummyReg<uint32>, IOAccess::W> m_refy;
+	IOReg16<0x04000020> m_dx;
+	IOReg16<0x04000022> m_dmx;
+	IOReg16<0x04000024> m_dy;
+	IOReg16<0x04000026> m_dmy;
+	IOReg32<0x04000028> m_refx;
+	IOReg32<0x0400002C> m_refy;
 };
 
 
 template<>
 struct __BGExtraVars<3> {
-	IOReg<0x04000030, _DummyReg<uint16>, IOAccess::W> m_dx;
-	IOReg<0x04000032, _DummyReg<uint16>, IOAccess::W> m_dmx;
-	IOReg<0x04000034, _DummyReg<uint16>, IOAccess::W> m_dy;
-	IOReg<0x04000036, _DummyReg<uint16>, IOAccess::W> m_dmy;
-	IOReg<0x04000038, _DummyReg<uint32>, IOAccess::W> m_refx;
-	IOReg<0x0400003C, _DummyReg<uint32>, IOAccess::W> m_refy;
+	IOReg16<0x04000030> m_dx;
+	IOReg16<0x04000032> m_dmx;
+	IOReg16<0x04000034> m_dy;
+	IOReg16<0x04000036> m_dmy;
+	IOReg32<0x04000038> m_refx;
+	IOReg32<0x0400003C> m_refy;
+};
+
+
+template<unsigned address>
+class OffsetReg final : public IOReg16<address> {
+	void on_write(uint16 val) override {
+		this->m_register = val & 0b111111111;
+	}
+};
+
+
+template<unsigned address>
+class BGCNT final : public IOReg16<address> {
+public:
+	BGxCNTReg* operator->() {
+		return this->template as<BGxCNTReg>();
+	}
+
+	BGxCNTReg const* operator->() const {
+		return this->template as<BGxCNTReg>();
+	}
 };
 
 
@@ -40,26 +61,11 @@ private:
 	static constexpr uint32 ctl_addr = 0x04000008 + n * 2;
 	static constexpr uint32 xy_base = 0x04000010 + n * 4;
 public:
-	IOReg<ctl_addr, BGxCNTReg, IOAccess::RW> m_control;
-	class : public IOReg<xy_base, _DummyReg<uint16>, IOAccess::RW> {
-		void on_write(uint16 val) override {
-			this->m_register.m_raw = val & 0b111111111;
-		}
-
-		std::string identify() const {
-			return "BG" + std::to_string(n) + "HOFS";
-		}
-	} m_xoffset;
-	class : public IOReg<xy_base + 2, _DummyReg<uint16>, IOAccess::RW> {
-		void on_write(uint16 val) override {
-			this->m_register.m_raw = val & 0b111111111;
-		}
-
-		std::string identify() const {
-			return "BG" + std::to_string(n) + "VOFS";
-		}
-	} m_yoffset;
+	BGCNT<ctl_addr> m_control;
+	OffsetReg<xy_base> m_xoffset;
+	OffsetReg<xy_base+2> m_yoffset;
 };
+
 
 class Backgrounds {
 	PPU& m_ppu;

@@ -16,66 +16,46 @@ enum class KeypadKey {
 };
 
 
-union KEYCNTReg {
-	struct {
-		uint16 buttons : 10;
-		uint8 _unused : 4;
-		bool irq_enable : 1;
-		bool irq_condition : 1;
-	} __attribute__((packed)) m_reg;
-	uint16 m_raw;
-};
+struct DISPCNTReg {
+	uint8 video_mode    : 3;
+	bool cgb_mode       : 1;
+	uint8 frame_select  : 1;
+	bool oam_in_HBlank  : 1;
+	bool obj_one_dim    : 1;
+	bool forced_blank   : 1;
+	bool BG0            : 1;
+	bool BG1            : 1;
+	bool BG2            : 1;
+	bool BG3            : 1;
+	bool OBJ            : 1;
+	bool window0        : 1;
+	bool window1        : 1;
+	bool objWindow      : 1;
+} __attribute__((packed));
 
 
-union DISPCNTReg {
-	struct {
-		uint8 video_mode    : 3;
-		bool cgb_mode       : 1;
-		uint8 frame_select  : 1;
-		bool oam_in_HBlank  : 1;
-		bool obj_one_dim    : 1;
-		bool forced_blank   : 1;
-		bool BG0            : 1;
-		bool BG1            : 1;
-		bool BG2            : 1;
-		bool BG3            : 1;
-		bool OBJ            : 1;
-		bool window0        : 1;
-		bool window1        : 1;
-		bool objWindow      : 1;
-	} __attribute__((packed)) m_reg;
-	uint16 m_raw;
-};
+struct DISPSTATReg {
+	bool VBlank         : 1;
+	bool HBlank         : 1;
+	bool VCounter       : 1;
+	bool VBlank_IRQ     : 1;
+	bool HBlank_IRQ     : 1;
+	bool VCounter_IRQ   : 1;
+	uint8 _unused       : 2;
+	uint8 LYC           : 8;
+} __attribute__((packed));
 
 
-union DISPSTATReg {
-	struct {
-		bool VBlank         : 1;
-		bool HBlank         : 1;
-		bool VCounter       : 1;
-		bool VBlank_IRQ     : 1;
-		bool HBlank_IRQ     : 1;
-		bool VCounter_IRQ   : 1;
-		uint8 _unused       : 2;
-		uint8 LYC           : 8;
-	} __attribute__((packed)) m_reg;
-	uint16 m_raw;
-};
-
-
-union BGxCNTReg {
-	struct {
-		uint8 priority          : 2;
-		uint8 base_tile_block   : 2;
-		uint8 _unused           : 2;
-		bool mosaic             : 1;
-		bool palette_flag       : 1;
-		uint8 base_screen_block : 5;
-		bool area_overflow      : 1;
-		uint8 screen_size       : 2;
-	} __attribute__((packed)) m_reg;
-	uint16 m_raw;
-};
+struct BGxCNTReg {
+	uint8 priority          : 2;
+	uint8 base_tile_block   : 2;
+	uint8 _unused           : 2;
+	bool mosaic             : 1;
+	bool palette_flag       : 1;
+	uint8 base_screen_block : 5;
+	bool area_overflow      : 1;
+	uint8 screen_size       : 2;
+} __attribute__((packed));
 
 
 union TextScreenData {
@@ -190,10 +170,40 @@ struct OBJAttr {
 } __attribute__((packed));
 
 
+class DISPCNT : public IOReg16<0x04000000> {
+public:
+	DISPCNTReg* operator->() {
+		return this->template as<DISPCNTReg>();
+	}
+
+	DISPCNTReg const* operator->() const {
+		return this->template as<DISPCNTReg>();
+	}
+};
+
+class GreenSwap : public IOReg16<0x04000002> {
+
+};
+
+class DISPSTAT : public IOReg16<0x04000004> {
+public:
+	DISPSTATReg* operator->() {
+		return this->template as<DISPSTATReg>();
+	}
+
+	DISPSTATReg const* operator->() const {
+		return this->template as<DISPSTATReg>();
+	}
+};
+
+class VCOUNT : public IOReg16<0x04000006> {
+
+};
+
 struct LCDCtl {
-	class : public IOReg<0x04000000, DISPCNTReg, IOAccess::RW>{} m_dispcnt;
-	class : public IOReg<0x04000002, _DummyReg<uint16>, IOAccess::RW>{} m_greenswap;
-	class : public IOReg<0x04000004, DISPSTATReg, IOAccess::RW>{} m_dispstat;
-	class : public IOReg<0x04000006, _DummyReg<uint16>, IOAccess::R> {} m_vcount;
+	DISPCNT m_dispcnt;
+	GreenSwap m_green_swap;
+	DISPSTAT m_dispstat;
+	VCOUNT m_vcount;
 };
 

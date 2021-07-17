@@ -7,7 +7,7 @@ PPU::PPU(ARM7TDMI& a,MMU& b)
 }
 
 bool PPU::is_HBlank() const {
-	return m_lcd_ctl.m_dispstat.reg().HBlank && vcount() >= 160;
+	return m_lcd_ctl.m_dispstat->HBlank && vcount() >= 160;
 }
 
 bool PPU::is_VBlank() const {
@@ -22,15 +22,15 @@ void PPU::next_scanline() {
 	vcount()++;
 
 	if(vcount() == 160) {
-		m_lcd_ctl.m_dispstat.reg().HBlank = false;
-		m_lcd_ctl.m_dispstat.reg().VBlank = true;
+		m_lcd_ctl.m_dispstat->HBlank = false;
+		m_lcd_ctl.m_dispstat->VBlank = true;
 		cpu.dma_start_vblank();
-		if(m_lcd_ctl.m_dispstat.reg().VBlank_IRQ) {
+		if(m_lcd_ctl.m_dispstat->VBlank_IRQ) {
 			cpu.raise_irq(IRQType::VBlank);
 		}
 		m_frame_ready = true;
 	} else if(vcount() == 228) {
-		m_lcd_ctl.m_dispstat.reg().VBlank = false;
+		m_lcd_ctl.m_dispstat->VBlank = false;
 		vcount() = 0;
 	}
 }
@@ -46,9 +46,9 @@ void PPU::cycle() {
 	current_scanline_position++;
 
 	if(current_scanline_position == 240 && !is_VBlank()) {
-		m_lcd_ctl.m_dispstat.reg().HBlank = true;
+		m_lcd_ctl.m_dispstat->HBlank = true;
 		cpu.dma_start_hblank();
-		if(m_lcd_ctl.m_dispstat.reg().HBlank_IRQ) {
+		if(m_lcd_ctl.m_dispstat->HBlank_IRQ) {
 			cpu.raise_irq(IRQType::HBlank);
 		}
 
@@ -75,10 +75,10 @@ void PPU::handle_key_up(KeypadKey key) {
 }
 
 void PPU::handle_key_irq() {
-	if(!m_keypadcnt.reg().irq_enable)
+	if(!m_keypadcnt.irq_enable())
 		return;
 
-	bool cond_and = m_keypadcnt.reg().irq_condition;
+	bool cond_and = m_keypadcnt.irq_condition();
 
 	bool raise_irq = cond_and;
 	for(unsigned i = 0; i < 10; ++i) {
@@ -101,7 +101,7 @@ void PPU::handle_key_irq() {
 }
 
 void PPU::objects_draw_line(uint16 ly) {
-	if(!m_lcd_ctl.m_dispcnt.reg().OBJ)
+	if(!m_lcd_ctl.m_dispcnt->OBJ)
 		return;
 
 	for(unsigned i = 0; i < 128; ++i) {
@@ -133,7 +133,7 @@ void PPU::objects_draw_obj(uint16 ly, OBJAttr obj) {
 	const uint8 which_vertical_tile = obj_line / 8;
 
 	uint16 base_tile = obj.attr2.tile_number;
-	if(m_lcd_ctl.m_dispcnt.reg().obj_one_dim) {
+	if(m_lcd_ctl.m_dispcnt->obj_one_dim) {
 		base_tile += (tile_width-1) * which_vertical_tile;
 	} else {
 		base_tile += 32 * which_vertical_tile;

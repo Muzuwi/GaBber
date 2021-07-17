@@ -2,7 +2,8 @@
 #include "MMU/IOReg.hpp"
 #include "PPU/Unions.hpp"
 
-class Keypad : public IOReg<0x04000130, _DummyReg<uint16>, IOAccess::R> {
+class Keypad final : public IOReg16<0x04000130> {
+	void on_write(uint16) override {}
 public:
 	enum class State {
 		Pressed,
@@ -10,23 +11,32 @@ public:
 	};
 
 	void reload() override {
-		raw() = 0x3ff;
+		m_register = 0x3ff;
 	}
 
 	bool pressed(KeypadKey key) const {
-		return (raw() & (1u << (uint16)key)) == 0;
+		return (m_register & (1u << (uint16)key)) == 0;
 	}
 
 	void set(KeypadKey key, State state) {
 		const uint16 mask = (1u << (uint16)key);
-		const uint16 val  = raw() & ~mask;
-		raw() = val | (state == State::Pressed ? 0 : mask);
+		const uint16 val  = m_register & ~mask;
+		m_register = val | (state == State::Pressed ? 0 : mask);
 	}
 };
 
-class KeypadCnt : public IOReg<0x04000132, KEYCNTReg, IOAccess::RW> {
+
+class KeypadCnt final : public IOReg16<0x04000132> {
 public:
 	bool selected(KeypadKey key) {
-		return (raw() & (1u << (uint16)key));
+		return (m_register & (1u << (uint16)key));
+	}
+
+	bool irq_enable() const {
+		return (m_register & (1u << 14u));
+	}
+
+	bool irq_condition() const {
+		return (m_register & (1u << 15u));
 	}
 };

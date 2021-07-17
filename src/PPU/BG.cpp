@@ -8,20 +8,20 @@ void Backgrounds::draw_textmode() {
 	if(!bg_enabled<n>())
 		return;
 
-//	assert(bg.m_control.reg().screen_size == 0);
-	assert(bg.m_control.reg().mosaic == 0);
+//	assert(bg.m_control->screen_size == 0);
+	assert(bg.m_control->mosaic == 0);
 
-	const uint32 screen_base = bg.m_control.reg().base_screen_block * 2 * kB;
-	const uint32 tile_base = bg.m_control.reg().base_tile_block * 16 * kB;
-	const uint8 priority = bg.m_control.reg().priority;
-	const bool depth = bg.m_control.reg().palette_flag;
-	const unsigned vscreen_width = (bg.m_control.reg().screen_size & 1u) ? 512u : 256u;
-	const unsigned vscreen_height = (bg.m_control.reg().screen_size & 2u) ? 512u : 256u;
+	const uint32 screen_base = bg.m_control->base_screen_block * 2 * kB;
+	const uint32 tile_base = bg.m_control->base_tile_block * 16 * kB;
+	const uint8 priority = bg.m_control->priority;
+	const bool depth = bg.m_control->palette_flag;
+	const unsigned vscreen_width = (bg.m_control->screen_size & 1u) ? 512u : 256u;
+	const unsigned vscreen_height = (bg.m_control->screen_size & 2u) ? 512u : 256u;
 	const unsigned vscreen_screensx = vscreen_width / 256u;
 	const unsigned vscreen_screensy = vscreen_height / 256u;
 
-	const auto scx = bg.m_xoffset.raw();
-	const auto scy = bg.m_yoffset.raw();
+	const auto scx = *bg.m_xoffset;
+	const auto scy = *bg.m_yoffset;
 	const auto ly = (scy + m_ppu.vcount()) % vscreen_height;
 	const unsigned vscreen_y = ((scy + m_ppu.vcount()) / vscreen_height) % vscreen_screensy;
 
@@ -58,10 +58,10 @@ void Backgrounds::draw_textmode() {
 
 
 void Backgrounds::draw_mode0() {
-	uint8 bg0_pri = m_bg0.m_control.reg().priority,
-		  bg1_pri = m_bg1.m_control.reg().priority,
-		  bg2_pri = m_bg2.m_control.reg().priority,
-		  bg3_pri = m_bg3.m_control.reg().priority;
+	uint8 bg0_pri = m_bg0.m_control->priority,
+		  bg1_pri = m_bg1.m_control->priority,
+		  bg2_pri = m_bg2.m_control->priority,
+		  bg3_pri = m_bg3.m_control->priority;
 	uint8 pri[4] = {bg0_pri, bg1_pri, bg2_pri, bg3_pri};
 	uint8 idx[4] = {0,1,2,3};
 	for(unsigned i = 0; i < 4 - 1; ++i) {
@@ -95,8 +95,8 @@ void Backgrounds::draw_mode2() {
 void Backgrounds::draw_mode3() {
 	const auto& ctl = m_ppu.lcd().m_dispcnt;
 
-	if(ctl.reg().BG2) {
-		const auto ly = m_ppu.lcd().m_vcount.raw();
+	if(ctl->BG2) {
+		const auto ly = *m_ppu.lcd().m_vcount;
 		const auto line_offset = ly * 480;  //  480 bytes per line
 
 		for(unsigned x = 0; x < 240; ++x) {
@@ -110,9 +110,9 @@ void Backgrounds::draw_mode3() {
 void Backgrounds::draw_mode4() {
 	const auto& ctl = m_ppu.lcd().m_dispcnt;
 
-	if(ctl.reg().BG2) {
-		const auto ly = m_ppu.lcd().m_vcount.raw();
-		const auto frame_offset = (ctl.reg().frame_select ? 0xA000 : 0);
+	if(ctl->BG2) {
+		const auto ly = *m_ppu.lcd().m_vcount;
+		const auto frame_offset = (ctl->frame_select ? 0xA000 : 0);
 
 		for(unsigned i = 0; i < 240; ++i) {
 			const auto line_offset = ly * 240;
@@ -130,9 +130,9 @@ void Backgrounds::draw_mode5() {
 
 	const auto& ctl = m_ppu.lcd().m_dispcnt;
 
-	if(ctl.reg().BG2) {
-		const auto ly = m_ppu.lcd().m_vcount.raw();
-		const auto frame_offset = (ctl.reg().frame_select ? 0xA000 : 0);
+	if(ctl->BG2) {
+		const auto ly = *m_ppu.lcd().m_vcount;
+		const auto frame_offset = (ctl->frame_select ? 0xA000 : 0);
 
 		for(unsigned i = 0; i < 240; ++i) {
 			const auto line_offset = ly * 240;
@@ -149,7 +149,7 @@ void Backgrounds::draw_mode5() {
 void Backgrounds::draw_scanline() {
 	const auto& ctl = m_ppu.lcd().m_dispcnt;
 
-	switch (ctl.reg().video_mode) {
+	switch (ctl->video_mode) {
 		case 0: draw_mode0(); break;
 		case 1: draw_mode1(); break;
 		case 2: draw_mode2(); break;
@@ -166,12 +166,12 @@ void Backgrounds::draw_scanline() {
 template<unsigned int n>
 constexpr bool Backgrounds::bg_enabled() {
 	if constexpr(n == 0)
-		return m_ppu.m_lcd_ctl.m_dispcnt.reg().BG0;
+		return m_ppu.m_lcd_ctl.m_dispcnt->BG0;
 	else if constexpr(n == 1)
-		return m_ppu.m_lcd_ctl.m_dispcnt.reg().BG1;
+		return m_ppu.m_lcd_ctl.m_dispcnt->BG1;
 	else if constexpr(n == 2)
-		return m_ppu.m_lcd_ctl.m_dispcnt.reg().BG2;
+		return m_ppu.m_lcd_ctl.m_dispcnt->BG2;
 	else
-		return m_ppu.m_lcd_ctl.m_dispcnt.reg().BG3;
+		return m_ppu.m_lcd_ctl.m_dispcnt->BG3;
 }
 

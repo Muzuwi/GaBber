@@ -1,23 +1,38 @@
 #pragma once
 #include "CPU/Unions.hpp"
+#include "MMU/IOReg.hpp"
 
-
-template<unsigned base_address>
-struct TimerReload final : public IOReg<base_address, _DummyReg<uint16>, IOAccess::RW> {
+template<unsigned x>
+class TimerReload final : public IOReg16<0x04000100 + x*4> {
 	uint16 m_reload {0};
 
 	void on_write(uint16 val) override {
 		m_reload = val;
 	}
+public:
+	uint16 reload_value() const { return m_reload; }
 };
 
-template<unsigned timer_number>
+template<unsigned x>
+class TimerCtl final : public IOReg16<0x04000102 + x*4> {
+public:
+	TimerReg* operator->() {
+		return this->template as<TimerReg>();
+	}
+
+	TimerReg const* operator->() const {
+		return this->template as<TimerReg>();
+	}
+};
+
+
+template<unsigned x>
 struct Timer {
-	static_assert(timer_number < 4, "Invalid timer number");
+	static_assert(x < 4, "Invalid timer number");
 
 	unsigned m_timer_cycles {0};
-	TimerReload<0x04000100 + timer_number*4> m_reload_and_current;
-	IOReg<0x04000102 + timer_number*4, TimerReg, IOAccess::RW> m_ctl;
+	TimerReload<x> m_reload_and_current;
+	TimerCtl<x> m_ctl;
 };
 
 class ARM7TDMI;

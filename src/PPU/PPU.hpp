@@ -76,7 +76,7 @@ class PPU {
 	}
 
 	inline uint8 get_obj_tile_dot(uint16 tile, uint8 ly_in_tile, uint8 dot_in_tile, bool depth_flag) const {
-		const uint32 base = (m_lcd_ctl.m_dispcnt.reg().video_mode <= 2) ? 0x00010000 : 0x00014000;
+		const uint32 base = (m_lcd_ctl.m_dispcnt->video_mode <= 2) ? 0x00010000 : 0x00014000;
 		return get_bg_tile_dot(base, tile, ly_in_tile, dot_in_tile, depth_flag);
 	}
 
@@ -99,8 +99,8 @@ class PPU {
 		}
 	}
 
-	uint16& vcount() { return m_lcd_ctl.m_vcount.raw(); }
-	uint16 const& vcount() const { return m_lcd_ctl.m_vcount.raw(); }
+	uint16& vcount() { return *m_lcd_ctl.m_vcount; }
+	uint16 const& vcount() const { return *m_lcd_ctl.m_vcount; }
 
 	void colorbuffer_blit();
 	void objects_draw_line(uint16 ly);

@@ -22,27 +22,27 @@ enum class IRQType : uint8 {
 	_Reserved_15 = 15
 };
 
-class IE final : public IOReg<0x04000200, IEReg, IOAccess::RW> {
+class IE final : public IOReg16<0x04000200> {
 public:
 	void on_write(uint16 val) override {
-		m_register.m_raw = (val & ~0xc000);
+		m_register = (val & ~0xc000);
 	}
 };
 
-class IF final : public IOReg<0x04000202, IFReg, IOAccess::RW> {
+class IF final : public IOReg16<0x04000202> {
 	void on_write(uint16 val) override {
-		m_register.m_raw &= ~val;
+		m_register &= ~val;
 	}
 };
 
-class IME final : public IOReg<0x04000208, _DummyReg<uint16>, IOAccess::RW> {
+class IME final : public IOReg16<0x04000208> {
 public:
 	inline bool enabled() const {
-		return this->raw() & 1u;
+		return m_register & 1u;
 	}
 };
 
-class HALTCNT final : public IOReg<0x04000301, _DummyReg<uint8>, IOAccess::RW> {
+class HALTCNT final : public IOReg8<0x04000301> {
 	void on_write(uint8 val) override {
 		//  Halt
 		if(val == 0) {
@@ -56,5 +56,6 @@ public:
 	bool m_stop {false};
 };
 
-class POSTFLG final : public IOReg<0x04000300, _DummyReg<uint8>, IOAccess::RW> {
+class POSTFLG final : public IOReg8<0x04000300> {
+
 };

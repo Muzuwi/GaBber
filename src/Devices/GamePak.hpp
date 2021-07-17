@@ -4,28 +4,6 @@
 #include "MMU/ArrayMem.hpp"
 #include "MMU/IOReg.hpp"
 
-//class GamePak : public BusDevice {
-//	Vector<uint8> m_game_pak;
-//	Vector<uint8> m_flash;
-//
-//	uint32 get_image_offset(uint32 offset);
-//public:
-//	GamePak()
-//	: BusDevice(0x08000000, 0xE000000) {}
-//
-//	uint32 read32(uint32 offset) override;
-//	uint16 read16(uint32 offset) override;
-//	uint8 read8(uint32 offset) override;
-//
-//	void write32(uint32 offset, uint32 value) override;
-//	void write16(uint32 offset, uint16 value) override;
-//	void write8(uint32 offset, uint8 value) override;
-//
-//	void load_from_vector(const Vector<uint8>& game_pak, const Vector<uint8>& flash);
-//
-//	std::string identify() const override { return "GamePAK"; }
-//};
-
 enum class BackupCartType {
 	EEPROM,
 	SRAM32K,
@@ -33,11 +11,8 @@ enum class BackupCartType {
 	FLASH128K,
 };
 
-class WaitCtl : public IOReg<0x04000204, _DummyReg<uint16>, IOAccess::RW> {
-public:
-	std::string identify() const override {
-		return "WAITCNT";
-	}
+class WaitCtl : public IOReg16<0x04000204> {
+
 };
 
 class PakSRAM : public BusDevice {
