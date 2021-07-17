@@ -1,6 +1,6 @@
 #pragma once
 #include "MMU/IOReg.hpp"
-#include "PPU/Unions.hpp"
+#include "IO/PPU.hpp"
 
 class Keypad final : public IOReg16<0x04000130> {
 	void on_write(uint16) override {}

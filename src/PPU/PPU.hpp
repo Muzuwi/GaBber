@@ -1,9 +1,6 @@
 #pragma once
 #include <fmt/format.h>
-#include "PPU/BG.hpp"
-#include "Devices/VRAM.hpp"
-#include "PPU/Unions.hpp"
-#include "PPU/Keypad.hpp"
+#include "MMU/MemoryLayout.hpp"
 
 class BusInterface;
 class ARM7TDMI;
@@ -12,15 +9,8 @@ class PPU {
 	friend class Backgrounds;
 
 	ARM7TDMI& cpu;
-	BusInterface& mmu;
-
-	LCDCtl m_lcd_ctl;
-	VRAM m_vram;
-	PaletteRAM m_palette_ram;
-	OAM m_oam;
+	MemoryLayout& mem;
 	Backgrounds m_backgrounds;
-	Keypad m_keypad;
-	KeypadCnt m_keypadcnt;
 
 	uint32 m_framebuffer[240 * 160];
 	bool m_frame_ready { false };
@@ -42,19 +32,19 @@ class PPU {
 	}
 
 	inline Optional<OBJAttr> get_obj_attrs(uint8 obj) const {
-		return m_oam.readT<OBJAttr>(obj*8);
+		return mem.oam.readT<OBJAttr>(obj*8);
 	}
 
 	inline Optional<Color> get_palette_color(uint8 palette_number, uint16 color) const {
-		return m_palette_ram.readT<Color>(palette_number * 32 + color * 2);
+		return mem.palette_ram.readT<Color>(palette_number * 32 + color * 2);
 	}
 
 	inline Optional<Color> get_obj_palette_color(uint8 palette_number, uint16 color) const {
-		return m_palette_ram.readT<Color>(0x200 + palette_number * 32 + color * 2);
+		return mem.palette_ram.readT<Color>(0x200 + palette_number * 32 + color * 2);
 	}
 
 	inline Optional<TextScreenData> get_bg_text_data(uint32 screen_base, uint16 ly, uint16 dot) const {
-		return m_vram.readT<TextScreenData>(screen_base + (ly/8)*0x40 + (dot/8)*2);
+		return mem.vram.readT<TextScreenData>(screen_base + (ly/8)*0x40 + (dot/8)*2);
 	}
 
 	inline uint8 get_bg_tile_dot(uint32 base, uint16 tile, uint8 ly_in_tile, uint8 dot_in_tile, bool depth_flag) const {
@@ -62,7 +52,7 @@ class PPU {
 		const unsigned offset_to_tile = tile * (64/d);
 		const unsigned offset_to_dot = ly_in_tile * (8/d) + (dot_in_tile/d);
 
-		Optional<uint8> ret = m_vram.readT<uint8>(base + offset_to_tile + offset_to_dot);
+		Optional<uint8> ret = mem.vram.readT<uint8>(base + offset_to_tile + offset_to_dot);
 		assert(ret.has_value());
 
 		uint8 byte = (ret.has_value() ? *ret : 0);
@@ -76,7 +66,7 @@ class PPU {
 	}
 
 	inline uint8 get_obj_tile_dot(uint16 tile, uint8 ly_in_tile, uint8 dot_in_tile, bool depth_flag) const {
-		const uint32 base = (m_lcd_ctl.m_dispcnt->video_mode <= 2) ? 0x00010000 : 0x00014000;
+		const uint32 base = (mem.io.dispcnt->video_mode <= 2) ? 0x00010000 : 0x00014000;
 		return get_bg_tile_dot(base, tile, ly_in_tile, dot_in_tile, depth_flag);
 	}
 
@@ -99,15 +89,15 @@ class PPU {
 		}
 	}
 
-	uint16& vcount() { return *m_lcd_ctl.m_vcount; }
-	uint16 const& vcount() const { return *m_lcd_ctl.m_vcount; }
+	uint16& vcount() { return *mem.io.vcount; }
+	uint16 const& vcount() const { return *mem.io.vcount; }
 
 	void colorbuffer_blit();
 	void objects_draw_line(uint16 ly);
 	void objects_draw_obj(uint16 ly, OBJAttr obj);
 
 public:
-	PPU(ARM7TDMI&, BusInterface&);
+	PPU(ARM7TDMI&, MemoryLayout&);
 	void cycle();
 	bool frame_ready() const { return m_frame_ready; }
 	void clear_frame_ready() { m_frame_ready = false; }
@@ -116,7 +106,6 @@ public:
 	void handle_key_down(KeypadKey key);
 	void handle_key_up(KeypadKey key);
 
-	LCDCtl& lcd() { return m_lcd_ctl; }
 	const uint32* framebuffer() const { return m_framebuffer; }
 
 	void draw_scanline();

@@ -199,11 +199,3 @@ public:
 class VCOUNT : public IOReg16<0x04000006> {
 
 };
-
-struct LCDCtl {
-	DISPCNT m_dispcnt;
-	GreenSwap m_green_swap;
-	DISPSTAT m_dispstat;
-	VCOUNT m_vcount;
-};
-

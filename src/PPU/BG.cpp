@@ -1,6 +1,18 @@
 #include "PPU/BG.hpp"
 #include "PPU/PPU.hpp"
 
+template<unsigned n>
+constexpr BG<n>& Backgrounds::current_bg() {
+	static_assert(n < 4, "Invalid BG number");
+	if constexpr(n == 0)
+		return m_ppu.mem.io.bg0;
+	else if constexpr(n == 1)
+		return m_ppu.mem.io.bg1;
+	else if constexpr(n == 2)
+		return m_ppu.mem.io.bg2;
+	else
+		return m_ppu.mem.io.bg3;
+}
 
 template<unsigned int n>
 void Backgrounds::draw_textmode() {
@@ -58,10 +70,10 @@ void Backgrounds::draw_textmode() {
 
 
 void Backgrounds::draw_mode0() {
-	uint8 bg0_pri = m_bg0.m_control->priority,
-		  bg1_pri = m_bg1.m_control->priority,
-		  bg2_pri = m_bg2.m_control->priority,
-		  bg3_pri = m_bg3.m_control->priority;
+	uint8 bg0_pri = m_ppu.mem.io.bg0.m_control->priority,
+		  bg1_pri = m_ppu.mem.io.bg1.m_control->priority,
+		  bg2_pri = m_ppu.mem.io.bg2.m_control->priority,
+		  bg3_pri = m_ppu.mem.io.bg3.m_control->priority;
 	uint8 pri[4] = {bg0_pri, bg1_pri, bg2_pri, bg3_pri};
 	uint8 idx[4] = {0,1,2,3};
 	for(unsigned i = 0; i < 4 - 1; ++i) {
@@ -93,14 +105,14 @@ void Backgrounds::draw_mode2() {
 
 
 void Backgrounds::draw_mode3() {
-	const auto& ctl = m_ppu.lcd().m_dispcnt;
+	const auto& ctl = m_ppu.mem.io.dispcnt;
 
 	if(ctl->BG2) {
-		const auto ly = *m_ppu.lcd().m_vcount;
+		const auto ly = *m_ppu.mem.io.vcount;
 		const auto line_offset = ly * 480;  //  480 bytes per line
 
 		for(unsigned x = 0; x < 240; ++x) {
-			const auto& color = (Color)m_ppu.m_vram.read16(line_offset + x*2);
+			const auto& color = (Color)m_ppu.mem.vram.read16(line_offset + x*2);
 			m_ppu.colorbuffer_write(x, 1, 0, color);
 		}
 	}
@@ -108,15 +120,15 @@ void Backgrounds::draw_mode3() {
 
 
 void Backgrounds::draw_mode4() {
-	const auto& ctl = m_ppu.lcd().m_dispcnt;
+	const auto& ctl = m_ppu.mem.io.dispcnt;
 
 	if(ctl->BG2) {
-		const auto ly = *m_ppu.lcd().m_vcount;
+		const auto ly = *m_ppu.mem.io.vcount;
 		const auto frame_offset = (ctl->frame_select ? 0xA000 : 0);
 
 		for(unsigned i = 0; i < 240; ++i) {
 			const auto line_offset = ly * 240;
-			const auto pixel = m_ppu.m_vram.read8(frame_offset + line_offset + i);
+			const auto pixel = m_ppu.mem.vram.read8(frame_offset + line_offset + i);
 			const Optional<Color> color = m_ppu.get_palette_color(0, pixel);
 			assert(color.has_value());
 
@@ -128,15 +140,15 @@ void Backgrounds::draw_mode4() {
 void Backgrounds::draw_mode5() {
 	ASSERT_NOT_REACHED();
 
-	const auto& ctl = m_ppu.lcd().m_dispcnt;
+	const auto& ctl = m_ppu.mem.io.dispcnt;
 
 	if(ctl->BG2) {
-		const auto ly = *m_ppu.lcd().m_vcount;
+		const auto ly = *m_ppu.mem.io.vcount;
 		const auto frame_offset = (ctl->frame_select ? 0xA000 : 0);
 
 		for(unsigned i = 0; i < 240; ++i) {
 			const auto line_offset = ly * 240;
-			const auto pixel = m_ppu.m_vram.read8(frame_offset + line_offset + i);
+			const auto pixel = m_ppu.mem.vram.read8(frame_offset + line_offset + i);
 			const Optional<Color> color = m_ppu.get_palette_color(0, pixel);
 			const auto framebuffer_address = ly * 240 + i;
 
@@ -147,7 +159,7 @@ void Backgrounds::draw_mode5() {
 }
 
 void Backgrounds::draw_scanline() {
-	const auto& ctl = m_ppu.lcd().m_dispcnt;
+	const auto& ctl = m_ppu.mem.io.dispcnt;
 
 	switch (ctl->video_mode) {
 		case 0: draw_mode0(); break;
@@ -166,12 +178,12 @@ void Backgrounds::draw_scanline() {
 template<unsigned int n>
 constexpr bool Backgrounds::bg_enabled() {
 	if constexpr(n == 0)
-		return m_ppu.m_lcd_ctl.m_dispcnt->BG0;
+		return m_ppu.mem.io.dispcnt->BG0;
 	else if constexpr(n == 1)
-		return m_ppu.m_lcd_ctl.m_dispcnt->BG1;
+		return m_ppu.mem.io.dispcnt->BG1;
 	else if constexpr(n == 2)
-		return m_ppu.m_lcd_ctl.m_dispcnt->BG2;
+		return m_ppu.mem.io.dispcnt->BG2;
 	else
-		return m_ppu.m_lcd_ctl.m_dispcnt->BG3;
+		return m_ppu.mem.io.dispcnt->BG3;
 }
 

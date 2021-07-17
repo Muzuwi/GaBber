@@ -1,6 +1,16 @@
 #pragma once
-#include "CPU/Unions.hpp"
 #include "MMU/IOReg.hpp"
+#include "IO/Interrupt.hpp"
+
+struct TimerReg {
+	uint8 prescaler     : 2;
+	bool  count_up      : 1;
+	uint8 _unused       : 3;
+	bool  irq_enable    : 1;
+	bool  timer_enable  : 1;
+	uint8 _unused_2     : 8;
+} __attribute__((packed));
+
 
 template<unsigned x>
 class TimerReload final : public IOReg16<0x04000100 + x*4> {
@@ -12,6 +22,7 @@ class TimerReload final : public IOReg16<0x04000100 + x*4> {
 public:
 	uint16 reload_value() const { return m_reload; }
 };
+
 
 template<unsigned x>
 class TimerCtl final : public IOReg16<0x04000102 + x*4> {
@@ -33,45 +44,22 @@ struct Timer {
 	unsigned m_timer_cycles {0};
 	TimerReload<x> m_reload_and_current;
 	TimerCtl<x> m_ctl;
-};
 
-class ARM7TDMI;
-
-class Timers {
-	ARM7TDMI& m_cpu;
-
-	Timer<0> m_timer0;
-	Timer<1> m_timer1;
-	Timer<2> m_timer2;
-	Timer<3> m_timer3;
-
-	template<unsigned timer_num>
-	Timer<timer_num>& timer_for_num() {
-		if constexpr(timer_num == 0)
-			return m_timer0;
-		else if constexpr(timer_num == 1)
-			return m_timer1;
-		else if constexpr(timer_num == 2)
-			return m_timer2;
-		else
-			return m_timer3;
-	}
-
-	template<unsigned timer_num>
-	void cycle_timer(Timer<timer_num>& timer);
-
-	template<unsigned timer_num>
-	void increment_timer(Timer<timer_num>& timer);
-
-	unsigned cycle_count_from_prescaler(uint8 prescaler) {
+	static unsigned cycle_count_from_prescaler(uint8 prescaler) {
 		const unsigned val[4] { 1, 64, 256, 1024 };
 
 		if(prescaler > 3) return 1;
 		else              return val[prescaler];
 	}
-public:
-	Timers(ARM7TDMI& v)
-	: m_cpu(v) {}
 
-	void cycle();
+	static constexpr IRQType irq_for_timer() {
+		if constexpr(x == 0)
+			return IRQType::Timer0;
+		else if constexpr(x == 1)
+			return IRQType::Timer1;
+		else if constexpr(x == 2)
+			return IRQType::Timer2;
+		else
+			return IRQType::Timer3;
+	}
 };

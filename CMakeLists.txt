@@ -18,7 +18,7 @@ add_executable(GaBber
                src/CPU/ARM7TDMI.cpp
                src/main.cpp
                src/GaBber.cpp
-               src/Headers/ARM_Instruction.hpp src/MMU/BusInterface.hpp src/MMU/BusDevice.hpp src/Devices/SystemBIOS.hpp src/PPU/PPU.hpp src/CPU/Interrupt.hpp src/MMU/IOReg.hpp src/Headers/THUMB_Instruction.hpp src/Devices/GamePak.hpp
+               src/Headers/ARM_Instruction.hpp src/MMU/BusInterface.hpp src/MMU/BusDevice.hpp src/Devices/SystemBIOS.hpp src/PPU/PPU.hpp src/IO/Interrupt.hpp src/MMU/IOReg.hpp src/Headers/THUMB_Instruction.hpp src/Devices/GamePak.hpp
     src/MMU/BusInterface.cpp
     src/CPU/OpcodesARM.cpp
                src/PPU/PPU.cpp
@@ -28,7 +28,7 @@ add_executable(GaBber
                src/Debugger/Debugger.cpp
                src/GaBberDisplay.cpp
                src/Tests/Harness.cpp
-               src/CPU/DMA.cpp src/Devices/DebugBackdoor.hpp src/CPU/Timer.cpp src/PPU/BG.hpp src/PPU/BG.cpp src/Debugger/Screen.cpp src/Debugger/MemoryEditor.cpp src/Debugger/Registers.cpp src/Debugger/DebuggerWindow.cpp src/Debugger/IORegisters.cpp)
+               src/CPU/DMA.cpp src/IO/DebugBackdoor.hpp src/CPU/Timer.cpp src/PPU/BG.hpp src/PPU/BG.cpp src/Debugger/Screen.cpp src/Debugger/MemoryEditor.cpp src/Debugger/Registers.cpp src/Debugger/DebuggerWindow.cpp src/Debugger/IORegisters.cpp src/IO/IOContainer.hpp src/MMU/MemoryLayout.hpp)
 
 target_link_libraries(GaBber
     fmt

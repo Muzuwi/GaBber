@@ -1,17 +1,13 @@
 #pragma once
 #include <SDL2/SDL.h>
 #include "GL/gl3w.h"
-
-#include "CPU/Unions.hpp"
-#include "Devices/RAM.hpp"
 #include "Debugger/Debugger.hpp"
-#include "Devices/GamePak.hpp"
-#include "Devices/SystemBIOS.hpp"
-#include "Devices/DebugBackdoor.hpp"
 #include "Headers/ARM7TDMI.hpp"
 #include "MMU/BusInterface.hpp"
+#include "MMU/MemoryLayout.hpp"
 #include "PPU/PPU.hpp"
 #include "Tests/Harness.hpp"
+
 
 class GaBber {
 	std::string m_rom_filename;
@@ -20,12 +16,8 @@ class GaBber {
 	BusInterface m_mmu;
 	ARM7TDMI m_cpu;
 	PPU m_ppu;
-    OnboardWRAM m_onboard_wram;
-    OnchipWRAM m_onchip_wram;
-	GamePak m_pak;
     TestHarness m_test_harness;
-	SystemBIOS m_bios;
-	Backdoor m_backdoor;
+    MemoryLayout m_mem;
 	bool m_test_mode;
 
 	void toggle_debug_mode();
@@ -52,7 +44,7 @@ class GaBber {
 	void clock_cycle();
 public:
 	GaBber()
-	: m_debugger(*this), m_mmu(), m_cpu(m_mmu, m_debugger), m_ppu(m_cpu, m_mmu), m_test_harness(*this) {}
+	: m_debugger(*this), m_mmu(), m_cpu(m_mmu, m_debugger, m_mem.io), m_ppu(m_cpu, m_mem), m_test_harness(*this) {}
 
 	void parse_args(int argc, char** argv);
     int start();

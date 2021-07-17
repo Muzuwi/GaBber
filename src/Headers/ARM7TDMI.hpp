@@ -1,15 +1,16 @@
 #pragma once
+#include <fstream>
 #include <fmt/format.h>
 #include "Headers/ARM_Instruction.hpp"
 #include "Headers/StdTypes.hpp"
 #include "Headers/THUMB_Instruction.hpp"
 #include "CPU/GPR.hpp"
 #include "CPU/PSR.hpp"
-#include "CPU/Interrupt.hpp"
-#include "CPU/Unions.hpp"
+#include "IO/Interrupt.hpp"
 #include "MMU/IOReg.hpp"
-#include "CPU/Timer.hpp"
-#include "CPU/DMA.hpp"
+#include "IO/Timer.hpp"
+#include "IO/DMA.hpp"
+#include "IO/IOContainer.hpp"
 
 enum class ExceptionVector {
 	Reset = 0,
@@ -35,6 +36,7 @@ protected:
 	friend class IORegisters;
 	friend class TestHarness;
 
+	IOContainer& io;
 	BusInterface& m_mmu;
 	Debugger& m_debugger;
 
@@ -42,20 +44,8 @@ protected:
 	SPSR m_saved_status;
 	GPR m_registers;
 
-	IE m_IE;
-	IF m_IF;
-	IME m_IME;
-	HALTCNT m_HALTCNT;
-	POSTFLG m_POSTFLG;
-	Timers m_timers;
-
-	CSPR& cspr() {
-		return m_status;
-	}
-
-	const CSPR& cspr() const {
-		return m_status;
-	}
+	CSPR& cspr() { return m_status; }
+	const CSPR& cspr() const { return m_status; }
 
 	Optional<Ref<CSPR>> spsr() {
 		switch (cspr().mode()) {
@@ -122,20 +112,10 @@ protected:
 		return const_cast<uint32&>(static_cast<const ARM7TDMI*>(this)->r14());
 	}
 
-	uint32& pc() {
-		m_pc_dirty = true;
-		return m_registers.m_base[15];
-    }
-    uint32 const& const_pc() const {
-		return m_registers.m_base[15];
-	}
-
-    uint32& sp() {
-    	return r13();
-    }
-	uint32& lr() {
-		return r14();
-	}
+	uint32& pc() { m_pc_dirty = true; return m_registers.m_base[15]; }
+    uint32 const& const_pc() const { return m_registers.m_base[15]; }
+    uint32& sp() { return r13(); }
+	uint32& lr() { return r14(); }
 
 	uint32& reg(uint8 num) {
 		assert(num < 16);
@@ -177,7 +157,7 @@ protected:
 	inline void pc_increment() { m_registers.m_base[15] += current_instr_len(); }
 
 
-	[[nodiscard]] bool irqs_enabled_globally() const { return m_IME.enabled() && !cspr().is_set(CSPR_REGISTERS::IRQn); }
+	[[nodiscard]] bool irqs_enabled_globally() const { return io.ime.enabled() && !cspr().is_set(CSPR_REGISTERS::IRQn); }
 	void enter_irq();
 	void enter_swi();
 	bool handle_halt();
@@ -297,28 +277,58 @@ protected:
 
 	template<typename... Args>
 	void log(const char* format, const Args& ...args) const {
+		return;
 		fmt::print("\u001b[32mARM7TDMI{{{}, mode={}, lr={:08x} sp={:08x}, pc={:08x}}}/ ", m_cycles, cspr().mode_str(), r14(), cr13(), const_pc());
 		fmt::vprint(format, fmt::make_format_args(args...));
 		fmt::print("\u001b[0m\n");
 	}
 	void dump_memory_around_pc() const;
 
+	mutable std::ofstream* log_file;
+	bool seen_rom {true};
+
+	static constexpr bool kill_debug() {
+		return true;
+	}
+
+	void log_mem_dbg(uint32 addr, uint8 size, bool write) const {
+		if constexpr(kill_debug())
+			return;
+
+		if(!seen_rom) return;
+		if(!log_file) {
+			log_file = new std::ofstream{"debug_gabber.log"};
+		}
+		if(!log_file->good()) return;
+
+		*log_file << fmt::format("{}{}[{:08x}]\n", write?"write":"read",size, addr);
+	}
+
 	inline uint8 mem_read8(uint32 address) const {
+		if(address == 0xa50918a4) {
+			dump_memory_around_pc();
+			ASSERT_NOT_REACHED();
+		}
+		log_mem_dbg(address, 1, false);
 		return m_mmu.read8(address);
 	}
 	inline uint16 mem_read16(uint32 address) const {
+		if(address == 0xa50918a4) {
+			dump_memory_around_pc();
+			ASSERT_NOT_REACHED();
+		}
+		log_mem_dbg(address, 2, false);
 		return m_mmu.read16(address);
 	}
 	inline uint32 mem_read32(uint32 address) const {
+		if(address == 0xa50918a4) {
+			dump_memory_around_pc();
+			ASSERT_NOT_REACHED();
+		}
+		log_mem_dbg(address, 4, false);
 		return m_mmu.read32(address);
 	}
 
-	struct WriteContext {
-		uint32 pc;
-		uint32 instruction;
-		uint64 cycle;
-		void* return_address;
-	};
 	struct {
 		uint32 pc;
 		uint64 cycle;
@@ -327,18 +337,32 @@ protected:
 		INSTR_MODE neu;
 	} m_last_mode_change;
 
-	std::unordered_map<uint32, WriteContext> m_last_written;
 	void mem_write8(uint32 address, uint8 val) {
+		if(address == 0xa50918a4) {
+			dump_memory_around_pc();
+			ASSERT_NOT_REACHED();
+		}
+		log_mem_dbg(address, 1, true);
+
 		m_mmu.write8(address, val);
-		m_last_written[address] = WriteContext{.pc = (uint32)(const_pc() - 2*current_instr_len()), .instruction = mem_read32(const_pc() - 2*current_instr_len()), .cycle = m_cycles, .return_address = __builtin_return_address(0)};
 	}
 	void mem_write16(uint32 address, uint16 val) {
+		if(address == 0xa50918a4) {
+			dump_memory_around_pc();
+			ASSERT_NOT_REACHED();
+		}
+		log_mem_dbg(address, 2, true);
+
 		m_mmu.write16(address, val);
-		m_last_written[address] = WriteContext{.pc = (uint32)(const_pc() - 2*current_instr_len()), .instruction = mem_read32(const_pc() - 2*current_instr_len()), .cycle = m_cycles, .return_address = __builtin_return_address(0)};
 	}
 	void mem_write32(uint32 address, uint32 val) {
+		if(address == 0xa50918a4) {
+			dump_memory_around_pc();
+			ASSERT_NOT_REACHED();
+		}
+		log_mem_dbg(address, 4, true);
+
 		m_mmu.write32(address, val);
-		m_last_written[address] = WriteContext{.pc = (uint32)(const_pc() - 2*current_instr_len()), .instruction = mem_read32(const_pc() - 2*current_instr_len()), .cycle = m_cycles, .return_address = __builtin_return_address(0)};
 	}
 
 
@@ -347,21 +371,26 @@ protected:
 	 *                      DMA
 	 *  ==============================================
 	 */
-	DMAData m_dma;
 	template<unsigned x> void dma_start();
 	template<unsigned x> void dma_cycle();
-	template<unsigned x> inline bool dma_is_running() { return m_dma.get_data<x>().m_is_running; }
-	template<unsigned x> inline bool dma_is_finished() { return m_dma.get_data<x>().m_finished; }
+	template<unsigned x> inline bool dma_is_running()  { return io.template dma_for_num<x>().m_is_running; }
+	template<unsigned x> inline bool dma_is_finished() { return io.template dma_for_num<x>().m_finished; }
 	bool dma_cycle_all();
+
+	/*  ==============================================
+     *                      Timers
+     *  ==============================================
+     */
+	template<unsigned timer_num> void timers_cycle_one(Timer<timer_num>& timer);
+	template<unsigned timer_num> void timers_increment(Timer<timer_num>& timer);
+	void timers_cycle_all();
+
 public:
-	explicit ARM7TDMI(BusInterface& v, Debugger& dbg)
-	: m_mmu(v), m_debugger(dbg), m_registers(), m_timers(*this) {}
-	BusInterface& mmu() { return m_mmu; }
+	explicit ARM7TDMI(BusInterface& v, Debugger& dbg, IOContainer& _io)
+	: io(_io), m_mmu(v), m_debugger(dbg), m_registers() {}
 
 	void cycle();
 	void reset();
-
-    void dump_regs();
 
 	void raise_irq(IRQType);
 	void dma_start_vblank();

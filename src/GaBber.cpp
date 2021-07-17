@@ -45,7 +45,7 @@ int GaBber::start() {
 		std::cerr << "Failed loading BIOS image!";
 		return -1;
 	}
-	m_bios.load_from_vec(*bios_image);
+	m_mem.bios.load_from_vec(*bios_image);
 
 	if(!m_test_mode) {
 		auto rom = load_from_file(m_rom_filename);
@@ -54,7 +54,7 @@ int GaBber::start() {
 			return -1;
 		}
 
-		m_pak.load_pak(std::move(*rom), {});
+		m_mem.pak.load_pak(std::move(*rom), {});
 	}
 
 	emulator_reset();

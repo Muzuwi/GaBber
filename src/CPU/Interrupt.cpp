@@ -27,17 +27,17 @@ void ARM7TDMI::enter_swi() {
 
 void ARM7TDMI::raise_irq(IRQType type) {
 	auto irq_num = static_cast<unsigned>(type);
-	*m_IF |= (1u << irq_num);
+	*io.if_ |= (1u << irq_num);
 }
 
 bool ARM7TDMI::handle_halt() {
 	//  FIXME: Implement stop? Does anything use this?
-	if(m_HALTCNT.m_stop)
+	if(io.haltcnt.m_stop)
 		return false;
 
-	if(m_HALTCNT.m_halt) {
-		if ((*m_IE & *m_IF) != 0) {
-			m_HALTCNT.m_halt = false;
+	if(io.haltcnt.m_halt) {
+		if ((*io.ie & *io.if_) != 0) {
+			io.haltcnt.m_halt = false;
 			return false;
 		} else {
 			return true;
@@ -51,7 +51,7 @@ void ARM7TDMI::handle_interrupts() {
 	if (!irqs_enabled_globally())
 		return;
 
-	const uint16 result = *m_IF & *m_IE;
+	const uint16 result = *io.if_ & *io.ie;
 	if(result)
 		enter_irq();
 }

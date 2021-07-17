@@ -28,7 +28,7 @@ void ARM7TDMI::reset() {
 
 void ARM7TDMI::cycle() {
 	m_cycles++;
-	m_timers.cycle();
+	timers_cycle_all();
 
 	if (dma_cycle_all())
 		return;
@@ -167,15 +167,6 @@ void ARM7TDMI::dump_memory_around_pc() const {
 
 		if((addr%16) == 15)
 			fmt::print("\n");
-	}
-
-	if(m_last_written.contains(pc)) {
-		const WriteContext& c = m_last_written.at(pc);
-
-		fmt::print("Address {:08x} was last written by pc={:08x} on cycle={}\n", pc, c.pc, c.cycle);
-		fmt::print("Instruction: {:08x}, return_address={}\n", c.instruction, c.return_address);
-	} else {
-		fmt::print("Address {:08x} was not modified recently\n", pc);
 	}
 
 	fmt::print("Last mode change at cycle {}\n", m_last_mode_change.cycle);

@@ -2,12 +2,12 @@
 #include "MMU/BusInterface.hpp"
 #include "PPU/PPU.hpp"
 
-PPU::PPU(ARM7TDMI& a,BusInterface& b)
-: cpu(a), mmu(b), m_backgrounds(*this) {
+PPU::PPU(ARM7TDMI& a, MemoryLayout& mem_)
+: cpu(a), mem(mem_), m_backgrounds(*this) {
 }
 
 bool PPU::is_HBlank() const {
-	return m_lcd_ctl.m_dispstat->HBlank && vcount() >= 160;
+	return mem.io.dispstat->HBlank && vcount() >= 160;
 }
 
 bool PPU::is_VBlank() const {
@@ -22,15 +22,15 @@ void PPU::next_scanline() {
 	vcount()++;
 
 	if(vcount() == 160) {
-		m_lcd_ctl.m_dispstat->HBlank = false;
-		m_lcd_ctl.m_dispstat->VBlank = true;
+		mem.io.dispstat->HBlank = false;
+		mem.io.dispstat->VBlank = true;
 		cpu.dma_start_vblank();
-		if(m_lcd_ctl.m_dispstat->VBlank_IRQ) {
+		if(mem.io.dispstat->VBlank_IRQ) {
 			cpu.raise_irq(IRQType::VBlank);
 		}
 		m_frame_ready = true;
 	} else if(vcount() == 228) {
-		m_lcd_ctl.m_dispstat->VBlank = false;
+		mem.io.dispstat->VBlank = false;
 		vcount() = 0;
 	}
 }
@@ -46,9 +46,9 @@ void PPU::cycle() {
 	current_scanline_position++;
 
 	if(current_scanline_position == 240 && !is_VBlank()) {
-		m_lcd_ctl.m_dispstat->HBlank = true;
+		mem.io.dispstat->HBlank = true;
 		cpu.dma_start_hblank();
-		if(m_lcd_ctl.m_dispstat->HBlank_IRQ) {
+		if(mem.io.dispstat->HBlank_IRQ) {
 			cpu.raise_irq(IRQType::HBlank);
 		}
 
@@ -65,34 +65,34 @@ void PPU::draw_scanline() {
 }
 
 void PPU::handle_key_down(KeypadKey key) {
-	m_keypad.set(key, Keypad::State::Pressed);
+	mem.io.keyinput.set(key, Keypad::State::Pressed);
 	handle_key_irq();
 }
 
 void PPU::handle_key_up(KeypadKey key) {
-	m_keypad.set(key, Keypad::State::Released);
+	mem.io.keyinput.set(key, Keypad::State::Released);
 	handle_key_irq();
 }
 
 void PPU::handle_key_irq() {
-	if(!m_keypadcnt.irq_enable())
+	if(!mem.io.keycnt.irq_enable())
 		return;
 
-	bool cond_and = m_keypadcnt.irq_condition();
+	bool cond_and = mem.io.keycnt.irq_condition();
 
 	bool raise_irq = cond_and;
 	for(unsigned i = 0; i < 10; ++i) {
 		const auto key = static_cast<KeypadKey>(i);
-		if(!m_keypadcnt.selected(key))
+		if(!mem.io.keycnt.selected(key))
 			continue;
 
 		//  AND
 		if(cond_and) {
-			raise_irq &= m_keypad.pressed(key);
+			raise_irq &= mem.io.keyinput.pressed(key);
 		}
 		//  OR
 		else {
-			raise_irq |= m_keypad.pressed(key);
+			raise_irq |= mem.io.keyinput.pressed(key);
 		}
 	}
 
@@ -101,7 +101,7 @@ void PPU::handle_key_irq() {
 }
 
 void PPU::objects_draw_line(uint16 ly) {
-	if(!m_lcd_ctl.m_dispcnt->OBJ)
+	if(!mem.io.dispcnt->OBJ)
 		return;
 
 	for(unsigned i = 0; i < 128; ++i) {
@@ -133,7 +133,7 @@ void PPU::objects_draw_obj(uint16 ly, OBJAttr obj) {
 	const uint8 which_vertical_tile = obj_line / 8;
 
 	uint16 base_tile = obj.attr2.tile_number;
-	if(m_lcd_ctl.m_dispcnt->obj_one_dim) {
+	if(mem.io.dispcnt->obj_one_dim) {
 		base_tile += (tile_width-1) * which_vertical_tile;
 	} else {
 		base_tile += 32 * which_vertical_tile;

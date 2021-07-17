@@ -1,5 +1,5 @@
 #include "Headers/ARM7TDMI.hpp"
-#include "CPU/DMA.hpp"
+#include "IO/DMA.hpp"
 
 
 bool ARM7TDMI::dma_cycle_all() {
@@ -25,7 +25,7 @@ bool ARM7TDMI::dma_cycle_all() {
 
 template<unsigned int x>
 void ARM7TDMI::dma_cycle() {
-	DMAx<x>& s = m_dma.get_data<x>();
+	DMAx<x>& s = io.template dma_for_num<x>();
 
 	if(!s.m_ctrl->enable)
 		return;
@@ -88,7 +88,7 @@ void ARM7TDMI::dma_cycle() {
 
 template<unsigned int x>
 void ARM7TDMI::dma_start() {
-	DMAx<x>& s = m_dma.get_data<x>();
+	DMAx<x>& s = io.template dma_for_num<x>();
 
 	fmt::print("DMA{} starting at cycle {}\n", x, m_cycles);
 
@@ -115,55 +115,47 @@ void ARM7TDMI::dma_start() {
 //  FIXME: These probably don't work at all
 
 void ARM7TDMI::dma_start_vblank() {
-	DMAx<0>& dma0 = m_dma.m_dma0;
-	DMAx<1>& dma1 = m_dma.m_dma1;
-	DMAx<2>& dma2 = m_dma.m_dma2;
-	DMAx<3>& dma3 = m_dma.m_dma3;
+	DMAx<0>& dma0 = io.dma0;
+	DMAx<1>& dma1 = io.dma1;
+	DMAx<2>& dma2 = io.dma2;
+	DMAx<3>& dma3 = io.dma3;
 
 	if(dma0.m_ctrl->enable && dma0.m_ctrl->start_timing == DMAStartTiming::VBlank) {
 		dma_start<0>();
-//		return;
 	}
 
 	if(dma1.m_ctrl->enable && dma1.m_ctrl->start_timing == DMAStartTiming::VBlank) {
 		dma_start<1>();
-//		return;
 	}
 
 	if(dma2.m_ctrl->enable && dma2.m_ctrl->start_timing == DMAStartTiming::VBlank) {
 		dma_start<2>();
-//		return;
 	}
 
 	if(dma3.m_ctrl->enable && dma3.m_ctrl->start_timing == DMAStartTiming::VBlank) {
 		dma_start<3>();
-//		return;
 	}
 }
 
 void ARM7TDMI::dma_start_hblank() {
-	DMAx<0>& dma0 = m_dma.m_dma0;
-	DMAx<1>& dma1 = m_dma.m_dma1;
-	DMAx<2>& dma2 = m_dma.m_dma2;
-	DMAx<3>& dma3 = m_dma.m_dma3;
+	DMAx<0>& dma0 = io.dma0;
+	DMAx<1>& dma1 = io.dma1;
+	DMAx<2>& dma2 = io.dma2;
+	DMAx<3>& dma3 = io.dma3;
 
 	if(dma0.m_ctrl->enable && dma0.m_ctrl->start_timing == DMAStartTiming::HBlank) {
 		dma_start<0>();
-//		return;
 	}
 
 	if(dma1.m_ctrl->enable && dma1.m_ctrl->start_timing == DMAStartTiming::HBlank) {
 		dma_start<1>();
-//		return;
 	}
 
 	if(dma2.m_ctrl->enable && dma2.m_ctrl->start_timing == DMAStartTiming::HBlank) {
 		dma_start<2>();
-//		return;
 	}
 
 	if(dma3.m_ctrl->enable && dma3.m_ctrl->start_timing == DMAStartTiming::HBlank) {
 		dma_start<3>();
-//		return;
 	}
 }

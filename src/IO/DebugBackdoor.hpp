@@ -1,4 +1,5 @@
 #pragma once
+#include "MMU/ArrayMem.hpp"
 #include "MMU/IOReg.hpp"
 
 class DebugBackdoor final : public ArrayMem<0x04fff600, 0x04fff600 + 0x60, 0x60> {

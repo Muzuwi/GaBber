@@ -33,9 +33,9 @@ void IORegisters::draw_window() {
 
 void IORegisters::draw_interrupts() {
 	auto& cpu = m_emu.cpu();
-	ImGui::Text("IF: %04x", *cpu.m_IF);
-	ImGui::Text("IE: %04x", *cpu.m_IE);
-	ImGui::Text("IME: %08x", *cpu.m_IME);
+	ImGui::Text("IF: %04x", *cpu.io.if_);
+	ImGui::Text("IE: %04x", *cpu.io.ie);
+	ImGui::Text("IME: %08x", *cpu.io.ime);
 
 }
 
@@ -49,10 +49,10 @@ void IORegisters::draw_sound() {
 
 void IORegisters::draw_dma() {
 	auto& cpu = m_emu.cpu();
-	DMAx<0> const& dma0 = cpu.m_dma.m_dma0;
-	DMAx<1> const& dma1 = cpu.m_dma.m_dma1;
-	DMAx<2> const& dma2 = cpu.m_dma.m_dma2;
-	DMAx<3> const& dma3 = cpu.m_dma.m_dma3;
+	DMAx<0> const& dma0 = cpu.io.dma0;
+	DMAx<1> const& dma1 = cpu.io.dma1;
+	DMAx<2> const& dma2 = cpu.io.dma2;
+	DMAx<3> const& dma3 = cpu.io.dma3;
 
 
 	auto draw_dma_stats = [](auto& dma) {

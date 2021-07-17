@@ -1,5 +1,6 @@
 #pragma once
 #include "MMU/IOReg.hpp"
+#include "IO/Interrupt.hpp"
 
 enum class DMADestCtrl : uint8 {
 	Increment = 0,
@@ -133,24 +134,4 @@ struct DMAx final {
 	uint32 m_fetched_data {};
 	bool m_fetched {false};
 	bool m_finished {false};
-};
-
-struct DMAData final {
-	DMAx<0> m_dma0;
-	DMAx<1> m_dma1;
-	DMAx<2> m_dma2;
-	DMAx<3> m_dma3;
-
-	template<unsigned x>
-	constexpr DMAx<x>& get_data() {
-		static_assert(x < 4, "Invalid DMA number");
-		if constexpr (x == 0)
-			return m_dma0;
-		else if constexpr(x == 1)
-			return m_dma1;
-		else if constexpr(x == 2)
-			return m_dma2;
-		else
-			return m_dma3;
-	}
 };

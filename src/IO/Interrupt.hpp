@@ -1,6 +1,5 @@
 #pragma once
 #include "Headers/StdTypes.hpp"
-#include "CPU/Unions.hpp"
 #include "MMU/IOReg.hpp"
 
 enum class IRQType : uint8 {

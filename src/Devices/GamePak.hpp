@@ -41,11 +41,11 @@ public:
 		return 0xffff;
 	}
 
-	void write32(uint32 offset, uint32 value) override {
+	void write32(uint32 offset, uint32) override {
 		fmt::print("PakSRAM/ Write of size 32 Unsupported, offset={:08x}\n", offset);
 	}
 
-	void write16(uint32 offset, uint16 value) override {
+	void write16(uint32 offset, uint16) override {
 		fmt::print("PakSRAM/ Write of size 16 Unsupported, offset={:08x}\n", offset);
 	}
 
@@ -130,7 +130,6 @@ public:
 class GamePak {
 	PakROM m_rom;
 	PakSRAM m_sram;
-	WaitCtl m_waitcnt;
 public:
 	GamePak() = default;
 
