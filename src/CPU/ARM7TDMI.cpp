@@ -65,8 +65,6 @@ void ARM7TDMI::exec_opcode() {
 	} else {
 		pc_increment();
 	}
-
-	logDebug();
 }
 
 
@@ -174,27 +172,7 @@ void ARM7TDMI::dump_memory_around_pc() const {
 	fmt::print("Changed from mode {} -> {}\n", m_last_mode_change.prev, m_last_mode_change.neu);
 
 	m_mmu.debug();
-}
-
-void ARM7TDMI::logDebug() {
-	if constexpr(kill_debug())
-		return;
-
-	if(!log_file) {
-		log_file = new std::ofstream{"debug_gabber.log"};
-	}
-	if(!log_file->good()) return;
-
-	if(!seen_rom) {
-		if(const_pc() == 0x08000000+8)
-			seen_rom = true;
-		else
-			return;
-	}
-
-	for(unsigned i = 0; i < 16; ++i) {
-		const uint32 v = creg(i) - (i == 15 ? current_instr_len() : 0);
-		*log_file << fmt::format("{:08x},", v);
-	}
-	*log_file << fmt::format("{:08x}\n", cspr().raw());
+	m_debugger.set_debug_mode(true);
+	m_debugger.set_continue_mode(false);
+	m_debugger.set_step(false);
 }

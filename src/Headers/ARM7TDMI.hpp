@@ -277,55 +277,29 @@ protected:
 
 	template<typename... Args>
 	void log(const char* format, const Args& ...args) const {
-		return;
 		fmt::print("\u001b[32mARM7TDMI{{{}, mode={}, lr={:08x} sp={:08x}, pc={:08x}}}/ ", m_cycles, cspr().mode_str(), r14(), cr13(), const_pc());
 		fmt::vprint(format, fmt::make_format_args(args...));
 		fmt::print("\u001b[0m\n");
 	}
 	void dump_memory_around_pc() const;
 
-	mutable std::ofstream* log_file;
-	bool seen_rom {true};
-
-	static constexpr bool kill_debug() {
-		return true;
-	}
-
-	void log_mem_dbg(uint32 addr, uint8 size, bool write) const {
-		if constexpr(kill_debug())
-			return;
-
-		if(!seen_rom) return;
-		if(!log_file) {
-			log_file = new std::ofstream{"debug_gabber.log"};
-		}
-		if(!log_file->good()) return;
-
-		*log_file << fmt::format("{}{}[{:08x}]\n", write?"write":"read",size, addr);
-	}
 
 	inline uint8 mem_read8(uint32 address) const {
 		if(address == 0xa50918a4) {
 			dump_memory_around_pc();
-			ASSERT_NOT_REACHED();
 		}
-		log_mem_dbg(address, 1, false);
 		return m_mmu.read8(address);
 	}
 	inline uint16 mem_read16(uint32 address) const {
 		if(address == 0xa50918a4) {
 			dump_memory_around_pc();
-			ASSERT_NOT_REACHED();
 		}
-		log_mem_dbg(address, 2, false);
 		return m_mmu.read16(address);
 	}
 	inline uint32 mem_read32(uint32 address) const {
 		if(address == 0xa50918a4) {
 			dump_memory_around_pc();
-			ASSERT_NOT_REACHED();
 		}
-		log_mem_dbg(address, 4, false);
 		return m_mmu.read32(address);
 	}
 
@@ -337,30 +311,24 @@ protected:
 		INSTR_MODE neu;
 	} m_last_mode_change;
 
-	void mem_write8(uint32 address, uint8 val) {
+	inline void mem_write8(uint32 address, uint8 val) {
 		if(address == 0xa50918a4) {
 			dump_memory_around_pc();
-			ASSERT_NOT_REACHED();
 		}
-		log_mem_dbg(address, 1, true);
 
 		m_mmu.write8(address, val);
 	}
-	void mem_write16(uint32 address, uint16 val) {
+	inline void mem_write16(uint32 address, uint16 val) {
 		if(address == 0xa50918a4) {
 			dump_memory_around_pc();
-			ASSERT_NOT_REACHED();
 		}
-		log_mem_dbg(address, 2, true);
 
 		m_mmu.write16(address, val);
 	}
-	void mem_write32(uint32 address, uint32 val) {
+	inline void mem_write32(uint32 address, uint32 val) {
 		if(address == 0xa50918a4) {
 			dump_memory_around_pc();
-			ASSERT_NOT_REACHED();
 		}
-		log_mem_dbg(address, 4, true);
 
 		m_mmu.write32(address, val);
 	}
@@ -395,6 +363,4 @@ public:
 	void raise_irq(IRQType);
 	void dma_start_vblank();
 	void dma_start_hblank();
-
-	void logDebug();
 };
