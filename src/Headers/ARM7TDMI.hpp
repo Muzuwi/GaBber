@@ -284,24 +284,14 @@ protected:
 	void dump_memory_around_pc() const;
 
 
-	inline uint8 mem_read8(uint32 address) const {
-		if(address == 0xa50918a4) {
-			dump_memory_around_pc();
-		}
-		return m_mmu.read8(address);
-	}
-	inline uint16 mem_read16(uint32 address) const {
-		if(address == 0xa50918a4) {
-			dump_memory_around_pc();
-		}
-		return m_mmu.read16(address);
-	}
-	inline uint32 mem_read32(uint32 address) const {
-		if(address == 0xa50918a4) {
-			dump_memory_around_pc();
-		}
-		return m_mmu.read32(address);
-	}
+	//0xa50918a4
+	uint8 mem_read8(uint32 address) const;
+	uint16 mem_read16(uint32 address) const;
+	uint32 mem_read32(uint32 address) const;
+	void mem_write8(uint32 address, uint8 val);
+	void mem_write16(uint32 address, uint16 val);
+	void mem_write32(uint32 address, uint32 val);
+
 
 	struct {
 		uint32 pc;
@@ -311,27 +301,6 @@ protected:
 		INSTR_MODE neu;
 	} m_last_mode_change;
 
-	inline void mem_write8(uint32 address, uint8 val) {
-		if(address == 0xa50918a4) {
-			dump_memory_around_pc();
-		}
-
-		m_mmu.write8(address, val);
-	}
-	inline void mem_write16(uint32 address, uint16 val) {
-		if(address == 0xa50918a4) {
-			dump_memory_around_pc();
-		}
-
-		m_mmu.write16(address, val);
-	}
-	inline void mem_write32(uint32 address, uint32 val) {
-		if(address == 0xa50918a4) {
-			dump_memory_around_pc();
-		}
-
-		m_mmu.write32(address, val);
-	}
 
 
 

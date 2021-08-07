@@ -17,3 +17,15 @@ Debugger::Debugger(GaBber& v)
 {
 
 }
+
+void Debugger::on_memory_access(uint32 address, uint32 val, bool write) {
+
+}
+
+void Debugger::on_memory_access(uint32 address, uint16 val, bool write) {
+
+}
+
+void Debugger::on_memory_access(uint32 address, uint8 val, bool write) {
+
+}
