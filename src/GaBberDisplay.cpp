@@ -1,3 +1,5 @@
+#include <thread>
+#include <chrono>
 #include <fmt/format.h>
 #include "Headers/GaBber.hpp"
 #include "GL/gl3w.h"
@@ -46,8 +48,21 @@ bool GaBber::display_initialize() {
 }
 
 void GaBber::display_update() {
+	using hrc = std::chrono::high_resolution_clock;
+
+	static constexpr unsigned target_millis = 1000 / 60;
+
+	static std::optional<hrc::time_point> s_last_drawn;
+	if(s_last_drawn.has_value()) {
+		auto duration = hrc::now() - *s_last_drawn;
+		auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+		if(millis.count() < target_millis) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(target_millis - millis.count()));
+		}
+	}
 	_disp_poll_events();
 	_disp_draw_frame();
+	s_last_drawn = hrc::now();
 }
 
 void GaBber::_disp_poll_events() {
