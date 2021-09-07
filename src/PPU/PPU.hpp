@@ -66,8 +66,23 @@ class PPU {
 	}
 
 	inline uint8 get_obj_tile_dot(uint16 tile, uint8 ly_in_tile, uint8 dot_in_tile, bool depth_flag) const {
-		const uint32 base = (mem.io.dispcnt->video_mode <= 2) ? 0x00010000 : 0x00014000;
-		return get_bg_tile_dot(base, tile, ly_in_tile, dot_in_tile, depth_flag);
+		const uint32 base = 0x00010000;
+
+		const unsigned d = depth_flag ? 1 : 2;
+		const unsigned offset_to_tile = tile * 32;
+		const unsigned offset_to_dot = ly_in_tile * (8/d) + (dot_in_tile/d);
+
+		Optional<uint8> ret = mem.vram.readT<uint8>(base + offset_to_tile + offset_to_dot);
+		assert(ret.has_value());
+
+		uint8 byte = (ret.has_value() ? *ret : 0);
+		if(!depth_flag) {
+			const bool is_right_pixel = (dot_in_tile % 2) != 0;
+			if(is_right_pixel) byte >>= 4u;
+			byte &= 0x0Fu;
+		}
+
+		return byte;
 	}
 
 	struct Dot {

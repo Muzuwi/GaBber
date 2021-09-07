@@ -131,17 +131,18 @@ void PPU::objects_draw_obj(uint16 ly, OBJAttr obj) {
 	}
 
 	const uint8 which_vertical_tile = obj_line / 8;
+	const uint8 color_depth_mult = (obj.attr0.color_mode ? 2 : 1);
 
 	uint16 base_tile = obj.attr2.tile_number;
 	if(mem.io.dispcnt->obj_one_dim) {
-		base_tile += (tile_width-1) * which_vertical_tile;
+		base_tile += (tile_width-1) * which_vertical_tile * color_depth_mult;
 	} else {
 		base_tile += 32 * which_vertical_tile;
 	}
 
 	for(unsigned i = 0; i < obj.width(); ++i) {
 		const uint16 tile = base_tile + (xflip ? (tile_width - 1 - (i / 8))
-											   : (i / 8));
+											   : (i / 8)) * color_depth_mult;
 		const unsigned x = xflip ? (7 - (i % 8))
 								 : (i % 8);
 
