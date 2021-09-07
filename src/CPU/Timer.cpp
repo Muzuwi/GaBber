@@ -12,10 +12,18 @@ void ARM7TDMI::timers_cycle_all() {
 
 template<unsigned int timer_num>
 void ARM7TDMI::timers_cycle_one(Timer<timer_num>& timer) {
-	if(!timer.m_ctl->timer_enable)
+	if(!timer.m_ctl->timer_enable) {
+		timer.m_previous_cycle_was_running = false;
 		return;
+	}
 	if(timer.m_ctl->count_up)
 		return;
+
+	//  On changing start bit 0 -> 1, copy the reload value to the counter
+	if(!timer.m_previous_cycle_was_running) {
+		*timer.m_reload_and_current = timer.m_reload_and_current.reload_value();
+		timer.m_previous_cycle_was_running = true;
+	}
 
 	timer.m_timer_cycles++;
 	auto cycles_per_tick = Timer<timer_num>::cycle_count_from_prescaler(timer.m_ctl->prescaler);

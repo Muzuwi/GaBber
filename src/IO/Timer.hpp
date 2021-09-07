@@ -44,6 +44,7 @@ struct Timer {
 	unsigned m_timer_cycles {0};
 	TimerReload<x> m_reload_and_current;
 	TimerCtl<x> m_ctl;
+	bool m_previous_cycle_was_running;
 
 	static unsigned cycle_count_from_prescaler(uint8 prescaler) {
 		const unsigned val[4] { 1, 64, 256, 1024 };
