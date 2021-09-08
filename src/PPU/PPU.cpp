@@ -147,6 +147,10 @@ void PPU::objects_draw_obj(uint16 ly, OBJAttr obj) {
 	}
 
 	for(unsigned i = 0; i < obj.width(); ++i) {
+		if((obj.left() + i) % 512 >= 240) {
+			continue;
+		}
+
 		const uint16 tile = base_tile + (xflip ? (tile_width - 1 - (i / 8))
 											   : (i / 8)) * color_depth_mult;
 		const unsigned x = xflip ? (7 - (i % 8))

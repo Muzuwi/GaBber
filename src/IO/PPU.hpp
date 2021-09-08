@@ -167,6 +167,14 @@ struct OBJAttr {
 		return (attr0.pos_y + height()) % 256;
 	}
 
+	inline uint16 left() const {
+		return attr1.pos_x;
+	}
+
+	inline uint16 right() const {
+		return (attr1.pos_x + width()) % 512;
+	}
+
 	inline bool contains_line(uint16 ly) const {
 		//  Large sprites overflow the Y position
 		if(top() > bottom()) {
