@@ -124,7 +124,13 @@ void PPU::objects_draw_obj(uint16 ly, OBJAttr obj) {
 
 	const uint8 tile_width = obj.width() / 8;
 
-	uint8 obj_line = ly - obj.attr0.pos_y;
+	uint8 obj_line;
+	if(obj.top() > obj.bottom()) {
+		obj_line = ly + (256 - obj.attr0.pos_y);
+	} else {
+		obj_line = ly - obj.attr0.pos_y;
+	}
+
 	//  Vertical flip
 	if(yflip) {
 		obj_line = (obj.attr0.pos_y + obj.height()) - ly;

@@ -159,8 +159,21 @@ struct OBJAttr {
 		return size_lookup[attr1.size][static_cast<uint8>(attr0.obj_shape)][1];
 	}
 
+	inline uint8 top() const {
+		return attr0.pos_y;
+	}
+
+	inline uint8 bottom() const {
+		return (attr0.pos_y + height()) % 256;
+	}
+
 	inline bool contains_line(uint16 ly) const {
-		return ly >= attr0.pos_y && ly < attr0.pos_y + height();
+		//  Large sprites overflow the Y position
+		if(top() > bottom()) {
+			return !(ly >= bottom() && ly < top());
+		}
+
+		return ly >= top() && ly < bottom();
 	}
 
 	inline bool is_enabled() const {
