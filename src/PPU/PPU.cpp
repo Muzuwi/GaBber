@@ -130,6 +130,7 @@ void PPU::objects_draw_obj(uint16 ly, OBJAttr obj) {
 	} else {
 		obj_line = ly - obj.attr0.pos_y;
 	}
+	const uint8 line_in_current_row = obj_line % 8;
 
 	//  Vertical flip
 	if(yflip) {
@@ -141,7 +142,7 @@ void PPU::objects_draw_obj(uint16 ly, OBJAttr obj) {
 
 	uint16 base_tile = obj.attr2.tile_number;
 	if(mem.io.dispcnt->obj_one_dim) {
-		base_tile += (tile_width-1) * which_vertical_tile * color_depth_mult;
+		base_tile += tile_width * which_vertical_tile * color_depth_mult;
 	} else {
 		base_tile += 32 * which_vertical_tile;
 	}
@@ -156,7 +157,7 @@ void PPU::objects_draw_obj(uint16 ly, OBJAttr obj) {
 		const unsigned x = xflip ? (7 - (i % 8))
 								 : (i % 8);
 
-		const uint8 dot = get_obj_tile_dot(tile, obj_line, x, obj.attr0.color_mode);
+		const uint8 dot = get_obj_tile_dot(tile, line_in_current_row, x, obj.attr0.color_mode);
 		const auto palette = obj.attr0.color_mode ? 0 : obj.attr2.palette_number;
 		const Optional<Color> color = get_obj_palette_color(palette, dot);
 		assert(color.has_value());
