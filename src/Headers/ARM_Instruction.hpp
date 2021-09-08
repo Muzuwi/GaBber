@@ -27,9 +27,9 @@ namespace ARM {
 		if (PATTERN(0x0ffffff0, 0x12fff10)) return InstructionType::BX;
 		if (PATTERN(0xfb00ff0, 0x01000090)) return InstructionType::SWP;
 		if (PATTERN(0x0fc000f0, 0x90)) return InstructionType::MUL;
+		if (PATTERN(0x0f8000f0, 0x00800090)) return InstructionType::MLL;
 		if (PATTERN(0x0e400f90, 0x90)) return InstructionType::HDT;
 		if (PATTERN(0x0e400f90, 0x400090)) return InstructionType::HDT;
-		if (PATTERN(0x0f8000f0, 0x00800090)) return InstructionType::MLL;
 		if (PATTERN(0x0c000000, 0)) return InstructionType::ALU;
 
 		return InstructionType::UD;
