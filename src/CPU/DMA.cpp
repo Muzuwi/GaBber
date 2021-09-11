@@ -90,8 +90,6 @@ template<unsigned int x>
 void ARM7TDMI::dma_start() {
 	DMAx<x>& s = io.template dma_for_num<x>();
 
-	fmt::print("DMA{} starting at cycle {}\n", x, m_cycles);
-
 	if(s.m_is_running) return;
 
 	//  FIXME: Split loading SAD,DAD,CTN_L from actually starting the dma
@@ -105,10 +103,6 @@ void ARM7TDMI::dma_start() {
 	s.m_count = s.m_ctrl->word_count;
 	if(s.m_count == 0)
 		s.m_count = DMA::max_count<x>();
-
-	fmt::print("DMA{} started, src={:08x} dest={:08x} count={} mode={} repeat={} irq={} srcctl={} dstctl={}\n",
-			   x, s.m_source_ptr, s.m_destination_ptr, s.m_count, (unsigned)s.m_ctrl->start_timing, (bool)s.m_ctrl->repeat, (bool)s.m_ctrl->irq_on_finish, (unsigned)s.m_ctrl->src_ctl, (unsigned)s.m_ctrl->dest_ctl
-			   );
 }
 
 

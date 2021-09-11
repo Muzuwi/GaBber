@@ -2,8 +2,6 @@
 #include "Debugger/Debugger.hpp"
 
 void ARM7TDMI::enter_irq() {
-	log("Entering IRQ from {}", cspr().state() == INSTR_MODE::ARM ? "ARM" : "THUMB");
-
 	const uint32 offset = cspr().state() == INSTR_MODE::ARM ? 4 : 0;
 	m_registers.m_gIRQ[1] = const_pc() - offset;
 	m_saved_status.m_IRQ = cspr();
@@ -15,8 +13,6 @@ void ARM7TDMI::enter_irq() {
 }
 
 void ARM7TDMI::enter_swi() {
-	log("Entering SWI");
-
 	m_registers.m_gSVC[1] = const_pc() - current_instr_len();
 	m_saved_status.m_SVC = cspr();
 	cspr().set_state(INSTR_MODE::ARM);
