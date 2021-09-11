@@ -90,6 +90,9 @@ void GaBber::_disp_poll_events() {
 					m_debugger.set_continue_mode(false);
 					m_debugger.set_step(true);
 				}
+				if(event.key.keysym.sym == SDLK_F5) {
+					m_debugger.set_continue_mode(true);
+				}
 				if(event.key.keysym.sym == SDLK_TAB && event.key.keysym.mod & KMOD_LSHIFT){
 					toggle_debug_mode();
 				}

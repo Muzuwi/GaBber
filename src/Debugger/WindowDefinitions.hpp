@@ -1,4 +1,5 @@
 #pragma once
+#include "GL/gl3w.h"
 #include "Headers/StdTypes.hpp"
 #include "Debugger/DebuggerWindow.hpp"
 #include "MMU/BusDevice.hpp"
@@ -51,4 +52,13 @@ public:
 	void draw_ppu();
 	void draw_sound();
 	void draw_dma();
+};
+
+class MemoryImage : public DebuggerWindow {
+	bool created_tex;
+	GLuint tex;
+	void draw_window() override;
+public:
+	MemoryImage(GaBber& emu)
+	: DebuggerWindow("Memory Image", emu) {}
 };

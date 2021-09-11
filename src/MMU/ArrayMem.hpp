@@ -105,4 +105,12 @@ public:
 	void write8(uint32 offset, uint8 value) override {
 		write_safe<uint8>(offset, value);
 	}
+
+	uint8 const* raw() const {
+		return &m_buffer[0];
+	}
+
+	size_t bytes() const {
+		return msize;
+	}
 };

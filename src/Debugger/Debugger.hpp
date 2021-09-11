@@ -13,6 +13,7 @@ class Debugger {
 	Screen m_screen;
 	GPRs m_registers;
 	IORegisters m_io_registers;
+	MemoryImage m_memimg;
 
 	bool m_debug_mode {false};
 	bool m_step {false};

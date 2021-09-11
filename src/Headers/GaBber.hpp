@@ -53,6 +53,7 @@ public:
 	ARM7TDMI& cpu() { return m_cpu; }
 	PPU& ppu() { return m_ppu; }
 	Debugger& debugger() { return m_debugger; }
+	MemoryLayout& mem() { return m_mem; }
 
 	unsigned window_scale() const { return m_window_scale; }
 	GLuint gba_texture() const { return m_gba_texture; }
