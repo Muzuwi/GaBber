@@ -161,8 +161,7 @@ void PPU::objects_draw_obj(uint16 ly, OBJAttr obj) {
 		const auto palette = obj.attr0.color_mode ? 0 : obj.attr2.palette_number;
 		const Optional<Color> color = get_obj_palette_color(palette, dot);
 		assert(color.has_value());
-
- 		colorbuffer_write(obj.attr1.pos_x + i, dot, obj.attr2.priority, *color);
+ 		colorbuffer_write_obj(obj.attr1.pos_x + i, dot, obj.attr2.priority, *color);
 	}
 }
 
@@ -171,7 +170,15 @@ void PPU::colorbuffer_blit() {
 	assert(backdrop.has_value());
 
 	for(unsigned i = 0; i < 240; ++i) {
-		auto& dot = m_colorbuffer[i];
+		Dot dot;
+		dot.dirty = false;
+		for(int priority = 7; priority >= 0; --priority) {
+			auto const& other = m_colorbuffer[priority][i];
+			if(other.dirty && other.color_number != 0) {
+				dot = other;
+			}
+		}
+
 		if(!dot.dirty) {
 			m_framebuffer[vcount() * 240 + i] = color_to_rgba32(*backdrop);
 		} else {
@@ -179,7 +186,9 @@ void PPU::colorbuffer_blit() {
 		}
 	}
 
-	for(auto& dot : m_colorbuffer) {
-		dot.dirty = false;
-	}
+	std::memset(
+			&m_colorbuffer[0],
+			0x0,
+			8 * 240 * sizeof(Dot)
+			);
 }

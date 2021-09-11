@@ -21,7 +21,7 @@ void Backgrounds::draw_textmode() {
 		return;
 
 //	assert(bg.m_control->screen_size == 0);
-	assert(bg.m_control->mosaic == 0);
+//	assert(bg.m_control->mosaic == 0);
 
 	const uint32 screen_base = bg.m_control->base_screen_block * 2 * kB;
 	const uint32 tile_base = bg.m_control->base_tile_block * 16 * kB;
@@ -60,43 +60,24 @@ void Backgrounds::draw_textmode() {
 				                      : (ly % 8);
 		const uint8 dot_color = m_ppu.get_bg_tile_dot(tile_base, tile, tile_line, tile_dot, depth);
 
-		const Optional<Color> color = m_ppu.get_palette_color(palette, dot_color);
+		const Optional<Color> color = m_ppu.get_palette_color(depth ? 0 : palette, dot_color);
 		assert(color.has_value());
 
-		m_ppu.colorbuffer_write(i-scx, dot_color, priority, *color);
+		m_ppu.colorbuffer_write_bg(i-scx, dot_color, priority, *color);
 	}
 
 }
 
 
 void Backgrounds::draw_mode0() {
-	uint8 bg0_pri = m_ppu.mem.io.bg0.m_control->priority,
-		  bg1_pri = m_ppu.mem.io.bg1.m_control->priority,
-		  bg2_pri = m_ppu.mem.io.bg2.m_control->priority,
-		  bg3_pri = m_ppu.mem.io.bg3.m_control->priority;
-	uint8 pri[4] = {bg0_pri, bg1_pri, bg2_pri, bg3_pri};
-	uint8 idx[4] = {0,1,2,3};
-	for(unsigned i = 0; i < 4 - 1; ++i) {
-		for(unsigned j = 0; j < 4 - 1; ++j) {
-			if(pri[j] < pri[j+1]) {
-				std::swap(pri[j], pri[j+1]);
-				std::swap(idx[j], idx[j+1]);
-			}
-		}
-	}
-
-//	fmt::print("{},{},{},{} pris {},{},{},{}\n", idx[0], idx[1], idx[2], idx[3], pri[0], pri[1], pri[2], pri[3]);
-
-	for(uint8 const& id : idx) {
-		if(id == 0) draw_textmode<0>();
-		else if(id == 1) draw_textmode<1>();
-		else if(id == 2) draw_textmode<2>();
-		else draw_textmode<3>();
-	}
+	draw_textmode<0>();
+	draw_textmode<1>();
+	draw_textmode<2>();
+	draw_textmode<3>();
 }
 
 void Backgrounds::draw_mode1() {
-	ASSERT_NOT_REACHED();
+//	ASSERT_NOT_REACHED();
 }
 
 void Backgrounds::draw_mode2() {
@@ -113,7 +94,7 @@ void Backgrounds::draw_mode3() {
 
 		for(unsigned x = 0; x < 240; ++x) {
 			const auto& color = (Color)m_ppu.mem.vram.read16(line_offset + x*2);
-			m_ppu.colorbuffer_write(x, 1, 0, color);
+			m_ppu.colorbuffer_write_bg(x, 1, 0, color);
 		}
 	}
 }
@@ -132,7 +113,7 @@ void Backgrounds::draw_mode4() {
 			const Optional<Color> color = m_ppu.get_palette_color(0, pixel);
 			assert(color.has_value());
 
-			m_ppu.colorbuffer_write(i, 1, 0, *color);
+			m_ppu.colorbuffer_write_bg(i, 1, 0, *color);
 		}
 	}
 }

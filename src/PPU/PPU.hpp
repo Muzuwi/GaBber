@@ -8,12 +8,19 @@ class ARM7TDMI;
 class PPU {
 	friend class Backgrounds;
 
+	struct Dot {
+		bool dirty;
+		uint8 color_number;
+		Color color;
+		uint8 priority;
+	};
 	ARM7TDMI& cpu;
 	MemoryLayout& mem;
 	Backgrounds m_backgrounds;
 
 	uint32 m_framebuffer[240 * 160];
 	bool m_frame_ready { false };
+	Dot m_colorbuffer[8][240] {};
 
 	void next_scanline();
 	bool is_HBlank() const;
@@ -21,6 +28,7 @@ class PPU {
 
 	template<typename... Args>
 	void log(const char* format, const Args& ...args) const {
+		return;
 		fmt::print("\u001b[35mPPU/");
 		fmt::vprint(format, fmt::make_format_args(args...));
 		fmt::print("\u001b[0m\n");
@@ -85,23 +93,46 @@ class PPU {
 		return byte;
 	}
 
-	struct Dot {
-		bool dirty {};
-		uint8 tile_number {};
-		Color color {};
-		uint8 priority {};
-	};
-	Dot m_colorbuffer[240] {};
-
-	inline void colorbuffer_write(uint8 x, uint8 tile_number, uint8 priority, Color color) {
-		if(x >= 240) return;
-		if(tile_number == 0) return;
-
-		//  Allow writing dots of higher priority than the currently present one, and in free spots
-		if(!m_colorbuffer[x].dirty || (priority <= m_colorbuffer[x].priority)) {
-			m_colorbuffer[x] = {.dirty = true, .tile_number = tile_number, .color = color, .priority = priority};
+	inline void colorbuffer_write_bg(uint8 x, uint8 color_number, uint8 priority, Color const& color) {
+		if(x >= 240) {
 			return;
 		}
+
+		if(color_number == 0) {
+			return;
+		}
+
+		if(m_colorbuffer[2*priority + 1][x].dirty) {
+			return;
+		}
+
+		m_colorbuffer[2*priority + 1][x] = {
+			.dirty = true,
+			.color_number = color_number,
+			.color = color,
+			.priority = priority,
+		};
+	}
+
+	inline void colorbuffer_write_obj(uint8 x, uint8 color_number, uint8 priority, Color const& color) {
+		if(x >= 240) {
+			return;
+		}
+
+		if(color_number == 0) {
+			return;
+		}
+
+		if(m_colorbuffer[2*priority][x].dirty) {
+			return;
+		}
+
+		m_colorbuffer[2*priority][x] = {
+			.dirty = true,
+			.color_number = color_number,
+			.color = color,
+			.priority = priority,
+		};
 	}
 
 	uint16& vcount() { return *mem.io.vcount; }
