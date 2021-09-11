@@ -388,6 +388,7 @@ void ARM7TDMI::THUMB_FMT16(THUMB::InstructionFormat16 instr) {
 
 void ARM7TDMI::THUMB_FMT17(THUMB::InstructionFormat17) {
 	enter_swi();
+	m_wait_cycles = 3;
 }
 
 void ARM7TDMI::THUMB_FMT18(THUMB::InstructionFormat18 instr) {
@@ -403,6 +404,7 @@ void ARM7TDMI::THUMB_FMT19(THUMB::InstructionFormat19 instr) {
 		const auto next_pc = pc() - 2;
 		pc() = lr() + ((instr.offset() << 1u));
 		lr() = next_pc | 0x1;
+		m_wait_cycles = 3;
 	}
 }
 

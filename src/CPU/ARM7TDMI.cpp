@@ -11,6 +11,12 @@ void ARM7TDMI::reset() {
 	cspr().set(CSPR_REGISTERS::FIQn, true);
 	cspr().set(CSPR_REGISTERS::State, false);
 
+	m_saved_status.m_ABT.set_raw(0x10);
+	m_saved_status.m_FIQ.set_raw(0x10);
+	m_saved_status.m_IRQ.set_raw(0x10);
+	m_saved_status.m_SVC.set_raw(0x10);
+	m_saved_status.m_UND.set_raw(0x10);
+
 	for (unsigned i = 0; i < 16; ++i) {
 		m_registers.m_base[i] = 0;
 		if (i < 7) m_registers.m_gFIQ[i] = 0;
@@ -30,6 +36,10 @@ void ARM7TDMI::cycle() {
 	m_cycles++;
 	timers_cycle_all();
 
+	if(m_wait_cycles) {
+		m_wait_cycles--;
+		return;
+	}
 	if (dma_cycle_all())
 		return;
 	if (handle_halt())

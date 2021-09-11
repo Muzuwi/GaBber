@@ -7,6 +7,7 @@ void ARM7TDMI::B(ARM::BInstruction instr) {
 	pc() = const_pc() + instr.offset();
 	if(instr.is_link())
 		r14() = old_pc - 4;
+	m_wait_cycles = 3;
 }
 
 
@@ -26,6 +27,7 @@ void ARM7TDMI::BX(ARM::BXInstruction instr) {
 		pc() = reg;
 
 	cspr().set_state(!is_thumb ? INSTR_MODE::ARM : INSTR_MODE::THUMB);
+	m_wait_cycles = 3;
 }
 
 
@@ -49,6 +51,12 @@ void ARM7TDMI::DPI(ARM::DataProcessInstruction instr) {
 		if(v.has_value()) {
 			cspr() = *spsr();
 //			log("Leaving exception, pc={:08x}, cspr={:08x}", const_pc(), cspr().raw());
+		}
+		if(instr.destination_reg() == 15) {
+			m_wait_cycles += 2;
+		}
+		if(instr.immediate_is_value() && instr.is_shift_reg()) {
+			m_wait_cycles += 1;
 		}
 	}
 }
@@ -411,6 +419,7 @@ void ARM7TDMI::SWP(ARM::SWPInstruction instr) {
 
 void ARM7TDMI::SWI(ARM::SWIInstruction) {
 	enter_swi();
+	m_wait_cycles = 3;
 }
 
 

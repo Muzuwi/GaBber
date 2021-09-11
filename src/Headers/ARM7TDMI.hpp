@@ -147,6 +147,7 @@ protected:
 	}
 
 
+	unsigned m_wait_cycles {0};
     uint64 m_cycles {0};
     bool m_pc_dirty {false};
     void exec_opcode();
