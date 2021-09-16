@@ -6,6 +6,7 @@
 #include "IO/Keypad.hpp"
 #include "IO/PPU.hpp"
 #include "IO/Timer.hpp"
+#include "IO/Sound.hpp"
 #include "PPU/BG.hpp"
 
 struct IOContainer {
@@ -84,6 +85,18 @@ struct IOContainer {
 	//	40000A4h  4    W    FIFO_B    Channel B FIFO, Data 0-3
 	//	40000A8h       -    -         Not used
 	//  TODO:
+	IOReg32<0x04000150> serialthing;
+
+	Sound1CtlH ch1ctlH;
+	Sound1CtlL ch1ctlL;
+	Sound1CtlX ch1ctlX;
+	Sound2CtlL ch2ctlL;
+	Sound2CtlH ch2ctlH;
+	IOReg16<0x0400006a> reg6a;
+	SoundCtlL soundcntL;
+
+	IOReg16<0x04000082> soundcntH;
+	IOReg16<0x04000088> soundbias;
 
 
 	//	40000B0h  4    W    DMA0SAD   DMA 0 Source Address

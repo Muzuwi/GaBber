@@ -7,6 +7,7 @@
 #include "MMU/MemoryLayout.hpp"
 #include "PPU/PPU.hpp"
 #include "Tests/Harness.hpp"
+#include "Sound/GBASound.hpp"
 
 
 class GaBber {
@@ -18,6 +19,7 @@ class GaBber {
 	PPU m_ppu;
     TestHarness m_test_harness;
     MemoryLayout m_mem;
+	GBASound m_sound;
 	bool m_test_mode;
 
 	void toggle_debug_mode();
@@ -59,6 +61,7 @@ public:
 	PPU& ppu() { return m_ppu; }
 	Debugger& debugger() { return m_debugger; }
 	MemoryLayout& mem() { return m_mem; }
+	GBASound& sound() { return m_sound; }
 
 	unsigned window_scale() const { return m_window_scale; }
 	GLuint gba_texture() const { return m_gba_texture; }

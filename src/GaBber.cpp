@@ -74,6 +74,7 @@ int GaBber::start() {
 		std::cerr << "Failed initializing display subsystem\n";
 		return -1;
 	}
+	m_sound.init();
 
 	emulator_loop();
 
@@ -111,6 +112,7 @@ void GaBber::emulator_loop() {
 void GaBber::clock_cycle() {
 	m_cpu.cycle();
 	m_ppu.cycle();
+	m_sound.cycle();
 }
 
 

@@ -19,7 +19,7 @@ public:
 
 	template<typename... Args>
 	static void log(const char* format, const Args& ...args) {
-//		return;
+		return;
 
 		fmt::print("\u001b[93mMMU/ ");
 		fmt::vprint(format, fmt::make_format_args(args...));

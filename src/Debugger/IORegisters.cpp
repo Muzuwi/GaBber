@@ -44,7 +44,83 @@ void IORegisters::draw_ppu() {
 }
 
 void IORegisters::draw_sound() {
-	ImGui::Text("Sound");
+	auto& io = m_emu.mem().io;
+
+	ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0, 5.0));
+	if(ImGui::BeginTable("soundtab", 2, ImGuiTableFlags_Borders)) {
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn(); ImGui::TableHeader("Channel 1");
+		ImGui::TableNextColumn(); ImGui::TableHeader("Channel 2");
+
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		{
+			auto freq_hz = 131072u / (2048u - io.ch1ctlX->frequency);
+			//  Draw ch0
+			ImGui::Text("Frequency: %04x [%d Hz]", io.ch1ctlX->frequency, freq_hz);
+		}
+		ImGui::TableNextColumn();
+		{
+			auto freq_hz = 131072u / (2048u - io.ch2ctlH->frequency);
+			//  Draw ch0
+			ImGui::Text("Frequency: %04x [%d Hz]", io.ch2ctlH->frequency, freq_hz);
+			//  Draw ch1
+		}
+
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn(); ImGui::TableHeader("Channel 3");
+		ImGui::TableNextColumn(); ImGui::TableHeader("Channel 4");
+
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		{
+			//  Draw ch2
+		}
+		ImGui::TableNextColumn();
+		{
+			//  Draw ch3
+		}
+
+		ImGui::EndTable();
+	}
+	ImGui::PopStyleVar(1);
+
+	const char* strings[] = {
+			"1", "2", "3", "4"
+	};
+	ImGui::Text("Channels [L]: "); ImGui::SameLine();
+	for(unsigned i = 0; i < 4; ++i) {
+		bool v = io.soundcntL->channel_enable_l & (1 << i);
+		ImGui::Checkbox(strings[i], &v);
+		if(i != 3) ImGui::SameLine();
+	}
+	ImGui::Text("Channels [R]: "); ImGui::SameLine();
+	for(unsigned i = 0; i < 4; ++i) {
+		bool v = io.soundcntL->channel_enable_r & (1 << i);
+		ImGui::Checkbox(strings[i], &v);
+		if(i != 3) ImGui::SameLine();
+	}
+
+	int vol_l = io.soundcntL->volume_l;
+	int vol_r = io.soundcntL->volume_r;
+	ImGui::Text("Volume [L]"); ImGui::SameLine();
+	ImGui::PushID("volL");
+	ImGui::SliderInt("", &vol_l, 0, 7);
+	ImGui::PopID();
+
+	ImGui::Text("Volume [R]"); ImGui::SameLine();
+	ImGui::PushID("volR");
+	ImGui::SliderInt("", &vol_r, 0, 7);
+	ImGui::PopID();
+
+	ImGui::PlotLines("Internal samples @ 262.144kHz",
+					 &GaBber::instance().sound().internal_samples()[0],
+					 GaBber::instance().sound().internal_samples().size(),
+					 0,
+					 nullptr,
+					 -1.0,
+					 1.0, ImVec2(800.0, 100.0));
+
 }
 
 void IORegisters::draw_dma() {
