@@ -40,6 +40,12 @@ void GaBber::parse_args(int argc, char** argv) {
 
 
 int GaBber::start() {
+	auto rc = SDL_Init(SDL_INIT_EVERYTHING);
+	if(rc != 0) {
+		std::cerr << "Failed initializing SDL!\n";
+		return -1;
+	}
+
 	auto bios_image = load_from_file("bios.bin");
 	if(!bios_image.has_value()) {
 		std::cerr << "Failed loading BIOS image!";

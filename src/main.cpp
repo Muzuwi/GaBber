@@ -1,4 +1,3 @@
-#include <memory>
 #include <iostream>
 #include "Headers/GaBber.hpp"
 
@@ -8,7 +7,6 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-    auto emulator = std::make_shared<GaBber>();
-	emulator->parse_args(argc, argv);
-    return emulator->start();
+	GaBber::instance().parse_args(argc, argv);
+	return GaBber::instance().start();
 }
