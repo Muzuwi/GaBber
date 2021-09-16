@@ -52,12 +52,13 @@ void ARM7TDMI::DPI(ARM::DataProcessInstruction instr) {
 			cspr() = *spsr();
 //			log("Leaving exception, pc={:08x}, cspr={:08x}", const_pc(), cspr().raw());
 		}
-		if(instr.destination_reg() == 15) {
-			m_wait_cycles += 2;
-		}
-		if(instr.immediate_is_value() && instr.is_shift_reg()) {
-			m_wait_cycles += 1;
-		}
+	}
+
+	if(instr.destination_reg() == 15) {
+		m_wait_cycles += 2;
+	}
+	if(instr.immediate_is_value() && instr.is_shift_reg()) {
+		m_wait_cycles += 1;
 	}
 }
 
@@ -448,13 +449,16 @@ void ARM7TDMI::MLL(ARM::MultLongInstruction instr) {
 		cspr().set(CSPR_REGISTERS::Negative, result & (1ul << 63ul));
 		cspr().set(CSPR_REGISTERS::Carry, true);   //  FIXME: ???
 	}
+
+	m_wait_cycles = (instr.is_signed() ? mult_m_cycles(m) : unsigned_mult_m_cycles(m)) + 1
+	                + (instr.should_accumulate() ? 1 : 0);
 }
 
 void ARM7TDMI::MUL(ARM::MultInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
-	const auto& m = creg(instr.multiplicand_reg());
-	const auto& s = creg(instr.source_reg());
-	const auto& n = creg(instr.accumulate_reg());
+	const uint32 m = creg(instr.multiplicand_reg());
+	const uint32 s = creg(instr.source_reg());
+	const uint32 n = creg(instr.accumulate_reg());
 
 	uint32 result = m*s + ((instr.should_accumulate()) ? n : 0);
 	destination = result;
@@ -464,6 +468,8 @@ void ARM7TDMI::MUL(ARM::MultInstruction instr) {
 		cspr().set(CSPR_REGISTERS::Negative, result & (1u << 31u));
 		cspr().set(CSPR_REGISTERS::Carry, false); //  "is set to a meaningless value"
 	}
+
+	m_wait_cycles = mult_m_cycles(s) + (instr.should_accumulate() ? 1 : 0);
 }
 
 

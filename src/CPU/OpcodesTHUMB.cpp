@@ -544,5 +544,6 @@ void ARM7TDMI::THUMB_MUL(THUMB::InstructionFormat4 instr) {
 	uint32 result = target * source;
 	_alu_set_flags_logical_op(result);  //  FIXME
 
+	m_wait_cycles = mult_m_cycles(target);
 	target = result;
 }

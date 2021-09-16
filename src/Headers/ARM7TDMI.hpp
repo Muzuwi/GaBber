@@ -188,6 +188,31 @@ protected:
 			pc_offset = 4;
 		return creg(instr.operand1_reg()) + pc_offset;
 	}
+	inline unsigned mult_m_cycles(uint64 multiplier) {
+		multiplier >>= 8;
+		if(multiplier == 0 || multiplier == 0xFFFFFF)
+			return 1;
+		multiplier >>= 8;
+		if(multiplier == 0 || multiplier == 0xFFFF)
+			return 2;
+		multiplier >>= 8;
+		if(multiplier == 0 || multiplier == 0xFF)
+			return 3;
+		return 4;
+	}
+	inline unsigned unsigned_mult_m_cycles(uint64 multiplier) {
+		multiplier >>= 8;
+		if(multiplier == 0)
+			return 1;
+		multiplier >>= 8;
+		if(multiplier == 0)
+			return 2;
+		multiplier >>= 8;
+		if(multiplier == 0)
+			return 3;
+		return 4;
+	}
+
 
 	uint32 rotr32 (uint32_t n, unsigned int c);
 
