@@ -19,6 +19,7 @@ void ARM7TDMI::enter_swi() {
 	cspr().set_mode(PRIV_MODE::SVC);
 	cspr().set(CSPR_REGISTERS::IRQn, true);
 	pc() = 0x08;
+	m_wait_cycles += 2/*S*/ + 1/*N*/;
 }
 
 void ARM7TDMI::raise_irq(IRQType type) {

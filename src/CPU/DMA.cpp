@@ -22,15 +22,25 @@ bool ARM7TDMI::dma_cycle_all() {
 	return false;
 }
 
+template<unsigned int x>
+bool ARM7TDMI::dma_try_start_immediate() {
+	DMAx<x>& s = io.template dma_for_num<x>();
+	if(!s.m_ctrl->enable) {
+		return false;
+	}
+	if(!s.m_is_running && (s.m_ctrl->start_timing == DMAStartTiming::Immediate)) {
+		dma_start<x>();
+		return true;
+	}
+
+	return s.m_is_running;
+}
+
 
 template<unsigned int x>
 void ARM7TDMI::dma_cycle() {
 	DMAx<x>& s = io.template dma_for_num<x>();
 
-	if(!s.m_ctrl->enable)
-		return;
-	if(!s.m_is_running && (s.m_ctrl->start_timing == DMAStartTiming::Immediate))
-		dma_start<x>();
 	if(!s.m_is_running)
 		return;
 
@@ -153,3 +163,8 @@ void ARM7TDMI::dma_start_hblank() {
 		dma_start<3>();
 	}
 }
+
+template bool ARM7TDMI::dma_try_start_immediate<0>();
+template bool ARM7TDMI::dma_try_start_immediate<1>();
+template bool ARM7TDMI::dma_try_start_immediate<2>();
+template bool ARM7TDMI::dma_try_start_immediate<3>();

@@ -14,6 +14,7 @@ void ARM7TDMI::THUMB_ALU(THUMB::InstructionFormat4 instr) {
 		&ARM7TDMI::THUMB_ORR, &ARM7TDMI::THUMB_MUL, &ARM7TDMI::THUMB_BIC, &ARM7TDMI::THUMB_MVN,
 	};
 
+	m_wait_cycles += 1/*S*/;
 	auto func = s_thumb_alu_lookup[instr.opcode()];
 	(*this.*func)(instr);
 }
@@ -43,6 +44,8 @@ void ARM7TDMI::THUMB_FMT1(THUMB::InstructionFormat1 instr) {
 			break;
 		}
 	}
+
+	m_wait_cycles += 1/*S*/;
 }
 
 void ARM7TDMI::THUMB_FMT2(THUMB::InstructionFormat2 instr) {
@@ -55,6 +58,8 @@ void ARM7TDMI::THUMB_FMT2(THUMB::InstructionFormat2 instr) {
 									   : _alu_add(source, operand2, true);
 
 	destination = result;
+
+	m_wait_cycles += 1/*S*/;
 }
 
 void ARM7TDMI::THUMB_FMT3(THUMB::InstructionFormat3 instr) {
@@ -82,6 +87,8 @@ void ARM7TDMI::THUMB_FMT3(THUMB::InstructionFormat3 instr) {
 		}
 		default: ASSERT_NOT_REACHED();
 	}
+
+	m_wait_cycles += 1/*S*/;
 }
 
 void ARM7TDMI::THUMB_FMT5(THUMB::InstructionFormat5 instr) {
@@ -91,16 +98,25 @@ void ARM7TDMI::THUMB_FMT5(THUMB::InstructionFormat5 instr) {
 		case 0: {
 			auto& destination = reg(instr.destination_reg());
 			destination = source + destination;
+			m_wait_cycles += 1/*S*/;
+			if(instr.destination_reg() == 15) {
+				m_wait_cycles += 1/*S*/ + 1/*N*/;
+			}
 			break;
 		}
 		case 1: {
 			const auto& destination = creg(instr.destination_reg());
 			(void)_alu_sub(destination, source, true);
+			m_wait_cycles += 1/*S*/;
 			break;
 		}
 		case 2: {
 			auto& destination = reg(instr.destination_reg());
 			destination = source;
+			m_wait_cycles += 1/*S*/;
+			if(instr.destination_reg() == 15) {
+				m_wait_cycles += 1/*S*/ + 1/*N*/;
+			}
 			break;
 		}
 		case 3: {
@@ -116,6 +132,7 @@ void ARM7TDMI::THUMB_FMT5(THUMB::InstructionFormat5 instr) {
 					pc() = source & ~2u;
 				else
 					pc() = source & ~1u;
+				m_wait_cycles += 2/*S*/ + 1/*N*/;
 			}
 			break;
 		}
@@ -131,6 +148,8 @@ void ARM7TDMI::THUMB_FMT6(THUMB::InstructionFormat6 instr) {
 	const auto immediate_shifted = static_cast<uint16>(instr.immediate()) << 2u;
 	const auto aligned_pc = const_pc() & ~0x3;
 	destination = static_cast<uint32>(mem_read32(aligned_pc + immediate_shifted));
+
+	m_wait_cycles += 1/*S*/ + 1/*N*/ + 1/*I*/;
 }
 
 void ARM7TDMI::THUMB_FMT7(THUMB::InstructionFormat7 instr) {
@@ -152,6 +171,8 @@ void ARM7TDMI::THUMB_FMT7(THUMB::InstructionFormat7 instr) {
 
 			target = word;
 		}
+
+		m_wait_cycles += 1/*S*/ + 1/*N*/ + 1/*I*/;
 	}
 	else {
 		const auto target = creg(instr.target_reg());
@@ -160,6 +181,8 @@ void ARM7TDMI::THUMB_FMT7(THUMB::InstructionFormat7 instr) {
 			mem_write8(address, target & 0xFFu);
 		else
 			mem_write32(address, target);
+
+		m_wait_cycles += 2/*N*/;
 	}
 }
 
@@ -172,6 +195,8 @@ void ARM7TDMI::THUMB_FMT8(THUMB::InstructionFormat8 instr) {
 		case 0: {
 			const auto destination = creg(instr.destination_reg());
 			mem_write16(address & ~1u, destination & 0xffff);
+
+			m_wait_cycles += 2/*N*/;
 			break;
 		}
 		case 1: {
@@ -179,6 +204,8 @@ void ARM7TDMI::THUMB_FMT8(THUMB::InstructionFormat8 instr) {
 
 			uint8 val = mem_read8(address);
 			destination = sign_extend<8>(val);
+
+			m_wait_cycles += 1/*S*/ + 1/*N*/ + 1/*I*/;
 			break;
 		}
 		case 2: {
@@ -192,6 +219,8 @@ void ARM7TDMI::THUMB_FMT8(THUMB::InstructionFormat8 instr) {
 			}
 
 			destination = word;
+
+			m_wait_cycles += 1/*S*/ + 1/*N*/ + 1/*I*/;
 			break;
 		}
 		case 3: {
@@ -208,13 +237,14 @@ void ARM7TDMI::THUMB_FMT8(THUMB::InstructionFormat8 instr) {
 			}
 
 			destination = word;
+
+			m_wait_cycles += 1/*S*/ + 1/*N*/ + 1/*I*/;
 			break;
 		}
 
 		default: ASSERT_NOT_REACHED();
 	}
 }
-
 
 void ARM7TDMI::THUMB_FMT9(THUMB::InstructionFormat9 instr) {
 	const auto& base = creg(instr.base_reg());
@@ -238,6 +268,8 @@ void ARM7TDMI::THUMB_FMT9(THUMB::InstructionFormat9 instr) {
 
 			target = word;
 		}
+
+		m_wait_cycles += 1/*S*/ + 1/*N*/ + 1/*I*/;
 	}
 	else {
 		const auto target = creg(instr.target_reg());
@@ -246,6 +278,8 @@ void ARM7TDMI::THUMB_FMT9(THUMB::InstructionFormat9 instr) {
 			mem_write8(address, target & 0xFFu);
 		else
 			mem_write32(address, target);
+
+		m_wait_cycles += 2/*N*/;
 	}
 }
 
@@ -265,10 +299,14 @@ void ARM7TDMI::THUMB_FMT10(THUMB::InstructionFormat10 instr) {
 		}
 
 		target = word;
+
+		m_wait_cycles += 1/*S*/ + 1/*N*/ + 1/*I*/;
 	} else {
 		const auto target = creg(instr.target_reg());
 
 		mem_write16(address & ~1u, target & 0xFFFF);
+
+		m_wait_cycles += 2/*N*/;
 	}
 }
 
@@ -286,10 +324,14 @@ void ARM7TDMI::THUMB_FMT11(THUMB::InstructionFormat11 instr) {
 		}
 
 		destination = word;
+
+		m_wait_cycles += 1/*S*/ + 1/*N*/ + 1/*I*/;
 	} else {
 		const auto destination = creg(instr.destination_reg());
 
 		mem_write32(address & ~3u, destination);
+
+		m_wait_cycles += 2/*N*/;
 	}
 }
 
@@ -301,6 +343,8 @@ void ARM7TDMI::THUMB_FMT12(THUMB::InstructionFormat12 instr) {
 										  : (const_pc()&~0b10u) + offset;
 
 	destination = address;
+
+	m_wait_cycles += 1/*S*/;
 }
 
 void ARM7TDMI::THUMB_FMT13(THUMB::InstructionFormat13 instr) {
@@ -308,19 +352,29 @@ void ARM7TDMI::THUMB_FMT13(THUMB::InstructionFormat13 instr) {
 
 	sp() = (instr.offset_is_negative()) ? sp() - offset
 										: sp() + offset;
+
+	m_wait_cycles += 1/*S*/;
 }
 
 
 void ARM7TDMI::THUMB_FMT14(THUMB::InstructionFormat14 instr) {
+	unsigned n = 0;
+
 	//  POP {Rlist}
 	if(instr.load_from_memory()) {
 		for(int8 i = 0; i < 8; ++i) {
 			if(instr.is_register_in_list(i)) {
 				reg(i) = stack_pop32();
+				++n;
 			}
 		}
 		if(instr.store_lr_load_pc()) {
 			pc() = stack_pop32() & ~0x1;
+		}
+
+		m_wait_cycles += n/*S*/ + 1/*N*/ + 1/*I*/;
+		if(instr.store_lr_load_pc()) {
+			m_wait_cycles += 1/*S*/ + 1/*N*/;
 		}
 	}
 	//  PUSH {Rlist}
@@ -331,8 +385,12 @@ void ARM7TDMI::THUMB_FMT14(THUMB::InstructionFormat14 instr) {
 		for(int8 i = 8; i >= 0; --i) {
 			if(instr.is_register_in_list(i)) {
 				stack_push32(creg(i));
+				++n;
 			}
 		}
+
+		const unsigned clamped_n = n > 0 ? n - 1 : 0;   // (n-1)
+		m_wait_cycles = clamped_n/*S*/ + 2/*N*/;
 	}
 }
 
@@ -347,14 +405,19 @@ void ARM7TDMI::THUMB_FMT15(THUMB::InstructionFormat15 instr) {
 		}
 
 		base += 0x40;
+
+	    //  FIXME: Emulate cycles
+	    m_wait_cycles += 1;
 		return;
 	}
 
 	const auto& base = creg(instr.base_reg());
 	auto ptr = base;
 
+	unsigned n = 0;
 	for(uint8 reg = 0; reg < 8; ++reg) {
 		if(!instr.is_register_in_list(reg)) continue;
+		++n;
 
 		if(instr.load_from_memory()) {
 			this->reg(reg) = mem_read32(ptr & ~3u);
@@ -375,36 +438,51 @@ void ARM7TDMI::THUMB_FMT15(THUMB::InstructionFormat15 instr) {
 		ptr = base;
 
 	reg(instr.base_reg()) = ptr;    //  FIXME:  Potential weirdness with constness and R15
+
+	if(instr.load_from_memory()) {
+		m_wait_cycles += n/*S*/ + 1/*N*/ + 1/*I*/;
+	} else {
+		m_wait_cycles += (n-1)/*S*/ + 2/*N*/;
+	}
 }
 
 void ARM7TDMI::THUMB_FMT16(THUMB::InstructionFormat16 instr) {
-	if (!cspr().evaluate_condition(instr.condition())) return;
+	if (!cspr().evaluate_condition(instr.condition())) {
+		m_wait_cycles += 1/*S*/;
+		return;
+	}
 
 	const auto offset = sign_extend<9>(static_cast<uint16>(instr.offset()) << 1u);
 	const auto new_pc = pc() + offset;
 
 	pc() = new_pc;
+
+	m_wait_cycles += 2/*S*/ + 1/*N*/;
 }
 
 void ARM7TDMI::THUMB_FMT17(THUMB::InstructionFormat17) {
 	enter_swi();
-	m_wait_cycles = 3;
 }
 
 void ARM7TDMI::THUMB_FMT18(THUMB::InstructionFormat18 instr) {
 	auto new_pc = pc() + sign_extend<12>(instr.offset() << 1u);
 	pc() = new_pc;
+
+	m_wait_cycles += 2/*S*/ + 1/*N*/;
 }
 
 void ARM7TDMI::THUMB_FMT19(THUMB::InstructionFormat19 instr) {
 	if(!instr.low()) {
 		auto offset = sign_extend<23>(static_cast<uint32>(instr.offset()) << 12u);
 		lr() = (const_pc() + offset);
+
+		m_wait_cycles += 1/*S*/;
 	} else {
 		const auto next_pc = pc() - 2;
 		pc() = lr() + ((instr.offset() << 1u));
 		lr() = next_pc | 0x1;
-		m_wait_cycles = 3;
+
+		m_wait_cycles += 2/*S*/ + 1/*N*/;
 	}
 }
 
@@ -465,6 +543,8 @@ void ARM7TDMI::THUMB_LSL(THUMB::InstructionFormat4 instr) {
 	if(shift_count != 0)
 		target = _shift_lsl(target, shift_count);
 	_alu_set_flags_logical_op(target);
+
+	m_wait_cycles += 1/*I*/;
 }
 
 void ARM7TDMI::THUMB_LSR(THUMB::InstructionFormat4 instr) {
@@ -475,6 +555,8 @@ void ARM7TDMI::THUMB_LSR(THUMB::InstructionFormat4 instr) {
 	if(shift_count != 0)
 		target = _shift_lsr(target, shift_count);
 	_alu_set_flags_logical_op(target);
+
+	m_wait_cycles += 1/*I*/;
 }
 
 void ARM7TDMI::THUMB_ASR(THUMB::InstructionFormat4 instr) {
@@ -485,6 +567,8 @@ void ARM7TDMI::THUMB_ASR(THUMB::InstructionFormat4 instr) {
 	if(shift_count != 0)
 		target = _shift_asr(target, shift_count);
 	_alu_set_flags_logical_op(target);
+
+	m_wait_cycles += 1/*I*/;
 }
 
 void ARM7TDMI::THUMB_ROR(THUMB::InstructionFormat4 instr) {
@@ -495,6 +579,8 @@ void ARM7TDMI::THUMB_ROR(THUMB::InstructionFormat4 instr) {
 	if(shift_count != 0)
 		target = _shift_ror(target, shift_count);
 	_alu_set_flags_logical_op(target);
+
+	m_wait_cycles += 1/*I*/;
 }
 
 
@@ -544,6 +630,6 @@ void ARM7TDMI::THUMB_MUL(THUMB::InstructionFormat4 instr) {
 	uint32 result = target * source;
 	_alu_set_flags_logical_op(result);  //  FIXME
 
-	m_wait_cycles = mult_m_cycles(target);
+	m_wait_cycles += mult_m_cycles(target)/*I*/;
 	target = result;
 }

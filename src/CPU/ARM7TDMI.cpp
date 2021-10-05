@@ -1,4 +1,3 @@
-#include <fstream>
 #include "Headers/ARM7TDMI.hpp"
 #include "Headers/ARM_Instruction.hpp"
 #include "MMU/BusInterface.hpp"
@@ -32,21 +31,39 @@ void ARM7TDMI::reset() {
 	m_pc_dirty = false;
 }
 
-void ARM7TDMI::cycle() {
-	m_cycles++;
-	timers_cycle_all();
 
-	if(m_wait_cycles) {
-		m_wait_cycles--;
-		return;
+unsigned ARM7TDMI::run_next_instruction() {
+	const unsigned n = run_to_next_state();
+	for(unsigned i = 0; i < n; ++i) {
+		timers_cycle_all();
 	}
-	if (dma_cycle_all())
-		return;
-	if (handle_halt())
-		return;
-	handle_interrupts();
 
+	m_cycles += n;
+	return n;
+}
+
+
+unsigned ARM7TDMI::run_to_next_state() {
+	m_wait_cycles = 0;
+
+	//  If in DMA, emulate the wait states used up by DMA
+	if(dma_try_start_immediate<0>() ||
+	   dma_try_start_immediate<1>() ||
+	   dma_try_start_immediate<2>() ||
+	   dma_try_start_immediate<3>()) {
+		dma_cycle_all();
+		return m_wait_cycles;
+	}
+
+	//  If in halt, emulate it cycle-by-cycle
+	if(handle_halt()) {
+		return 1;
+	}
+
+	handle_interrupts();
 	exec_opcode();
+
+	return m_wait_cycles;
 }
 
 

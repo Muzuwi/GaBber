@@ -7,7 +7,8 @@ void ARM7TDMI::B(ARM::BInstruction instr) {
 	pc() = const_pc() + instr.offset();
 	if(instr.is_link())
 		r14() = old_pc - 4;
-	m_wait_cycles = 3;
+
+	m_wait_cycles += 2/*S*/ + 1/*N*/;
 }
 
 
@@ -27,7 +28,8 @@ void ARM7TDMI::BX(ARM::BXInstruction instr) {
 		pc() = reg;
 
 	cspr().set_state(!is_thumb ? INSTR_MODE::ARM : INSTR_MODE::THUMB);
-	m_wait_cycles = 3;
+
+	m_wait_cycles += 2/*S*/ + 1/*N*/;
 }
 
 
@@ -54,11 +56,12 @@ void ARM7TDMI::DPI(ARM::DataProcessInstruction instr) {
 		}
 	}
 
+	m_wait_cycles += 1/*S*/;
 	if(instr.destination_reg() == 15) {
-		m_wait_cycles += 2;
+		m_wait_cycles += 1/*S*/ + 1/*N*/;
 	}
 	if(instr.immediate_is_value() && instr.is_shift_reg()) {
-		m_wait_cycles += 1;
+		m_wait_cycles += 1/*I*/;
 	}
 }
 
@@ -75,7 +78,6 @@ void ARM7TDMI::SUB(ARM::DataProcessInstruction instr) {
 	uint32 result = _alu_sub(operand1, operand2, S);
 	destination = result;
 }
-
 
 void ARM7TDMI::RSB(ARM::DataProcessInstruction instr) {
     auto& destination = reg(instr.destination_reg());
@@ -341,6 +343,15 @@ void ARM7TDMI::HDT(ARM::HDTInstruction instr) {
 
 	if(instr.load_from_memory())
 		reg(instr.target_reg()) = word_for_load;
+
+	if(instr.load_from_memory()) {
+		m_wait_cycles += 1/*S*/ + 1/*N*/ + 1/*I*/;
+		if(instr.target_reg() == 15) {
+			m_wait_cycles += 1/*S*/ + 1/*N*/;
+		}
+	} else {
+		m_wait_cycles += 2/*N*/;
+	}
 }
 
 void ARM7TDMI::SDT(ARM::SDTInstruction instr) {
@@ -421,15 +432,12 @@ void ARM7TDMI::SWP(ARM::SWPInstruction instr) {
 		mem_write32(swap_address & ~3u, source);
 		dest = prev_contents;
 	}
+	m_wait_cycles += 1/*S*/ + 2/*N*/ + 1/*I*/;
 }
-
 
 void ARM7TDMI::SWI(ARM::SWIInstruction) {
 	enter_swi();
-	m_wait_cycles = 3;
 }
-
-
 
 void ARM7TDMI::MLL(ARM::MultLongInstruction instr) {
 	auto& lower = reg(instr.destLo_reg());
@@ -456,7 +464,8 @@ void ARM7TDMI::MLL(ARM::MultLongInstruction instr) {
 		cspr().set(CSPR_REGISTERS::Carry, true);   //  FIXME: ???
 	}
 
-	m_wait_cycles = (instr.is_signed() ? mult_m_cycles(m) : unsigned_mult_m_cycles(m)) + 1
+	m_wait_cycles += 1/*S*/
+					+ (instr.is_signed() ? mult_m_cycles(m) : unsigned_mult_m_cycles(m)) + 1
 	                + (instr.should_accumulate() ? 1 : 0);
 }
 
@@ -475,9 +484,8 @@ void ARM7TDMI::MUL(ARM::MultInstruction instr) {
 		cspr().set(CSPR_REGISTERS::Carry, false); //  "is set to a meaningless value"
 	}
 
-	m_wait_cycles = mult_m_cycles(s) + (instr.should_accumulate() ? 1 : 0);
+	m_wait_cycles += 1/*S*/ + mult_m_cycles(s) + (instr.should_accumulate() ? 1 : 0);
 }
-
 
 void ARM7TDMI::BDT(ARM::BDTInstruction instr) {
 	const auto& base = creg(instr.base_reg());
@@ -501,15 +509,19 @@ void ARM7TDMI::BDT(ARM::BDTInstruction instr) {
 		//  LDMIB ??
 		//  LDMIA ??
 
+		//  FIXME: Emulate cycles
+		m_wait_cycles += 1;
 		return;
 	}
 
+	unsigned n = 0;
 	for(unsigned r = 0; r < 16; ++r) {
 		const uint8 reg = instr.add_offset_to_base() ? r : (15 - r);
 		if(!instr.is_register_in_list(reg)) continue;
 
 		if(instr.preindex()) address += (instr.add_offset_to_base()) ? 4 : -4;
 
+		++n;
  		if(instr.load_from_memory()) {
 			uint32 word = mem_read32(address & ~3u);
 
@@ -542,4 +554,12 @@ void ARM7TDMI::BDT(ARM::BDTInstruction instr) {
 		reg(instr.base_reg()) = address;
 	}
 
+	if(instr.load_from_memory()) {
+		m_wait_cycles += n/*S*/ + 1/*N*/ + 1/*I*/;
+		if(instr.is_register_in_list(15)) {
+			m_wait_cycles += 1/*S*/ + 1/*N*/;
+		}
+	} else {
+		m_wait_cycles += (n-1)/*S*/ + 2/*N*/;
+	}
 }
