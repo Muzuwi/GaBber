@@ -36,6 +36,7 @@ void IORegisters::draw_interrupts() {
 	ImGui::Text("IF: %04x", *cpu.io.if_);
 	ImGui::Text("IE: %04x", *cpu.io.ie);
 	ImGui::Text("IME: %08x", *cpu.io.ime);
+	ImGui::Text("Wait cycles: %d\n", cpu.m_wait_cycles);
 
 }
 
@@ -78,6 +79,8 @@ void IORegisters::draw_sound() {
 		}
 		ImGui::TableNextColumn();
 		{
+			const unsigned sample_rate = 2097152 / (2048 - io.ch3ctlX->rate);
+			ImGui::Text("Sample rate: %d Hz", sample_rate);
 			//  Draw ch3
 		}
 

@@ -92,6 +92,10 @@ struct IOContainer {
 	Sound1CtlX ch1ctlX;
 	Sound2CtlL ch2ctlL;
 	Sound2CtlH ch2ctlH;
+	Sound3CtlL ch3ctlL;
+	Sound3CtlH ch3ctlH;
+	Sound3CtlX ch3ctlX;
+	Sound3Bank ch3bank;
 	IOReg16<0x0400006a> reg6a;
 	SoundCtlL soundcntL;
 

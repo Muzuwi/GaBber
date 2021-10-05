@@ -112,7 +112,10 @@ void GaBber::emulator_loop() {
 void GaBber::clock_cycle() {
 	m_cpu.cycle();
 	m_ppu.cycle();
-	m_sound.cycle();
+	const auto count = m_sound.m_speed_scale;
+	for(unsigned i = 0; i < (unsigned)count; ++i) {
+		m_sound.cycle();
+	}
 }
 
 
