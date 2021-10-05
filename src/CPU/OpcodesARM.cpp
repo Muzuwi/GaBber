@@ -384,6 +384,10 @@ void ARM7TDMI::SDT(ARM::SDTInstruction instr) {
 		    reg(instr.base_reg()) = address;
 
 	    target = word;
+		m_wait_cycles += 1/*S*/ + 1/*N*/ + 1/*I*/;
+		if(instr.target_reg() == 15) {
+			m_wait_cycles += 1/*S*/ + 1/*N*/;
+		}
     } else {
 	    const auto& target = creg(instr.target_reg());
 
@@ -396,6 +400,8 @@ void ARM7TDMI::SDT(ARM::SDTInstruction instr) {
 		    address = get_target_address();
 	    if((instr.writeback() || !instr.preindex()) && instr.base_reg() != 15)
 		    reg(instr.base_reg()) = address;
+
+	    m_wait_cycles += 2/*N*/;
     }
 }
 
