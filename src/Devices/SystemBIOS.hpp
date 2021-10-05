@@ -20,4 +20,16 @@ public:
 	std::string identify() const override {
 		return "BIOS";
 	}
+
+	unsigned int waitcycles32() const override {
+		return 1;
+	}
+
+	unsigned int waitcycles16() const override {
+		return 1;
+	}
+
+	unsigned int waitcycles8() const override {
+		return 1;
+	}
 };

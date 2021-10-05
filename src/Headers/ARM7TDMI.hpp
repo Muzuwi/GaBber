@@ -147,7 +147,7 @@ protected:
 	}
 
 
-	unsigned m_wait_cycles {0};
+	mutable unsigned m_wait_cycles {0};
     uint64 m_cycles {0};
     bool m_pc_dirty {false};
     void exec_opcode();
@@ -317,6 +317,8 @@ protected:
 	void mem_write8(uint32 address, uint8 val);
 	void mem_write16(uint32 address, uint16 val);
 	void mem_write32(uint32 address, uint32 val);
+	uint32 mem_read_arm_opcode(uint32 address) const;
+	uint16 mem_read_thumb_opcode(uint32 address) const;
 
 
 	struct {

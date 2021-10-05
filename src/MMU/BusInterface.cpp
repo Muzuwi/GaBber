@@ -65,12 +65,14 @@ uint32 BusInterface::read32(uint32 address) {
 
 		const auto address_in_device = (current_address - dev->start());
 		if(read == 0 && dev->size() >= 4) {
+			m_last_wait_cycles = dev->waitcycles32();
 			data = dev->read32(address_in_device);
 #ifdef SPLIT_DEBUG
 			log("read32 from {} -> {:08x}", (void*)dev, data);
 #endif
 			read += 4;
 		} else if((read % 2 == 0) && dev->size() >= 2) {
+			m_last_wait_cycles = dev->waitcycles32();
 			uint16 read_value = dev->read16(address_in_device);
 #ifdef SPLIT_DEBUG
 			log("read16 from {} -> {:04x}", (void*)dev, data);
@@ -78,6 +80,7 @@ uint32 BusInterface::read32(uint32 address) {
 			data |= (read_value << (read*8));
 			read += 2;
 		} else {
+			m_last_wait_cycles = dev->waitcycles32();
 			uint8 read_value = dev->read8(address_in_device);
 #ifdef SPLIT_DEBUG
 			log("read8 from {} -> {:02x}", (void*)dev, read_value);
@@ -109,12 +112,14 @@ uint16 BusInterface::read16(uint32 address) {
 
 		const auto address_in_device = (current_address - dev->start());
 		if(read == 0 && dev->size() >= 2) {
+			m_last_wait_cycles = dev->waitcycles16();
 			data = dev->read16(address_in_device);
 #ifdef SPLIT_DEBUG
 			log("read16 from {} -> {:04x}", (void*)dev, data);
 #endif
 			read += 2;
 		} else {
+			m_last_wait_cycles = dev->waitcycles16();
 			uint8 read_value = dev->read8(address_in_device);
 #ifdef SPLIT_DEBUG
 			log("read8 from {} -> {:02x}", (void*)dev, read_value);
@@ -136,6 +141,7 @@ uint8 BusInterface::read8(uint32 address) {
 		return 0xFF;
 	}
 
+	m_last_wait_cycles = dev->waitcycles8();
 	return dev->read8(address - dev->start());
 }
 
@@ -161,6 +167,7 @@ void BusInterface::write32(uint32 address, uint32 value) {
 #ifdef SPLIT_DEBUG
 			log("write32 to {} <- {:08x}", (void*)dev, value);
 #endif
+			m_last_wait_cycles = dev->waitcycles32();
 			dev->write32(address_in_device, value);
 			written += 4;
 		} else if((written % 2 == 0) && dev->size() >= 2) {
@@ -168,6 +175,7 @@ void BusInterface::write32(uint32 address, uint32 value) {
 #ifdef SPLIT_DEBUG
 			log("write16 to {} <- {:04x}, written: {}", (void*)dev, write_value, written);
 #endif
+			m_last_wait_cycles = dev->waitcycles32();
 			dev->write16(address_in_device, write_value);
 			written += 2;
 		} else {
@@ -175,6 +183,7 @@ void BusInterface::write32(uint32 address, uint32 value) {
 #ifdef SPLIT_DEBUG
 			log("write8 to {} <- {:02x}", (void*)dev, write_value);
 #endif
+			m_last_wait_cycles = dev->waitcycles32();
 			dev->write8(address_in_device, write_value);
 			written += 1;
 		}
@@ -203,6 +212,7 @@ void BusInterface::write16(uint32 address, uint16 value) {
 #ifdef SPLIT_DEBUG
 			log("write16 to {} <- {:04x}", (void*)dev, value);
 #endif
+			m_last_wait_cycles = dev->waitcycles16();
 			dev->write16(address_in_device, value);
 			written += 2;
 		} else {
@@ -210,6 +220,7 @@ void BusInterface::write16(uint32 address, uint16 value) {
 #ifdef SPLIT_DEBUG
 			log("write8 to {} <- {:02x}", (void*)dev, write_value);
 #endif
+			m_last_wait_cycles = dev->waitcycles16();
 			dev->write8(address_in_device, write_value);
 			written += 1;
 		}
@@ -227,6 +238,7 @@ void BusInterface::write8(uint32 address, uint8 value) {
 		return;
 	}
 
+	m_last_wait_cycles = dev->waitcycles8();
 	dev->write8(address - dev->start(), value);
 }
 

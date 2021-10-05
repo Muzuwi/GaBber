@@ -51,8 +51,8 @@ void ARM7TDMI::cycle() {
 
 
 uint32 ARM7TDMI::fetch_instruction() {
-	const auto op = (cspr().state() == INSTR_MODE::ARM) ? mem_read32(const_pc() - 2*current_instr_len())
-	                                                    : mem_read16(const_pc() - 2*current_instr_len());
+	const auto op = (cspr().state() == INSTR_MODE::ARM) ? mem_read_arm_opcode(const_pc() - 2*current_instr_len())
+	                                                    : mem_read_thumb_opcode(const_pc() - 2*current_instr_len());
 	return op;
 }
 

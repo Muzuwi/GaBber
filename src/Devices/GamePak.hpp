@@ -70,6 +70,18 @@ public:
 	std::string identify() const override {
 		return "GamePak - SRAM";
 	}
+
+	unsigned int waitcycles32() const override {
+		return 5;
+	}
+
+	unsigned int waitcycles16() const override {
+		return 5;
+	}
+
+	unsigned int waitcycles8() const override {
+		return 5;
+	}
 };
 
 class PakROM : public BusDevice {
@@ -120,6 +132,18 @@ public:
 
 	void write8(uint32 offset, uint8) override {
 		fmt::print("PakROM/ Tried writing to ROM, offset {:08x}\n", offset);
+	}
+
+	unsigned int waitcycles32() const override {
+		return 8;
+	}
+
+	unsigned int waitcycles16() const override {
+		return 5;
+	}
+
+	unsigned int waitcycles8() const override {
+		return 5;
 	}
 
 	std::string identify() const override {

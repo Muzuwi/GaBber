@@ -15,6 +15,18 @@ public:
 	std::string identify() const override {
 		return "OAM";
 	}
+
+	unsigned int waitcycles32() const override {
+		return 1;
+	}
+
+	unsigned int waitcycles16() const override {
+		return 1;
+	}
+
+	unsigned int waitcycles8() const override {
+		return 1;
+	}
 };
 
 
@@ -30,6 +42,18 @@ public:
 
 	std::string identify() const override {
 		return "PaletteRAM";
+	}
+
+	unsigned int waitcycles32() const override {
+		return 2;
+	}
+
+	unsigned int waitcycles16() const override {
+		return 1;
+	}
+
+	unsigned int waitcycles8() const override {
+		return 1;
 	}
 };
 
@@ -47,5 +71,17 @@ public:
 
 	std::string identify() const override {
 		return "VRAM";
+	}
+
+	unsigned int waitcycles32() const override {
+		return 2;
+	}
+
+	unsigned int waitcycles16() const override {
+		return 1;
+	}
+
+	unsigned int waitcycles8() const override {
+		return 1;
 	}
 };

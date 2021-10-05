@@ -12,6 +12,8 @@ class BusInterface {
 
 	BusDevice* find_device(uint32 address);
 
+	unsigned m_last_wait_cycles;
+
 	uint64 cache_hit {0};
 	uint64 cache_miss {0};
 	static bool register_device(BusDevice&);
@@ -24,6 +26,10 @@ public:
 		fmt::print("\u001b[93mMMU/ ");
 		fmt::vprint(format, fmt::make_format_args(args...));
 		fmt::print("\u001b[0m\n");
+	}
+
+	unsigned last_wait_cycles() const {
+		return m_last_wait_cycles;
 	}
 
 	uint32 read32(uint32 address);

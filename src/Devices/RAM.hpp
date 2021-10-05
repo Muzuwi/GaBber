@@ -15,6 +15,18 @@ public:
 	std::string identify() const override {
 		return "On-board WRAM";
 	}
+
+	unsigned int waitcycles32() const override {
+		return 6;
+	}
+
+	unsigned int waitcycles16() const override {
+		return 3;
+	}
+
+	unsigned int waitcycles8() const override {
+		return 3;
+	}
 };
 
 
@@ -30,5 +42,18 @@ public:
 
 	std::string identify() const override {
 		return "On-Chip WRAM";
+	}
+
+
+	unsigned int waitcycles32() const override {
+		return 1;
+	}
+
+	unsigned int waitcycles16() const override {
+		return 1;
+	}
+
+	unsigned int waitcycles8() const override {
+		return 1;
 	}
 };
