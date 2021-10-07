@@ -16,19 +16,35 @@ class WaitCtl : public IOReg16<0x04000204> {
 };
 
 class PakSRAM : public BusDevice {
+	enum class FlashChipMode {
+		Idle,
+		ID,
+		Erase,
+		Write,
+		BankChange
+	};
+
+	const uint32 m_identifier {0x1cc2};
+	const unsigned m_chip_size = 65536;
+	const unsigned m_sector_size = 4096;
+	FlashChipMode m_mode;
+	uint8 m_bank;
+	uint8 m_reg5555;
+	uint8 m_reg2aaa;
+
 	Vector<uint8> m_buffer;
+	BackupCartType m_type;
 public:
 	PakSRAM()
-	: BusDevice(0xe000000, 0x0e010000) {}
+	: BusDevice(0x0e000000, 0x0e010000) {}
 
 	Vector<uint8> const& get_buffer() const {
 		return m_buffer;
 	}
 
-	void from_vec(Vector<uint8>&& save_data) {
+	void from_vec(Vector<uint8>&& save_data, BackupCartType cart_type) {
 		m_buffer = save_data;
-		if(m_buffer.size() > 0x10000)
-			m_buffer.resize(0x10000);
+		m_type = cart_type;
 	}
 
 	uint32 read32(uint32 offset) override {
@@ -49,23 +65,8 @@ public:
 		fmt::print("PakSRAM/ Write of size 16 Unsupported, offset={:08x}\n", offset);
 	}
 
-	uint8 read8(uint32 offset) override {
-		if(offset >= m_buffer.size()) {
-			fmt::print("PakSRAM/ Undefined read from offset={:08x}\n", offset);
-			return 0xff;
-		}
-
-		return m_buffer[offset];
-	}
-
-	void write8(uint32 offset, uint8 value) override {
-		if(offset >= m_buffer.size()) {
-			fmt::print("PakSRAM/ Undefined write to offset={:08x}\n", offset);
-			return;
-		}
-
-		m_buffer[offset] = value;
-	}
+	uint8 read8(uint32 offset) override;
+	void write8(uint32 offset, uint8 value) override;
 
 	std::string identify() const override {
 		return "GamePak - SRAM";
@@ -192,26 +193,30 @@ public:
 		Vector<uint8> s {std::move(sram)};
 
 		if(!result.has_value()) {
-			fmt::print("GamePak/ Backup cart type autodetection failed! Assuming FLASH 64K");
+			fmt::print("GamePak/ Backup cart type autodetection failed! Assuming FLASH 64K\n");
 			type = BackupCartType::FLASH64K;
 		} else {
 			type = *result;
 			fmt::print("GamePak/ Backup cart type: {}\n", type);
 			switch (type) {
 				case BackupCartType::FLASH64K:
-					s.resize(64*kB); break;
+					s.resize(64*kB, 0xFF); break;
 				case BackupCartType::SRAM32K:
-					s.resize(32*kB); break;
+					s.resize(32*kB, 0xFF); break;
 				case BackupCartType::FLASH128K:
-					s.resize(128*kB); break;
+					s.resize(128*kB, 0xFF); break;
 				default:
-					s.resize(64*kB);    //  FIXME:
+					s.resize(64*kB, 0xFF);    //  FIXME:
 			}
 		}
 
 		m_rom.from_vec(std::move(rom));
-		m_sram.from_vec(std::move(s));
+		m_sram.from_vec(std::move(s), type);
 
 		return true;
+	}
+
+	PakSRAM& sram() {
+		return m_sram;
 	}
 };

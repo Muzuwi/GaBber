@@ -60,7 +60,15 @@ int GaBber::start() {
 			return -1;
 		}
 
-		m_mem.pak.load_pak(std::move(*rom), {});
+		Vector<uint8> save = {};
+		auto maybe_save = load_from_file(m_rom_filename + ".sav");
+		if(maybe_save.has_value()) {
+			save = *maybe_save;
+		} else {
+			std::cerr << "Could not load save file!\n";
+		}
+
+		m_mem.pak.load_pak(std::move(*rom), std::move(save));
 	}
 
 	emulator_reset();
@@ -77,6 +85,7 @@ int GaBber::start() {
 	m_sound.init();
 
 	emulator_loop();
+	emulator_close();
 
 	return 0;
 }
@@ -142,4 +151,16 @@ void GaBber::toggle_debug_mode() {
 void GaBber::emulator_reset() {
 	m_cpu.reset();
 	m_mmu.reload_all();
+}
+
+void GaBber::emulator_close() {
+	std::ofstream save_file {m_rom_filename + ".sav", std::ios_base::binary};
+	if(!save_file.good()) {
+		fmt::print("Failed opening save file!\n");
+		return;
+	}
+
+	auto const& buffer = mem().pak.sram().get_buffer();
+	save_file.write(reinterpret_cast<char const*>(buffer.data()), buffer.size());
+	save_file.close();
 }

@@ -45,7 +45,7 @@ add_executable(GaBber
     src/Debugger/MemoryImage.cpp
     src/Sound/GBASound.cpp
     src/Sound/GBASound.hpp
-    )
+    src/Devices/GamePak.cpp)
 
 target_link_libraries(GaBber
     fmt

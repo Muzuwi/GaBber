@@ -44,6 +44,7 @@ class GaBber {
 	void emulator_reset();
 	void emulator_loop();
 	void clock_cycle();
+	void emulator_close();
 
 	GaBber()
 	: m_debugger(*this), m_mmu(), m_cpu(m_mmu, m_debugger, m_mem.io), m_ppu(m_cpu, m_mem), m_test_harness(*this) {}
