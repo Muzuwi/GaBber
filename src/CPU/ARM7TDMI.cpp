@@ -2,6 +2,7 @@
 #include "Headers/ARM_Instruction.hpp"
 #include "MMU/BusInterface.hpp"
 #include "Debugger/Debugger.hpp"
+#include "Headers/GaBber.hpp"
 
 void ARM7TDMI::reset() {
 	cspr().set_state(INSTR_MODE::ARM);
@@ -199,7 +200,5 @@ void ARM7TDMI::dump_memory_around_pc() const {
 	fmt::print("Changed from mode {} -> {}\n", m_last_mode_change.prev, m_last_mode_change.neu);
 
 	m_mmu.debug();
-	m_debugger.set_debug_mode(true);
-	m_debugger.set_continue_mode(false);
-	m_debugger.set_step(false);
+	GaBber::instance().toggle_debug_mode();
 }

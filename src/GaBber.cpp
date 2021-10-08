@@ -93,32 +93,19 @@ int GaBber::start() {
 
 void GaBber::emulator_loop() {
 	while(!m_closed) {
-		bool step = m_debugger.is_step(),
-			 cont = m_debugger.continue_mode();
-		if(m_debugger.is_debug_mode() && !step && !cont) {
-			display_update();
-			continue;
+		if(m_running || m_do_step) {
+			emulator_next_state();
+			m_do_step = false;
 		}
 
-		clock_cycle();
-		if(step)
-			m_debugger.set_step(false);
-
-		if(m_ppu.frame_ready()) {
+		if(m_ppu.frame_ready() || !m_running) {
 			display_update();
 			m_ppu.clear_frame_ready();
-		} else if(m_debugger.is_debug_mode()) {
-			static unsigned cycles_without_display_update {0};
-			cycles_without_display_update++;
-			if((cycles_without_display_update % 1024768) == 0) {
-				display_update();
-			}
 		}
 	}
 }
 
-
-void GaBber::clock_cycle() {
+void GaBber::emulator_next_state() {
 	const unsigned cycles = m_cpu.run_next_instruction();
 	for(unsigned i = 0; i < cycles; ++i) {
 		m_ppu.cycle();
@@ -129,19 +116,16 @@ void GaBber::clock_cycle() {
 	}
 }
 
-
 void GaBber::toggle_debug_mode() {
 	if(m_debugger.is_debug_mode()) {
 		m_debugger.set_debug_mode(false);
-		m_debugger.set_step(false);
-		m_debugger.set_continue_mode(true);
+		m_running = true;
 
 		SDL_SetWindowResizable(m_gabberWindow, SDL_FALSE);
 		SDL_RestoreWindow(m_gabberWindow);
 	} else {
 		m_debugger.set_debug_mode(true);
-		m_debugger.set_step(true);
-		m_debugger.set_continue_mode(false);
+		m_running = false;
 
 		SDL_SetWindowResizable(m_gabberWindow, SDL_TRUE);
 		SDL_MaximizeWindow(m_gabberWindow);

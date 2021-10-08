@@ -87,11 +87,10 @@ void GaBber::_disp_poll_events() {
 				}
 
 				if(event.key.keysym.sym == SDLK_F3) {
-					m_debugger.set_continue_mode(false);
-					m_debugger.set_step(true);
+					single_step();
 				}
 				if(event.key.keysym.sym == SDLK_F5) {
-					m_debugger.set_continue_mode(true);
+					resume();
 				}
 				if(event.key.keysym.sym == SDLK_TAB && event.key.keysym.mod & KMOD_LSHIFT){
 					toggle_debug_mode();

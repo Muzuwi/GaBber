@@ -21,8 +21,8 @@ class GaBber {
     MemoryLayout m_mem;
 	GBASound m_sound;
 	bool m_test_mode;
-
-	void toggle_debug_mode();
+	bool m_running {true};
+	bool m_do_step {false};
 
 	bool m_closed;
 	SDL_Window* m_gabberWindow;
@@ -43,7 +43,7 @@ class GaBber {
 
 	void emulator_reset();
 	void emulator_loop();
-	void clock_cycle();
+	void emulator_next_state();
 	void emulator_close();
 
 	GaBber()
@@ -64,6 +64,11 @@ public:
 	MemoryLayout& mem() { return m_mem; }
 	GBASound& sound() { return m_sound; }
 
+	void toggle_debug_mode();
 	unsigned window_scale() const { return m_window_scale; }
 	GLuint gba_texture() const { return m_gba_texture; }
+	bool running() const { return m_running; }
+
+	void single_step() { m_do_step = true; }
+	void resume() { m_running = true; }
 };
