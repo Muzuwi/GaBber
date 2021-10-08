@@ -207,6 +207,9 @@ class GreenSwap : public IOReg16<0x04000002> {
 };
 
 class DISPSTAT : public IOReg16<0x04000004> {
+	void on_write(T new_value) override {
+		m_register = new_value & 0xFF38u;
+	}
 public:
 	DISPSTATReg* operator->() {
 		return this->template as<DISPSTATReg>();
@@ -218,5 +221,8 @@ public:
 };
 
 class VCOUNT : public IOReg16<0x04000006> {
-
+	void on_write(T new_value) override {
+		m_register = new_value & 0x00FFu;
+	}
+public:
 };

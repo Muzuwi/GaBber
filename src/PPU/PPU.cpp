@@ -21,6 +21,15 @@ void PPU::next_scanline() {
 	current_scanline_position = 0;
 	vcount()++;
 
+	if(vcount() == mem.io.dispstat->LYC) {
+		mem.io.dispstat->VCounter = true;
+		if(mem.io.dispstat->VCounter_IRQ) {
+			cpu.raise_irq(IRQType::VCounter);
+		}
+	} else {
+		mem.io.dispstat->VCounter = false;
+	}
+
 	if(vcount() == 160) {
 		mem.io.dispstat->HBlank = false;
 		mem.io.dispstat->VBlank = true;

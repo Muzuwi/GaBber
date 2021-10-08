@@ -35,17 +35,16 @@ void Backgrounds::draw_textmode() {
 	const auto scx = *bg.m_xoffset;
 	const auto scy = *bg.m_yoffset;
 	const auto ly = (scy + m_ppu.vcount()) % vscreen_height;
-	const unsigned vscreen_y = ((scy + m_ppu.vcount()) / vscreen_height) % vscreen_screensy;
+	const unsigned vscreen_y = (ly / 256u) % vscreen_screensy;
 
 	for(unsigned i = scx; i < scx + 240u; ++i) {
-		const uint8 x = i % vscreen_width;
-		const unsigned vscreen_x =  (i / vscreen_width) % vscreen_screensx;
+		const unsigned x = i % vscreen_width;
+		const unsigned vscreen_x = (x / 256u) % vscreen_screensx;
 
-		const unsigned which_vscreen =(vscreen_width / 256u) * vscreen_y + vscreen_x;
+		const unsigned which_vscreen = vscreen_screensx * vscreen_y + vscreen_x;
 		const uint32 vscreen_base = screen_base + which_vscreen * 0x800;
 
-//		fmt::print("{}\n", which_vscreen);
-		const Optional<TextScreenData> v = m_ppu.get_bg_text_data(vscreen_base, ly, x);
+		const Optional<TextScreenData> v = m_ppu.get_bg_text_data(vscreen_base, ly % 256u, x % 256u);
 		assert(v.has_value());
 
 		const TextScreenData text_data = *v;
