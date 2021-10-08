@@ -7,8 +7,10 @@ class GBASound {
 	static constexpr const unsigned output_sample_rate = 48000;
 	static constexpr const double requested_latency = 0.02;     //  in seconds
 
-	static constexpr const unsigned psg_sample_count = (unsigned)(psg_sample_rate * requested_latency);
-	static constexpr const unsigned output_sample_count = (unsigned)(output_sample_rate * requested_latency);
+	static constexpr const unsigned psg_sample_count = (unsigned)(psg_sample_rate * requested_latency) * 2;
+	static constexpr const unsigned output_sample_count = (unsigned)(output_sample_rate * requested_latency) * 2;
+	static_assert(psg_sample_count % 2 == 0, "Invalid PSG sample count. Should be a multiple of 2 (L+R).");
+	static_assert(output_sample_count % 2 == 0, "Invalid output sample count. Should be a multiple of 2 (L+R).");
 
 	SDL_AudioSpec m_device_spec;
 	SDL_AudioDeviceID m_device;

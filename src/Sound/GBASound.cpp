@@ -12,11 +12,11 @@ void GBASound::init() {
 
 	request.freq = output_sample_rate;
 	request.format = AUDIO_F32;
-	request.channels = 1;
+	request.channels = 2;
 	request.samples = output_sample_count;
 	request.callback = nullptr;
 
-	m_device = SDL_OpenAudioDevice(nullptr, 0, &request, &m_device_spec, SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+	m_device = SDL_OpenAudioDevice(nullptr, 0, &request, &m_device_spec, 0);
 	if(m_device == 0) {
 		fmt::print("Sound/ Failed opening audio device: {}\n", SDL_GetError());
 		return;
@@ -34,21 +34,54 @@ void GBASound::cycle() {
 	if((m_cycles % 64) != 0)
 		return;
 
+	auto& io = GaBber::instance().mem().io;
 	const float ch1 = generate_sample_ch1();
 	const float ch2 = generate_sample_ch2();
 	const float ch3 = generate_sample_ch3();
 	const float ch4 = generate_sample_ch4();
 
-	m_internal_samples[m_current_sample] = ch1 + ch2 + ch3 + ch4;
+	const float master_volume = 1.0f;
+	const float vol_l = (float)io.soundcntL->volume_l / 7.0f;
+	const float vol_r = (float)io.soundcntL->volume_r / 7.0f;
+	float left_sample = 0.0f;
+	float right_sample = 0.0f;
 
-	if(m_current_sample != m_internal_samples.size() - 1) {
-		m_current_sample++;
+	if(io.soundcntL->channel_enable_l & 0b0001) {
+		left_sample += ch1 * vol_l;
+	}
+	if(io.soundcntL->channel_enable_r & 0b0001) {
+		right_sample += ch1 * vol_r;
+	}
+	if(io.soundcntL->channel_enable_l & 0b0010) {
+		left_sample += ch2 * vol_l;
+	}
+	if(io.soundcntL->channel_enable_r & 0b0010) {
+		right_sample += ch2 * vol_r;
+	}
+	if(io.soundcntL->channel_enable_l & 0b0100) {
+		left_sample += ch3 * vol_l;
+	}
+	if(io.soundcntL->channel_enable_r & 0b0100) {
+		right_sample += ch3 * vol_r;
+	}
+	if(io.soundcntL->channel_enable_l & 0b1000) {
+		left_sample += ch4 * vol_l;
+	}
+	if(io.soundcntL->channel_enable_r & 0b1000) {
+		right_sample += ch4 * vol_r;
+	}
+
+	m_internal_samples[m_current_sample] = master_volume * left_sample;
+	m_internal_samples[m_current_sample+1] = master_volume * right_sample;
+
+	if(m_current_sample != m_internal_samples.size() - 2) {
+		m_current_sample += 2;
 		return;
 	}
 	m_current_sample = 0;
 
-	const unsigned queued_size = SDL_GetQueuedAudioSize(m_device) / sizeof(float);
-	const unsigned half_buffer_size = output_sample_count / 2;
+	const unsigned queued_size = SDL_GetQueuedAudioSize(m_device) / (sizeof(float)*2);
+	const unsigned half_buffer_size = (output_sample_count/2) / 2;
 	if(queued_size < half_buffer_size) {
 //		fmt::print("Sound/ Lagging behind! Increasing sound rate\n");
 		m_speed_scale += 1;
@@ -58,7 +91,7 @@ void GBASound::cycle() {
 	}
 
 	assert(
-			SDL_BuildAudioCVT(&m_out_converter, AUDIO_F32, 1, psg_sample_rate, AUDIO_F32, 1, output_sample_rate)
+			SDL_BuildAudioCVT(&m_out_converter, AUDIO_F32, 2, psg_sample_rate, AUDIO_F32, 2, output_sample_rate)
 			> 0
 	);
 	std::vector<uint8> output;
@@ -89,12 +122,6 @@ float GBASound::generate_sample_ch1() {
 	auto& io = GaBber::instance().mem().io;
 	auto& ch1 = io.ch1ctlX;
 
-	if(!(io.soundcntL->channel_enable_l & 0b0001) && !(io.soundcntL->channel_enable_r & 0b0001)) {
-		return 0.0f;
-	}
-
-	const float volume = 0.2;
-
 	const unsigned sample_rate = 262144;    //  in Hz
 	const unsigned sample_number = m_cycles / 64;
 	const unsigned freq = 131072u / (2048u - ch1->frequency);
@@ -111,7 +138,7 @@ float GBASound::generate_sample_ch1() {
 	}
 
 	const float phi = s_ch1_phi;
-	const float sample = volume * std::sin(wt - phi);
+	const float sample = 0.4f * std::sin(wt - phi);
 
 	s_last_phi = ft;
 	s_last_freq = freq;
@@ -127,12 +154,6 @@ float GBASound::generate_sample_ch2() {
 
 	auto& io = GaBber::instance().mem().io;
 	auto& ch2 = io.ch2ctlH;
-
-	if(!(io.soundcntL->channel_enable_l & 0b0010) && !(io.soundcntL->channel_enable_r & 0b0010)) {
-		return 0.0f;
-	}
-
-	const float volume = 0.2;
 
 	const unsigned sample_rate = 262144;    //  in Hz
 	const unsigned sample_number = m_cycles / 64;
@@ -150,7 +171,7 @@ float GBASound::generate_sample_ch2() {
 	}
 
 	const float phi = s_ch2_phi;
-	const float sample = volume * sin(wt - phi);
+	const float sample = 0.4f * sin(wt - phi);
 
 	s_last_phi = ft;
 	s_last_freq = freq;
