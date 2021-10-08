@@ -33,11 +33,41 @@ void IORegisters::draw_window() {
 
 void IORegisters::draw_interrupts() {
 	auto& cpu = m_emu.cpu();
-	ImGui::Text("IF: %04x", *cpu.io.if_);
-	ImGui::Text("IE: %04x", *cpu.io.ie);
-	ImGui::Text("IME: %08x", *cpu.io.ime);
-	ImGui::Text("Wait cycles: %d\n", cpu.m_wait_cycles);
 
+	static constexpr char const* labels[14] = {
+		"VBlank", "HBlank", "VCounter", "Timer 0",
+		"Timer 1", "Timer 2", "Timer 3", "Serial",
+		"DMA0", "DMA1", "DMA2", "DMA3",
+		"Keypad", "Game Pak"
+	};
+
+	bool if_values[14] = {};
+	bool ie_values[14] = {};
+	for(unsigned i = 0; i < 14; ++i) {
+		if_values[i] = (*cpu.io.if_) & (1u << i);
+		ie_values[i] = (*cpu.io.ie) & (1u << i);
+	}
+
+	ImGui::NewLine();
+	ImGui::SameLine(106.0f); ImGui::Text("IE");
+	ImGui::SameLine(156.0f); ImGui::Text("IF");
+	for(unsigned i = 0; i < 14; ++i) {
+		ImGui::Text("%s", labels[i]);
+		ImGui::SameLine(100.0f);
+
+		auto str_ie = "##ie" + std::to_string(i);
+		auto str_if = "##if" + std::to_string(i);
+
+		ImGui::Checkbox(str_ie.c_str(), &ie_values[i]);
+		ImGui::SameLine(150.0f);
+		ImGui::Checkbox(str_if.c_str(), &if_values[i]);
+	}
+
+	bool ime = *cpu.io.ime & 1u;
+	ImGui::Text("IME");
+	ImGui::SameLine(100.0f);
+	ImGui::Checkbox("##ime", &ime);
+	ImGui::Text("Wait cycles: %d\n", cpu.m_wait_cycles);
 }
 
 void IORegisters::draw_ppu() {
