@@ -295,10 +295,44 @@ void IORegisters::draw_dma() {
 	DMAx<3> const& dma3 = cpu.io.dma3;
 
 
-	auto draw_dma_stats = [](auto& dma) {
+
+	auto draw_dma_stats = []<const unsigned n>(DMAx<n> const& dma) {
+		bool active = dma.m_is_running;
+		ImGui::Checkbox("Active", &active);
+		bool enabled = dma.m_ctrl->enable;
+		ImGui::SameLine();
+		ImGui::Checkbox("Enabled", &enabled);
+		bool repeat = dma.m_ctrl->repeat;
+		ImGui::Checkbox("Repeat", &repeat);
+		ImGui::SameLine();
+		bool irq_on_end = dma.m_ctrl->irq_on_finish;
+		ImGui::Checkbox("IRQ on finish", &irq_on_end);
+		ImGui::Text("Transfer type: %s", dma.m_ctrl->transfer_size ? "32bit" : "16bit");
+
+		auto timing = dma.m_ctrl->start_timing;
+		auto timing_str = [](DMAStartTiming timing) -> const char* {
+			switch (timing) {
+				case DMAStartTiming::HBlank:
+					return "HBlank";
+				case DMAStartTiming::VBlank:
+					return "VBlank";
+				case DMAStartTiming::Immediate:
+					return "Immediate";
+				case DMAStartTiming::Special:
+				default:
+					return "Special";
+			}
+		};
+
+		ImGui::Text("Start timing: %s", timing_str(timing));
+
 		ImGui::Text("Source: %08x", *dma.m_source);
-		ImGui::Text("Dest: %08x", *dma.m_destination);
-		ImGui::Text("Words: %d", dma.m_ctrl->word_count);
+		ImGui::Text("Destination: %08x", *dma.m_destination);
+		ImGui::Text("Word count: %d", dma.m_ctrl->word_count);
+
+		ImGui::Text("Internal Source: %08x", dma.m_source_ptr);
+		ImGui::Text("Internal Destination: %08x", dma.m_destination_ptr);
+
 	};
 
 	ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0, 5.0));
