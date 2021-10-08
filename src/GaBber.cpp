@@ -114,6 +114,14 @@ void GaBber::emulator_next_state() {
 			m_sound.cycle();
 		}
 	}
+
+	m_cycle_samples[m_current_sample++] = cycles;
+	if(mem().io.haltcnt.m_halt) {
+		m_cycle_samples[m_current_sample-1] += 1000;
+	}
+	if(m_current_sample == 10000) {
+		m_current_sample = 0;
+	}
 }
 
 void GaBber::toggle_debug_mode() {

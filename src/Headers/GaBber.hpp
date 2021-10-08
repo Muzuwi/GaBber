@@ -29,6 +29,8 @@ class GaBber {
 	SDL_GLContext m_gabberGLContext;
 	unsigned m_window_scale {5};
 	GLuint m_fb, m_gba_texture;
+	unsigned m_current_sample;
+	Array<unsigned, 10000> m_cycle_samples;
 
 	void _disp_create_gl_state();
 	void _disp_poll_events();
@@ -71,4 +73,9 @@ public:
 
 	void single_step() { m_do_step = true; }
 	void resume() { m_running = true; }
+
+	Array<unsigned, 10000> const& cycle_samples() const {
+		return m_cycle_samples;
+	}
+
 };

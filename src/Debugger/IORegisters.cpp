@@ -68,6 +68,18 @@ void IORegisters::draw_interrupts() {
 	ImGui::SameLine(100.0f);
 	ImGui::Checkbox("##ime", &ime);
 	ImGui::Text("Wait cycles: %d\n", cpu.m_wait_cycles);
+
+	ImGui::PlotLines("Cycle count per state update",
+	                 [](void* data, int index) -> float {
+		                 return static_cast<float>(reinterpret_cast<unsigned*>(data)[index]);
+	                 },
+	                 (void*)&GaBber::instance().cycle_samples()[0],
+	                 GaBber::instance().cycle_samples().size(),
+					 0,
+					 nullptr,
+					 0,
+					 100,
+					 ImVec2(800.0, 200.0));
 }
 
 void IORegisters::draw_ppu() {
