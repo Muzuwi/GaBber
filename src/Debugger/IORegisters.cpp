@@ -41,7 +41,168 @@ void IORegisters::draw_interrupts() {
 }
 
 void IORegisters::draw_ppu() {
-	ImGui::Text("PPU");
+	//  Because layout in ImGui requires a lot of boilerplate, these
+	//  are at the top to make it easier to change them
+	auto draw_dispcnt = [this] {
+		auto& ctl = m_emu.mem().io.dispcnt;
+
+		ImGui::Text("BG Mode: %d\n", ctl->video_mode);
+		ImGui::Text("Frame Select: %d\n", ctl->frame_select);
+		ImGui::Text("OAM Access: %d\n", ctl->oam_in_HBlank);
+		ImGui::Text("OBJ Mapping: %s", ctl->obj_one_dim ? "One-dimensional" : "Two-dimensional");
+		ImGui::Text("Forced blank: %d", ctl->forced_blank);
+		bool values[5] = {
+				ctl->BG0,
+				ctl->BG1,
+				ctl->BG2,
+				ctl->BG3,
+				ctl->OBJ
+		};
+		ImGui::Checkbox("BG0", &values[0]); ImGui::SameLine();
+		ImGui::Checkbox("BG1", &values[1]); ImGui::SameLine();
+		ImGui::Checkbox("BG2", &values[2]); ImGui::SameLine();
+		ImGui::Checkbox("BG3", &values[3]); ImGui::SameLine();
+		ImGui::Checkbox("OBJ", &values[4]);
+
+		bool windowValues[3] = {
+				ctl->window0,
+				ctl->window1,
+				ctl->objWindow
+		};
+		ImGui::Checkbox("Window 0", &windowValues[0]); ImGui::SameLine();
+		ImGui::Checkbox("Window 1", &windowValues[1]); ImGui::SameLine();
+		ImGui::Checkbox("OBJ Window", &windowValues[2]);
+	};
+	auto draw_dispstat = [this] {
+		auto& stat = m_emu.mem().io.dispstat;
+		bool values[] = {
+				stat->VBlank,
+				stat->HBlank,
+				stat->VCounter,
+				stat->VBlank_IRQ,
+				stat->HBlank_IRQ,
+				stat->VCounter_IRQ
+		};
+
+		ImGui::Checkbox("VBlank", &values[0]); ImGui::SameLine();
+		ImGui::Checkbox("IRQ", &values[3]);
+		ImGui::Checkbox("HBlank", &values[1]); ImGui::SameLine();
+		ImGui::Checkbox("IRQ", &values[4]);
+		ImGui::Checkbox("VCounter", &values[2]); ImGui::SameLine();
+		ImGui::Checkbox("IRQ", &values[5]);
+		ImGui::Text("LYC: %d", stat->VCounter);
+		ImGui::Text("LY: %d", *m_emu.mem().io.vcount);
+	};
+	auto draw_bg0 = [this] {
+		auto& bg = m_emu.mem().io.bg0;
+		ImGui::Text("Priority: %d", bg.m_control->priority);
+		ImGui::Text("Tile base: %08x", 0x06000000 + bg.m_control->base_tile_block * 2 * kB);
+		ImGui::Text("Screen base: %08x", 0x06000000 + bg.m_control->base_screen_block * 16 * kB);
+		ImGui::Text("Screen size: %dx%d",
+		            bg.m_control->screen_size & 1u ? 512u : 256u,
+		            bg.m_control->screen_size & 2u ? 512u : 256u);
+		bool color = bg.m_control->palette_flag;
+		bool mosaic = bg.m_control->palette_flag;
+		ImGui::Checkbox("Depth flag", &color);
+		ImGui::SameLine();
+		ImGui::Checkbox("Mosaic", &color);
+	};
+	auto draw_bg1 = [this] {
+		auto& bg = m_emu.mem().io.bg1;
+		ImGui::Text("Priority: %d", bg.m_control->priority);
+		ImGui::Text("Tile base: %08x", 0x06000000 + bg.m_control->base_tile_block * 2 * kB);
+		ImGui::Text("Screen base: %08x", 0x06000000 + bg.m_control->base_screen_block * 16 * kB);
+		ImGui::Text("Screen size: %dx%d",
+		            bg.m_control->screen_size & 1u ? 512u : 256u,
+		            bg.m_control->screen_size & 2u ? 512u : 256u);
+		bool color = bg.m_control->palette_flag;
+		bool mosaic = bg.m_control->palette_flag;
+		ImGui::Checkbox("Depth flag", &color);
+		ImGui::SameLine();
+		ImGui::Checkbox("Mosaic", &color);
+	};
+	auto draw_bg2 = [this] {
+		auto& bg = m_emu.mem().io.bg2;
+		ImGui::Text("Priority: %d", bg.m_control->priority);
+		ImGui::Text("Tile base: %08x", 0x06000000 + bg.m_control->base_tile_block * 2 * kB);
+		ImGui::Text("Screen base: %08x", 0x06000000 + bg.m_control->base_screen_block * 16 * kB);
+		ImGui::Text("Screen size: %dx%d",
+		            bg.m_control->screen_size & 1u ? 512u : 256u,
+		            bg.m_control->screen_size & 2u ? 512u : 256u);
+		bool color = bg.m_control->palette_flag;
+		bool mosaic = bg.m_control->palette_flag;
+		ImGui::Checkbox("Depth flag", &color);
+		ImGui::SameLine();
+		ImGui::Checkbox("Mosaic", &color);
+	};
+	auto draw_bg3 = [this] {
+		auto& bg = m_emu.mem().io.bg3;
+		ImGui::Text("Priority: %d", bg.m_control->priority);
+		ImGui::Text("Tile base: %08x", 0x06000000 + bg.m_control->base_tile_block * 2 * kB);
+		ImGui::Text("Screen base: %08x", 0x06000000 + bg.m_control->base_screen_block * 16 * kB);
+		ImGui::Text("Screen size: %dx%d",
+		            bg.m_control->screen_size & 1u ? 512u : 256u,
+		            bg.m_control->screen_size & 2u ? 512u : 256u);
+		bool color = bg.m_control->palette_flag;
+		bool mosaic = bg.m_control->palette_flag;
+		ImGui::Checkbox("Depth flag", &color);
+		ImGui::SameLine();
+		ImGui::Checkbox("Mosaic", &color);
+	};
+
+	ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0, 5.0));
+	if(ImGui::BeginTable("dispcntstat", 2, ImGuiTableFlags_Borders)) {
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn(); ImGui::TableHeader("DISPCNT");
+		ImGui::TableNextColumn(); ImGui::TableHeader("DISPSTAT");
+
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		{
+			draw_dispcnt();
+		}
+		ImGui::TableNextColumn();
+		{
+			draw_dispstat();
+		}
+		ImGui::EndTable();
+	}
+	ImGui::PopStyleVar(1);
+
+	ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0, 5.0));
+	if(ImGui::BeginTable("pputab", 2, ImGuiTableFlags_Borders)) {
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn(); ImGui::TableHeader("BG0");
+		ImGui::TableNextColumn(); ImGui::TableHeader("BG1");
+
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		{
+			draw_bg0();
+		}
+		ImGui::TableNextColumn();
+		{
+			draw_bg1();
+		}
+
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn(); ImGui::TableHeader("BG2");
+		ImGui::TableNextColumn(); ImGui::TableHeader("BG3");
+
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		{
+			draw_bg2();
+		}
+		ImGui::TableNextColumn();
+		{
+			draw_bg3();
+		}
+
+		ImGui::EndTable();
+	}
+	ImGui::PopStyleVar(1);
+
 }
 
 void IORegisters::draw_sound() {
