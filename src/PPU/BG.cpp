@@ -118,8 +118,6 @@ void Backgrounds::draw_mode4() {
 }
 
 void Backgrounds::draw_mode5() {
-	ASSERT_NOT_REACHED();
-
 	const auto& ctl = m_ppu.mem.io.dispcnt;
 
 	if(ctl->BG2) {
@@ -130,10 +128,9 @@ void Backgrounds::draw_mode5() {
 			const auto line_offset = ly * 240;
 			const auto pixel = m_ppu.mem.vram.read8(frame_offset + line_offset + i);
 			const Optional<Color> color = m_ppu.get_palette_color(0, pixel);
-			const auto framebuffer_address = ly * 240 + i;
 
 			assert(color.has_value());
-			m_ppu.m_framebuffer[framebuffer_address] = PPU::color_to_rgba32(*color);
+			m_ppu.colorbuffer_write_bg(i, 1, 0, *color);
 		}
 	}
 }
