@@ -21,6 +21,9 @@ uint8 PakSRAM::read8(uint32 offset) {
 	const unsigned size = m_type == BackupCartType::FLASH64K ? 65536 : 65536*2;
 	const auto buffer_offset = (m_bank * 0x10000 + (offset & 0xFFFFu)) % size;
 
+	if(offset >= m_buffer.size()) {
+		return 0xFF;
+	}
 	fmt::print("PakSRAM/ Read {:02x}=[{:04x}]\n", m_buffer[buffer_offset], buffer_offset);
 	return m_buffer[buffer_offset];
 }
