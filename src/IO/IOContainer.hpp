@@ -46,6 +46,8 @@ struct IOContainer {
 	SoundCtlH soundctlH;
 	SoundCtlX soundctlX;
 	SoundBias soundbias;
+	SoundFifoA fifoA;
+	SoundFifoB fifoB;
 
 	DMAx<0> dma0;
 	DMAx<1> dma1;
@@ -69,6 +71,7 @@ struct IOContainer {
 	MemCtl memctl;
 	Backdoor backdoor;
 
+	EmptyReg<0x0400008C> reg8C;
 	EmptyReg<0x040000E0> regE0;
 	EmptyReg<0x04000110> reg110;
 	IOReg16<0x04000410> reg410;

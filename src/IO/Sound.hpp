@@ -376,3 +376,26 @@ protected:
 		return m_register & readable_mask;
 	}
 };
+
+
+class SoundFifoA final : public IOReg32<0x040000A0> {
+protected:
+	void on_write(uint32 new_value) override {
+		m_register = new_value;
+	}
+	uint32 on_read() override {
+		//  FIXME: unreadable I/O register
+		return 0xBABEBABE;
+	}
+};
+
+class SoundFifoB final : public IOReg32<0x040000A4> {
+protected:
+	void on_write(uint32 new_value) override {
+		m_register = new_value;
+	}
+	uint32 on_read() override {
+		//  FIXME: unreadable I/O register
+		return 0xBABEBABE;
+	}
+};

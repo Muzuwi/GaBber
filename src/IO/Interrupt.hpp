@@ -103,7 +103,7 @@ protected:
 template<unsigned address>
 class EmptyReg : public IOReg32<address> {
 protected:
-	void on_write(uint32 new_value) override {
+	void on_write(uint32) override {
 
 	}
 

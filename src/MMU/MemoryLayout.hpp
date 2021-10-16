@@ -8,8 +8,8 @@
 
 struct MemoryLayout {
 	SystemBIOS bios;
-	[[maybe_unused]] OnboardWRAM onboard_wram;
-	[[maybe_unused]] OnchipWRAM onchip_wram;
+	OnboardWRAM onboard_wram;
+	OnchipWRAM onchip_wram;
 	IOContainer io;
 
 	VRAM vram;

@@ -217,7 +217,7 @@ class GreenSwap : public IOReg16<0x04000002> {
 };
 
 class DISPSTAT : public IOReg16<0x04000004> {
-	void on_write(T new_value) override {
+	void on_write(uint16 new_value) override {
 		m_register = new_value & 0xFF38u;
 	}
 	uint16 on_read() override {
@@ -289,7 +289,7 @@ protected:
 	}
 	uint16 on_read() override {
 		//  FIXME: unreadable I/O register
-		return 0xBABEBABE;
+		return 0xBABE;
 	}
 };
 
@@ -301,7 +301,7 @@ protected:
 	}
 	uint16 on_read() override {
 		//  FIXME: unreadable I/O register
-		return 0xBABEBABE;
+		return 0xBABE;
 	}
 };
 
