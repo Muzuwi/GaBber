@@ -35,11 +35,20 @@ class OffsetReg final : public IOReg16<address> {
 	void on_write(uint16 val) override {
 		this->m_register = val & 0b111111111;
 	}
+
+	uint16 on_read() override {
+		return 0x0;
+	}
 };
 
 
-template<unsigned address>
+template<unsigned x, unsigned address>
 class BGCNT final : public IOReg16<address> {
+	void on_write(uint16 val) override {
+		constexpr const uint32 mask = (x == 0 || x == 1) ? 0xDFFF
+														 : 0xFFFF;
+		this->m_register = val & mask;
+	}
 public:
 	BGxCNTReg* operator->() {
 		return this->template as<BGxCNTReg>();
@@ -58,7 +67,7 @@ private:
 	static constexpr uint32 ctl_addr = 0x04000008 + n * 2;
 	static constexpr uint32 xy_base = 0x04000010 + n * 4;
 public:
-	BGCNT<ctl_addr> m_control;
+	BGCNT<n, ctl_addr> m_control;
 	OffsetReg<xy_base> m_xoffset;
 	OffsetReg<xy_base+2> m_yoffset;
 };

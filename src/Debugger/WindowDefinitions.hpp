@@ -1,9 +1,10 @@
 #pragma once
+#include "imgui/imgui.h"
+#include "imgui/imgui_memory_editor.h"
 #include "GL/gl3w.h"
 #include "Headers/StdTypes.hpp"
 #include "Debugger/DebuggerWindow.hpp"
 #include "MMU/BusDevice.hpp"
-#include "imgui/imgui_memory_editor.h"
 
 
 class MemEditor : public DebuggerWindow {

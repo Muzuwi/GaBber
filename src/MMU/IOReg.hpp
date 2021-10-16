@@ -33,9 +33,11 @@ protected:
 		assert(reg_size >= struct_size);
 		assert(offset + struct_size <= reg_size);
 
-		//  FIXME: This is probably not portable
-		T value = on_read();
-		return *reinterpret_cast<V const*>(reinterpret_cast<uint8 const*>(&value) + offset);
+		typedef __attribute__((may_alias)) T Source;
+		typedef __attribute__((may_alias)) V Target;
+
+		Source value = on_read();
+		return *reinterpret_cast<Target const*>(reinterpret_cast<uint8 const*>(&value) + offset);
 	}
 
 	template<typename V>
@@ -44,9 +46,11 @@ protected:
 		assert(reg_size >= struct_size);
 		assert(offset + struct_size <= reg_size);
 
-		//  FIXME: This is probably not portable
-		T new_value = m_register;
-		*reinterpret_cast<V*>(reinterpret_cast<uint8*>(&new_value) + offset) = value;
+		typedef __attribute__((may_alias)) T Source;
+		typedef __attribute__((may_alias)) V Target;
+
+		Source new_value = m_register;
+		*reinterpret_cast<Target*>(reinterpret_cast<uint8*>(&new_value) + offset) = value;
 		this->on_write(new_value);
 	}
 

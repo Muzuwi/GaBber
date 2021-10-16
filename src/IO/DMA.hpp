@@ -106,6 +106,18 @@ protected:
 
 template<unsigned x>
 class DMACtrl final : public IOReg32<DMA::reg_base<x>() + 8> {
+protected:
+	static constexpr const uint32 count_mask    = (x == 3) ? 0xFFFF : 0x3FFF;
+	static constexpr const uint32 writable_mask = 0xffe00000u | count_mask;
+	static constexpr const uint32 readable_mask = 0xffe00000u;
+
+	void on_write(uint32 new_value) override {
+		this->m_register = new_value & writable_mask;
+	}
+
+	uint32 on_read() override {
+		return this->m_register & readable_mask;
+	}
 public:
 	DMACtrlReg* operator->() {
 		return this->template as<DMACtrlReg>();
@@ -114,8 +126,6 @@ public:
 	DMACtrlReg const* operator->() const {
 		return this->template as<DMACtrlReg>();
 	}
-
-	uint32 on_read() override { return this->m_register & 0xffff0000; }
 };
 
 

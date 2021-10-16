@@ -22,19 +22,34 @@ enum class IRQType : uint8 {
 };
 
 class IE final : public IOReg16<0x04000200> {
-public:
+protected:
 	void on_write(uint16 val) override {
 		m_register = (val & ~0xc000);
+	}
+	uint16 on_read() override {
+		return m_register & ~0xc000;
 	}
 };
 
 class IF final : public IOReg16<0x04000202> {
+protected:
 	void on_write(uint16 val) override {
 		m_register &= ~val;
 	}
+	uint16 on_read() override {
+		return m_register & ~0xc000;
+	}
 };
 
-class IME final : public IOReg16<0x04000208> {
+class IME final : public IOReg32<0x04000208> {
+protected:
+	void on_write(uint32 new_value) override {
+		this->m_register = new_value & 1u;
+	}
+
+	uint32 on_read() override {
+		return this->m_register & 1u;
+	}
 public:
 	inline bool enabled() const {
 		return m_register & 1u;

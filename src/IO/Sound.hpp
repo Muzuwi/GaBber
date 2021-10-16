@@ -64,6 +64,12 @@ struct SND3CNTX {
 };
 
 class SoundCtlL final : public IOReg16<0x04000080> {
+	uint16 on_read() override {
+		return this->m_register & 0xFF77u;
+	}
+	void on_write(T new_value) override {
+		this->m_register = new_value & 0xFF77u;
+	}
 public:
 	SNDCNT_L* operator->() {
 		return this->template as<SNDCNT_L>();
@@ -75,6 +81,12 @@ public:
 };
 
 class Sound1CtlL final : public IOReg16<0x04000060> {
+	void on_write(uint16 new_value) override {
+		this->m_register = new_value & ~0xFF80u;
+	}
+	uint16 on_read() override {
+		return this->m_register & ~0xFF80u;
+	}
 public:
 	SND1CNTL* operator->() {
 		return this->template as<SND1CNTL>();
@@ -86,6 +98,12 @@ public:
 };
 
 class Sound1CtlH final : public IOReg16<0x04000062> {
+	void on_write(uint16 new_value) override {
+		this->m_register = new_value;
+	}
+	uint16 on_read() override {
+		return this->m_register & ~0x3F;
+	}
 public:
 	SND1CNTH* operator->() {
 		return this->template as<SND1CNTH>();
@@ -97,6 +115,12 @@ public:
 };
 
 class Sound1CtlX final : public IOReg32<0x04000064> {
+	void on_write(uint32 new_value) override {
+		this->m_register = new_value & 0xC7FFu;
+	}
+	uint32 on_read() override {
+		return 0x4000;
+	}
 public:
 	SND1CNTX* operator->() {
 		return this->template as<SND1CNTX>();
@@ -108,6 +132,12 @@ public:
 };
 
 class Sound2CtlL final : public IOReg16<0x04000068> {
+	void on_write(uint16 new_value) override {
+		this->m_register = new_value;
+	}
+	uint16 on_read() override {
+		return this->m_register & ~0x3F;
+	}
 public:
 	SND1CNTH* operator->() {
 		return this->template as<SND1CNTH>();
@@ -119,6 +149,12 @@ public:
 };
 
 class Sound2CtlH final : public IOReg32<0x0400006c> {
+	void on_write(uint32 new_value) override {
+		this->m_register = new_value & 0xC7FFu;
+	}
+	uint32 on_read() override {
+		return 0x4000;
+	}
 public:
 	SND1CNTX* operator->() {
 		return this->template as<SND1CNTX>();
@@ -130,6 +166,16 @@ public:
 };
 
 class Sound3CtlL final : public IOReg16<0x04000070> {
+protected:
+	static constexpr const uint32 writeable_mask = 0x00E0;
+	static constexpr const uint32 readable_mask = 0x00E0;
+
+	void on_write(uint16 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint16 on_read() override {
+		return m_register & readable_mask;
+	}
 public:
 	SND3CNTL* operator->() {
 		return this->template as<SND3CNTL>();
@@ -140,6 +186,16 @@ public:
 	}
 };
 class Sound3CtlH final : public IOReg16<0x04000072> {
+protected:
+	static constexpr const uint32 writeable_mask = 0xE0FF;
+	static constexpr const uint32 readable_mask = 0xE000;
+
+	void on_write(uint16 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint16 on_read() override {
+		return m_register & readable_mask;
+	}
 public:
 	SND3CNTH* operator->() {
 		return this->template as<SND3CNTH>();
@@ -150,6 +206,16 @@ public:
 	}
 };
 class Sound3CtlX final : public IOReg32<0x04000074> {
+protected:
+	static constexpr const uint32 writeable_mask = 0x0000C7FF;
+	static constexpr const uint32 readable_mask  = 0x00004000;
+
+	void on_write(uint32 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint32 on_read() override {
+		return m_register & readable_mask;
+	}
 public:
 	SND3CNTX* operator->() {
 		return this->template as<SND3CNTX>();

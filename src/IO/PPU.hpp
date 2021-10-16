@@ -192,6 +192,16 @@ struct OBJAttr {
 
 
 class DISPCNT : public IOReg16<0x04000000> {
+	void on_write(uint16 new_value) override {
+		if((new_value & 0b111u) > 5) {
+			new_value = (new_value & ~0b111u) | (m_register & 0b111u);
+		}
+
+		m_register = new_value & ~0x0008u;
+	}
+	uint16 on_read() override {
+		return m_register;
+	}
 public:
 	DISPCNTReg* operator->() {
 		return this->template as<DISPCNTReg>();
@@ -210,6 +220,9 @@ class DISPSTAT : public IOReg16<0x04000004> {
 	void on_write(T new_value) override {
 		m_register = new_value & 0xFF38u;
 	}
+	uint16 on_read() override {
+		return m_register;
+	}
 public:
 	DISPSTATReg* operator->() {
 		return this->template as<DISPSTATReg>();
@@ -221,8 +234,10 @@ public:
 };
 
 class VCOUNT : public IOReg16<0x04000006> {
-	void on_write(T new_value) override {
-		m_register = new_value & 0x00FFu;
+	void on_write(uint16) override {
+	}
+	uint16 on_read() override {
+		return m_register & 0x00FFu;
 	}
 public:
 };

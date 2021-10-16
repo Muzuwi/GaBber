@@ -26,6 +26,17 @@ public:
 
 template<unsigned x>
 class TimerCtl final : public IOReg16<0x04000102 + x*4> {
+protected:
+	static constexpr const uint32 countup_mask = (x != 0) ? 0x4u : 0u;
+	static constexpr const uint32 writeable_mask = 0xC3 | countup_mask;
+	static constexpr const uint32 readable_mask  = writeable_mask;
+
+	void on_write(uint16 val) override {
+		this->m_register = val & writeable_mask;
+	}
+	uint16 on_read() override {
+		return this->m_register & readable_mask;
+	}
 public:
 	TimerReg* operator->() {
 		return this->template as<TimerReg>();
