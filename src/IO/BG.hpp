@@ -37,7 +37,8 @@ class OffsetReg final : public IOReg16<address> {
 	}
 
 	uint16 on_read() override {
-		return 0x0;
+		//  FIXME: unreadable I/O register
+		return 0xBABEBABE;
 	}
 };
 

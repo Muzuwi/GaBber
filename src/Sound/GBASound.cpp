@@ -41,33 +41,33 @@ void GBASound::cycle() {
 	const float ch4 = generate_sample_ch4();
 
 	const float master_volume = 1.0f;
-	const float vol_l = (float)io.soundcntL->volume_l / 7.0f;
-	const float vol_r = (float)io.soundcntL->volume_r / 7.0f;
+	const float vol_l = (float)io.soundctlL->volume_l / 7.0f;
+	const float vol_r = (float)io.soundctlL->volume_r / 7.0f;
 	float left_sample = 0.0f;
 	float right_sample = 0.0f;
 
-	if(io.soundcntL->channel_enable_l & 0b0001) {
+	if(io.soundctlL->channel_enable_l & 0b0001) {
 		left_sample += ch1 * vol_l;
 	}
-	if(io.soundcntL->channel_enable_r & 0b0001) {
+	if(io.soundctlL->channel_enable_r & 0b0001) {
 		right_sample += ch1 * vol_r;
 	}
-	if(io.soundcntL->channel_enable_l & 0b0010) {
+	if(io.soundctlL->channel_enable_l & 0b0010) {
 		left_sample += ch2 * vol_l;
 	}
-	if(io.soundcntL->channel_enable_r & 0b0010) {
+	if(io.soundctlL->channel_enable_r & 0b0010) {
 		right_sample += ch2 * vol_r;
 	}
-	if(io.soundcntL->channel_enable_l & 0b0100) {
+	if(io.soundctlL->channel_enable_l & 0b0100) {
 		left_sample += ch3 * vol_l;
 	}
-	if(io.soundcntL->channel_enable_r & 0b0100) {
+	if(io.soundctlL->channel_enable_r & 0b0100) {
 		right_sample += ch3 * vol_r;
 	}
-	if(io.soundcntL->channel_enable_l & 0b1000) {
+	if(io.soundctlL->channel_enable_l & 0b1000) {
 		left_sample += ch4 * vol_l;
 	}
-	if(io.soundcntL->channel_enable_r & 0b1000) {
+	if(io.soundctlL->channel_enable_r & 0b1000) {
 		right_sample += ch4 * vol_r;
 	}
 
@@ -183,7 +183,7 @@ float GBASound::generate_sample_ch3() {
 	static unsigned s_which_digit {0};
 	auto& io = GaBber::instance().mem().io;
 
-	if(!(io.soundcntL->channel_enable_l & 0b0100) && !(io.soundcntL->channel_enable_r & 0b0100)) {
+	if(!(io.soundctlL->channel_enable_l & 0b0100) && !(io.soundctlL->channel_enable_r & 0b0100)) {
 		return 0.0f;
 	}
 

@@ -73,3 +73,42 @@ public:
 class POSTFLG final : public IOReg8<0x04000300> {
 
 };
+
+class WaitControl final : public IOReg32<0x04000204> {
+protected:
+	static constexpr const uint32 writeable_mask = 0x00005FFF;
+	static constexpr const uint32 readable_mask  = 0x00005FFF;
+
+	void on_write(uint32 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint32 on_read() override {
+		return m_register & readable_mask;
+	}
+};
+
+class MemCtl final : public IOReg32<0x04000800> {
+protected:
+	static constexpr const uint32 writeable_mask = 0xFF00002F;
+	static constexpr const uint32 readable_mask  = 0xFF00002F;
+
+	void on_write(uint32 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint32 on_read() override {
+		return m_register & readable_mask;
+	}
+};
+
+template<unsigned address>
+class EmptyReg : public IOReg32<address> {
+protected:
+	void on_write(uint32 new_value) override {
+
+	}
+
+	uint32 on_read() override {
+		//  FIXME: unreadable I/O register
+		return 0xBABEBABE;
+	}
+};

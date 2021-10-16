@@ -296,19 +296,19 @@ void IORegisters::draw_sound() {
 	};
 	ImGui::Text("Channels [L]: "); ImGui::SameLine();
 	for(unsigned i = 0; i < 4; ++i) {
-		bool v = io.soundcntL->channel_enable_l & (1 << i);
+		bool v = io.soundctlL->channel_enable_l & (1 << i);
 		ImGui::Checkbox(strings[i], &v);
 		if(i != 3) ImGui::SameLine();
 	}
 	ImGui::Text("Channels [R]: "); ImGui::SameLine();
 	for(unsigned i = 0; i < 4; ++i) {
-		bool v = io.soundcntL->channel_enable_r & (1 << i);
+		bool v = io.soundctlL->channel_enable_r & (1 << i);
 		ImGui::Checkbox(strings[i], &v);
 		if(i != 3) ImGui::SameLine();
 	}
 
-	int vol_l = io.soundcntL->volume_l;
-	int vol_r = io.soundcntL->volume_r;
+	int vol_l = io.soundctlL->volume_l;
+	int vol_r = io.soundctlL->volume_r;
 	ImGui::Text("Volume [L]"); ImGui::SameLine();
 	ImGui::PushID("volL");
 	ImGui::SliderInt("", &vol_l, 0, 7);

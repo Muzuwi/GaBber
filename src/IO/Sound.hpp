@@ -23,6 +23,23 @@ struct SND1CNTX {
 	uint16 _unused2     : 16;
 };
 
+struct SND2CNTL {
+	uint8 length        : 6;
+	uint8 duty          : 2;
+	uint8 envelope_step : 3;
+	uint8 envelope_inc  : 1;
+	uint8 envelope_vol  : 4;
+	uint16 _unused      : 16;
+};
+
+struct SND2CNTH {
+	uint16 frequency    : 11;
+	uint8 _unused1      : 3;
+	bool  length_flag   : 1;
+	bool  initial       : 1;
+	uint16 _unused2     : 16;
+};
+
 struct SNDCNT_L {
 	uint8 volume_r : 3;
 	uint8 _unused1 : 1;
@@ -80,6 +97,46 @@ public:
 	}
 };
 
+class SoundCtlH final : public IOReg16<0x04000082> {
+protected:
+	static constexpr const uint16 writeable_mask = 0xFF0F;
+	static constexpr const uint16 readable_mask  = 0x770F;
+
+	void on_write(uint16 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint16 on_read() override {
+		return m_register & readable_mask;
+	}
+};
+
+class SoundCtlX final : public IOReg32<0x04000084> {
+protected:
+	static constexpr const uint32 writeable_mask = 0x00000080;
+	static constexpr const uint32 readable_mask  = 0x0000008F;
+
+	void on_write(uint32 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint32 on_read() override {
+		return m_register & readable_mask;
+	}
+};
+
+class SoundBias final : public IOReg32<0x04000088> {
+protected:
+	static constexpr const uint32 writeable_mask = 0x0000C3FE;
+	static constexpr const uint32 readable_mask  = 0x0000C3FE;
+
+	void on_write(uint32 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint32 on_read() override {
+		return m_register & readable_mask;
+	}
+};
+
+
 class Sound1CtlL final : public IOReg16<0x04000060> {
 	void on_write(uint16 new_value) override {
 		this->m_register = new_value & ~0xFF80u;
@@ -131,20 +188,22 @@ public:
 	}
 };
 
-class Sound2CtlL final : public IOReg16<0x04000068> {
-	void on_write(uint16 new_value) override {
-		this->m_register = new_value;
+
+class Sound2CtlL final : public IOReg32<0x04000068> {
+protected:
+	void on_write(uint32 new_value) override {
+		this->m_register = new_value & 0x0000FFFF;
 	}
-	uint16 on_read() override {
-		return this->m_register & ~0x3F;
+	uint32 on_read() override {
+		return this->m_register & 0x0000FFC0;
 	}
 public:
-	SND1CNTH* operator->() {
-		return this->template as<SND1CNTH>();
+	SND2CNTL* operator->() {
+		return this->template as<SND2CNTL>();
 	}
 
-	SND1CNTH const* operator->() const {
-		return this->template as<SND1CNTH>();
+	SND2CNTL const* operator->() const {
+		return this->template as<SND2CNTL>();
 	}
 };
 
@@ -156,14 +215,15 @@ class Sound2CtlH final : public IOReg32<0x0400006c> {
 		return 0x4000;
 	}
 public:
-	SND1CNTX* operator->() {
-		return this->template as<SND1CNTX>();
+	SND2CNTH* operator->() {
+		return this->template as<SND2CNTH>();
 	}
 
-	SND1CNTX const* operator->() const {
-		return this->template as<SND1CNTX>();
+	SND2CNTH const* operator->() const {
+		return this->template as<SND2CNTH>();
 	}
 };
+
 
 class Sound3CtlL final : public IOReg16<0x04000070> {
 protected:
@@ -185,6 +245,7 @@ public:
 		return this->template as<SND3CNTL>();
 	}
 };
+
 class Sound3CtlH final : public IOReg16<0x04000072> {
 protected:
 	static constexpr const uint32 writeable_mask = 0xE0FF;
@@ -205,6 +266,7 @@ public:
 		return this->template as<SND3CNTH>();
 	}
 };
+
 class Sound3CtlX final : public IOReg32<0x04000074> {
 protected:
 	static constexpr const uint32 writeable_mask = 0x0000C7FF;
@@ -225,6 +287,7 @@ public:
 		return this->template as<SND3CNTX>();
 	}
 };
+
 class Sound3Bank final : public BusDevice {
 	Array<uint8, 16> m_bank0;
 	Array<uint8, 16> m_bank1;
@@ -285,4 +348,31 @@ public:
 		return m_bank1;
 	}
 
+};
+
+
+class Sound4CtlL final : public IOReg32<0x04000078> {
+protected:
+	static constexpr const uint32 writeable_mask = 0x0000FF3F;
+	static constexpr const uint32 readable_mask = 0x0000FF00;
+
+	void on_write(uint32 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint32 on_read() override {
+		return m_register & readable_mask;
+	}
+};
+
+class Sound4CtlH final : public IOReg32<0x0400007C> {
+protected:
+	static constexpr const uint32 writeable_mask = 0x0000C0FF;
+	static constexpr const uint32 readable_mask = 0x000040FF;
+
+	void on_write(uint32 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint32 on_read() override {
+		return m_register & readable_mask;
+	}
 };

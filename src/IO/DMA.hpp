@@ -92,7 +92,10 @@ protected:
 	void on_write(uint32 new_value) override {
 		this->m_register = new_value & DMA::source_mask<x>();
 	}
-	uint32 on_read() override { return 0x00000000; }
+	uint32 on_read() override {
+		//  FIXME: unreadable I/O register
+		return 0xBABEBABE;
+	}
 };
 
 template<unsigned x>
@@ -101,15 +104,19 @@ protected:
 	void on_write(uint32 new_value) override {
 		this->m_register = new_value & DMA::destination_mask<x>();
 	}
-	uint32 on_read() override { return 0x00000000; }
+	uint32 on_read() override {
+		//  FIXME: unreadable I/O register
+		return 0xBABEBABE;
+	}
 };
 
 template<unsigned x>
 class DMACtrl final : public IOReg32<DMA::reg_base<x>() + 8> {
 protected:
 	static constexpr const uint32 count_mask    = (x == 3) ? 0xFFFF : 0x3FFF;
-	static constexpr const uint32 writable_mask = 0xffe00000u | count_mask;
-	static constexpr const uint32 readable_mask = 0xffe00000u;
+	static constexpr const uint32 bit11_mask    = (x == 3) ? 0x08000000 : 0x00000000;
+	static constexpr const uint32 writable_mask = 0xf7e00000u | count_mask | bit11_mask;
+	static constexpr const uint32 readable_mask = 0xf7e00000u | bit11_mask;
 
 	void on_write(uint32 new_value) override {
 		this->m_register = new_value & writable_mask;

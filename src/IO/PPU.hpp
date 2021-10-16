@@ -241,3 +241,105 @@ class VCOUNT : public IOReg16<0x04000006> {
 	}
 public:
 };
+
+class BLDCNT : public IOReg16<0x04000050> {
+protected:
+	static constexpr const uint16 writeable_mask = 0x3FFF;
+	static constexpr const uint16 readable_mask  = 0x3FFF;
+
+	void on_write(uint16 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint16 on_read() override {
+		return m_register & readable_mask;
+	}
+};
+
+class BLDALPHA : public IOReg16<0x04000052> {
+protected:
+	static constexpr const uint16 writeable_mask = 0x1F1F;
+	static constexpr const uint16 readable_mask  = 0x1F1F;
+
+	void on_write(uint16 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint16 on_read() override {
+		return m_register & readable_mask;
+	}
+};
+
+class BLDY : public IOReg32<0x04000054> {
+protected:
+	static constexpr const uint32 writeable_mask = 0x0000001f;
+
+	void on_write(uint32 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint32 on_read() override {
+		//  FIXME: unreadable I/O register
+		return 0xBABEBABE;
+	}
+};
+
+template<unsigned n>
+class WindowH : public IOReg16<0x04000040 + n*2> {
+protected:
+	void on_write(uint16 new_value) override {
+		this->m_register = new_value;
+	}
+	uint16 on_read() override {
+		//  FIXME: unreadable I/O register
+		return 0xBABEBABE;
+	}
+};
+
+template<unsigned n>
+class WindowV : public IOReg16<0x04000044 + n*2> {
+protected:
+	void on_write(uint16 new_value) override {
+		this->m_register = new_value;
+	}
+	uint16 on_read() override {
+		//  FIXME: unreadable I/O register
+		return 0xBABEBABE;
+	}
+};
+
+class WindowInside : public IOReg16<0x04000048> {
+protected:
+	static constexpr const uint16 writeable_mask = 0x3F3F;
+	static constexpr const uint16 readable_mask  = 0x3F3F;
+
+	void on_write(uint16 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint16 on_read() override {
+		return m_register & readable_mask;
+	}
+};
+
+class WindowOutside : public IOReg16<0x0400004A> {
+protected:
+	static constexpr const uint16 writeable_mask = 0x3F3F;
+	static constexpr const uint16 readable_mask  = 0x3F3F;
+
+	void on_write(uint16 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint16 on_read() override {
+		return m_register & readable_mask;
+	}
+};
+
+class Mosaic : public IOReg32<0x0400004C> {
+protected:
+	static constexpr const uint16 writeable_mask = 0x00FF;
+
+	void on_write(uint32 new_value) override {
+		m_register = new_value & writeable_mask;
+	}
+	uint32 on_read() override {
+		//  FIXME: unreadable I/O register
+		return 0xBABEBABE;
+	}
+};
