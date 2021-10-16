@@ -348,9 +348,9 @@ protected:
      *                      Timers
      *  ==============================================
      */
-	template<unsigned timer_num> void timers_cycle_one(Timer<timer_num>& timer);
+	template<unsigned timer_num> void timers_cycle_n(Timer<timer_num>& timer, size_t n);
 	template<unsigned timer_num> void timers_increment(Timer<timer_num>& timer);
-	void timers_cycle_all();
+	void timers_cycle_all(size_t n);
 
 	unsigned run_to_next_state();
 public:

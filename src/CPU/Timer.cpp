@@ -2,16 +2,16 @@
 #include "Headers/ARM7TDMI.hpp"
 
 
-void ARM7TDMI::timers_cycle_all() {
-	timers_cycle_one(io.timer0);
-	timers_cycle_one(io.timer1);
-	timers_cycle_one(io.timer2);
-	timers_cycle_one(io.timer3);
+void ARM7TDMI::timers_cycle_all(size_t n) {
+	timers_cycle_n(io.timer0, n);
+	timers_cycle_n(io.timer1, n);
+	timers_cycle_n(io.timer2, n);
+	timers_cycle_n(io.timer3, n);
 }
 
 
 template<unsigned int timer_num>
-void ARM7TDMI::timers_cycle_one(Timer<timer_num>& timer) {
+void ARM7TDMI::timers_cycle_n(Timer<timer_num>& timer, size_t n) {
 	if(!timer.m_ctl->timer_enable) {
 		timer.m_previous_cycle_was_running = false;
 		return;
@@ -25,7 +25,7 @@ void ARM7TDMI::timers_cycle_one(Timer<timer_num>& timer) {
 		timer.m_previous_cycle_was_running = true;
 	}
 
-	timer.m_timer_cycles++;
+	timer.m_timer_cycles += n;
 	auto cycles_per_tick = Timer<timer_num>::cycle_count_from_prescaler(timer.m_ctl->prescaler);
 	while(timer.m_timer_cycles >= cycles_per_tick) {
 		timer.m_timer_cycles -= cycles_per_tick;

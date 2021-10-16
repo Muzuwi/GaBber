@@ -35,9 +35,7 @@ void ARM7TDMI::reset() {
 
 unsigned ARM7TDMI::run_next_instruction() {
 	const unsigned n = run_to_next_state();
-	for(unsigned i = 0; i < n; ++i) {
-		timers_cycle_all();
-	}
+	timers_cycle_all(n);
 
 	m_cycles += n;
 	return n;
