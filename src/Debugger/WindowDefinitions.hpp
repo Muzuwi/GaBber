@@ -57,7 +57,7 @@ public:
 
 class MemoryImage : public DebuggerWindow {
 	bool created_tex;
-	GLuint tex;
+	GLuint64 tex;
 	void draw_window() override;
 public:
 	MemoryImage(GaBber& emu)
