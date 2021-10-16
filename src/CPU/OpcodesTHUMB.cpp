@@ -390,7 +390,7 @@ void ARM7TDMI::THUMB_FMT14(THUMB::InstructionFormat14 instr) {
 		}
 
 		const unsigned clamped_n = n > 0 ? n - 1 : 0;   // (n-1)
-		m_wait_cycles = clamped_n/*S*/ + 2/*N*/;
+		m_wait_cycles += clamped_n/*S*/ + 2/*N*/;
 	}
 }
 

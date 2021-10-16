@@ -98,6 +98,8 @@ void ARM7TDMI::exec_opcode() {
 
 void ARM7TDMI::execute_ARM(uint32 opcode) {
 	if (!cspr().evaluate_condition(ARM::Instruction(opcode).condition())) {
+		//  Unevaluated instructions take 1 cycle anyway
+		m_wait_cycles += 1;
 		return;
 	}
 

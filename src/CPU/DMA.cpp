@@ -56,6 +56,7 @@ void ARM7TDMI::dma_cycle() {
 			s.m_source_ptr -= s.m_ctrl->transfer_size ? 4 : 2;
 
 		s.m_fetched = true;
+		m_wait_cycles += 1/*N*/ + 1/*S*/;
 
 		return;
 	}
@@ -75,6 +76,8 @@ void ARM7TDMI::dma_cycle() {
 
 		s.m_count--;
 		s.m_fetched = false;
+
+		m_wait_cycles += 1/*N*/ + 1/*S*/;
 	}
 
 	if(s.m_count == 0) {
@@ -82,15 +85,18 @@ void ARM7TDMI::dma_cycle() {
 		s.m_fetched = false;
 		s.m_finished = true;
 
-		if(s.m_ctrl->irq_on_finish)
-			raise_irq(DMA::irq_type<x>());
+		m_wait_cycles += 2/*I*/;
 
-		if(!s.m_ctrl->repeat)
+		if(s.m_ctrl->irq_on_finish) {
+			raise_irq(DMA::irq_type<x>());
+		}
+
+		if(!s.m_ctrl->repeat || s.m_ctrl->start_timing == DMAStartTiming::Immediate) {
 			s.m_ctrl->enable = false;
+		}
 
 		if(s.m_ctrl->dest_ctl == DMADestCtrl::Reload) {
 			s.m_destination_ptr = s.m_original_destination_ptr;
-//			s.m_destination_ptr = s.m_destination.raw();
 		}
 	}
 }
