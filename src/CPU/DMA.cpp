@@ -22,6 +22,26 @@ bool ARM7TDMI::dma_cycle_all() {
 	return false;
 }
 
+void ARM7TDMI::dma_cycle_all_fast() {
+	if(dma_is_running<0>()) {
+		dma_cycle_fast<0>();
+		return;
+	}
+	if(dma_is_running<1>()) {
+		dma_cycle_fast<1>();
+		return;
+	}
+	if(dma_is_running<2>()) {
+		dma_cycle_fast<2>();
+		return;
+	}
+	if(dma_is_running<3>()) {
+		dma_cycle_fast<3>();
+		return;
+	}
+}
+
+
 template<unsigned int x>
 bool ARM7TDMI::dma_try_start_immediate() {
 	DMAx<x>& s = io.template dma_for_num<x>();
@@ -101,6 +121,53 @@ void ARM7TDMI::dma_cycle() {
 	}
 }
 
+template<unsigned int x>
+void ARM7TDMI::dma_cycle_fast() {
+	DMAx<x>& s = io.template dma_for_num<x>();
+
+	if(!s.m_is_running) {
+		return;
+	}
+
+	const unsigned n = s.m_count;
+	while(s.m_count--) {
+		const uint32 data = (s.m_ctrl->transfer_size) ? mem_read32(s.m_source_ptr)
+		                                              : mem_read16(s.m_source_ptr);
+		if(s.m_ctrl->transfer_size) {
+			mem_write32(s.m_destination_ptr, data);
+		} else {
+			mem_write16(s.m_destination_ptr, static_cast<uint16>(data));
+		}
+
+		DMASrcCtrl ctl = s.m_ctrl->src_ctl;
+		if(ctl == DMASrcCtrl::Increment)
+			s.m_source_ptr += s.m_ctrl->transfer_size ? 4 : 2;
+		else if(ctl == DMASrcCtrl::Decrement)
+			s.m_source_ptr -= s.m_ctrl->transfer_size ? 4 : 2;
+
+		DMADestCtrl dest_ctl = s.m_ctrl->dest_ctl;
+		if(dest_ctl == DMADestCtrl::Increment || dest_ctl == DMADestCtrl::Reload)
+			s.m_destination_ptr += s.m_ctrl->transfer_size ? 4 : 2;
+		else if(dest_ctl == DMADestCtrl::Decrement)
+			s.m_destination_ptr -= s.m_ctrl->transfer_size ? 4 : 2;
+	}
+
+	s.m_is_running = false;
+
+	if(s.m_ctrl->irq_on_finish) {
+		raise_irq(DMA::irq_type<x>());
+	}
+
+	if(!s.m_ctrl->repeat || s.m_ctrl->start_timing == DMAStartTiming::Immediate) {
+		s.m_ctrl->enable = false;
+	}
+
+	if(s.m_ctrl->dest_ctl == DMADestCtrl::Reload) {
+		s.m_destination_ptr = s.m_original_destination_ptr;
+	}
+
+	m_wait_cycles += 2/*N*/ + 2*(n-1)/*S*/ + 2/*I*/;
+}
 
 template<unsigned int x>
 void ARM7TDMI::dma_start() {

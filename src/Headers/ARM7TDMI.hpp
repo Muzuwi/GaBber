@@ -338,11 +338,12 @@ protected:
 	 */
 	template<unsigned x> void dma_start();
 	template<unsigned x> void dma_cycle();
+	template<unsigned x> void dma_cycle_fast();
 	template<unsigned x> inline bool dma_is_running()  { return io.template dma_for_num<x>().m_is_running; }
 	template<unsigned x> inline bool dma_is_finished() { return io.template dma_for_num<x>().m_finished; }
 	template<unsigned x> bool dma_try_start_immediate();
 	bool dma_cycle_all();
-	bool dma_update_states();
+	void dma_cycle_all_fast();
 
 	/*  ==============================================
      *                      Timers

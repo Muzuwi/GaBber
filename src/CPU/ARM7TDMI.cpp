@@ -50,7 +50,9 @@ unsigned ARM7TDMI::run_to_next_state() {
 	   dma_try_start_immediate<1>() ||
 	   dma_try_start_immediate<2>() ||
 	   dma_try_start_immediate<3>()) {
-		dma_cycle_all();
+		dma_cycle_all_fast();
+//		log("Fast forwarded {} cycles\n", m_wait_cycles);
+//		dma_cycle_all();
 		return m_wait_cycles;
 	}
 
