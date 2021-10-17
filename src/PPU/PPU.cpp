@@ -68,6 +68,13 @@ void PPU::cycle() {
 }
 
 void PPU::draw_scanline() {
+	if(mem.io.dispcnt->forced_blank) {
+		for(unsigned x = 0; x < 240; ++x) {
+			m_framebuffer[vcount() * 240 + x] = 0xFFFFFFFF;
+		}
+		return;
+	}
+
 	m_backgrounds.draw_scanline();
 	objects_draw_line(vcount());
 	colorbuffer_blit();
