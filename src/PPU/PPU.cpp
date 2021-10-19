@@ -146,13 +146,13 @@ void PPU::objects_draw_obj(uint16 ly, OBJAttr obj) {
 	} else {
 		obj_line = ly - obj.attr0.pos_y;
 	}
-	const uint8 line_in_current_row = obj_line % 8;
 
 	//  Vertical flip
 	if(yflip) {
 		obj_line = (obj.attr0.pos_y + obj.height()) - ly;
 	}
 
+	const uint8 line_in_current_row = obj_line % 8;
 	const uint8 which_vertical_tile = obj_line / 8;
 	const uint8 color_depth_mult = (obj.attr0.color_mode ? 2 : 1);
 
