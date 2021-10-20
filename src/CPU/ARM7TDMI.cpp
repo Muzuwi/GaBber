@@ -197,10 +197,6 @@ void ARM7TDMI::dump_memory_around_pc() const {
 			fmt::print("\n");
 	}
 
-	fmt::print("Last mode change at cycle {}\n", m_last_mode_change.cycle);
-	fmt::print("Caused by: {}, pc={:08x}\n", m_last_mode_change.reason, m_last_mode_change.pc);
-	fmt::print("Changed from mode {} -> {}\n", m_last_mode_change.prev, m_last_mode_change.neu);
-
 	m_mmu.debug();
 	GaBber::instance().toggle_debug_mode();
 }

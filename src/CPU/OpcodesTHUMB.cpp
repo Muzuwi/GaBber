@@ -121,12 +121,6 @@ void ARM7TDMI::THUMB_FMT5(THUMB::InstructionFormat5 instr) {
 		}
 		case 3: {
 			if(!instr.MSBd()) {
-				m_last_mode_change.cycle = m_cycles;
-				m_last_mode_change.pc = const_pc() - 2*current_instr_len();
-				m_last_mode_change.prev = cspr().state();
-				m_last_mode_change.reason = "THUMB_FMT5";
-				m_last_mode_change.neu = (source & 1) ? INSTR_MODE::THUMB : INSTR_MODE::ARM;
-
 				cspr().set_state((source & 1) ? INSTR_MODE::THUMB : INSTR_MODE::ARM);
 				if(!(source & 1))
 					pc() = source & ~2u;

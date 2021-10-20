@@ -321,17 +321,6 @@ protected:
 	uint16 mem_read_thumb_opcode(uint32 address) const;
 
 
-	struct {
-		uint32 pc;
-		uint64 cycle;
-		std::string reason;
-		INSTR_MODE prev;
-		INSTR_MODE neu;
-	} m_last_mode_change;
-
-
-
-
 	/*  ==============================================
 	 *                      DMA
 	 *  ==============================================

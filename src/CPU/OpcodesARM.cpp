@@ -16,12 +16,6 @@ void ARM7TDMI::BX(ARM::BXInstruction instr) {
 	const auto& reg = creg(instr.reg());
 	const bool is_thumb = reg & 1;
 
-	m_last_mode_change.cycle = m_cycles;
-	m_last_mode_change.pc = const_pc() - 2*current_instr_len();
-	m_last_mode_change.prev = cspr().state();
-	m_last_mode_change.reason = "BX Instruction";
-	m_last_mode_change.neu = !is_thumb ? INSTR_MODE::ARM : INSTR_MODE::THUMB;
-
 	if(is_thumb)
 		pc() = reg & ~1u;
 	else
