@@ -80,6 +80,26 @@ struct SND3CNTX {
 	uint16 _unused2     : 16;
 };
 
+struct SND4CNTL {
+	uint8 length        : 6;
+	uint8 _unused1      : 2;
+	uint8 envelope_step : 3;
+	uint8 envelope_inc  : 1;
+	uint8 envelope_vol  : 4;
+	uint16 _unused2     : 16;
+};
+
+struct SND4CNTH {
+	uint8 r            : 3;
+	bool counter_7bits : 1;
+	uint8 s            : 4;
+	uint8 _unused1     : 6;
+	bool length_flag   : 1;
+	bool initial       : 1;
+	uint16 _unused2    : 16;
+};
+
+
 class SoundCtlL final : public IOReg16<0x04000080> {
 	uint16 on_read() override {
 		return this->m_register & 0xFF77u;
@@ -115,12 +135,8 @@ protected:
 	static constexpr const uint32 writeable_mask = 0x00000080;
 	static constexpr const uint32 readable_mask  = 0x0000008F;
 
-	void on_write(uint32 new_value) override {
-		m_register = new_value & writeable_mask;
-	}
-	uint32 on_read() override {
-		return m_register & readable_mask;
-	}
+	void on_write(uint32 new_value) override;
+	uint32 on_read() override;
 };
 
 class SoundBias final : public IOReg32<0x04000088> {
@@ -155,9 +171,7 @@ public:
 };
 
 class Sound1CtlH final : public IOReg16<0x04000062> {
-	void on_write(uint16 new_value) override {
-		this->m_register = new_value;
-	}
+	void on_write(uint16 new_value) override;
 	uint16 on_read() override {
 		return this->m_register & ~0x3F;
 	}
@@ -172,9 +186,7 @@ public:
 };
 
 class Sound1CtlX final : public IOReg32<0x04000064> {
-	void on_write(uint32 new_value) override {
-		this->m_register = new_value & 0xC7FFu;
-	}
+	void on_write(uint32 new_value) override;
 	uint32 on_read() override {
 		return 0x4000;
 	}
@@ -191,9 +203,7 @@ public:
 
 class Sound2CtlL final : public IOReg32<0x04000068> {
 protected:
-	void on_write(uint32 new_value) override {
-		this->m_register = new_value & 0x0000FFFF;
-	}
+	void on_write(uint32 new_value) override;
 	uint32 on_read() override {
 		return this->m_register & 0x0000FFC0;
 	}
@@ -208,9 +218,7 @@ public:
 };
 
 class Sound2CtlH final : public IOReg32<0x0400006c> {
-	void on_write(uint32 new_value) override {
-		this->m_register = new_value & 0xC7FFu;
-	}
+	void on_write(uint32 new_value) override;
 	uint32 on_read() override {
 		return 0x4000;
 	}
@@ -230,9 +238,7 @@ protected:
 	static constexpr const uint32 writeable_mask = 0x00E0;
 	static constexpr const uint32 readable_mask = 0x00E0;
 
-	void on_write(uint16 new_value) override {
-		m_register = new_value & writeable_mask;
-	}
+	void on_write(uint16 new_value) override;
 	uint16 on_read() override {
 		return m_register & readable_mask;
 	}
@@ -272,9 +278,7 @@ protected:
 	static constexpr const uint32 writeable_mask = 0x0000C7FF;
 	static constexpr const uint32 readable_mask  = 0x00004000;
 
-	void on_write(uint32 new_value) override {
-		m_register = new_value & writeable_mask;
-	}
+	void on_write(uint32 new_value) override;
 	uint32 on_read() override {
 		return m_register & readable_mask;
 	}
@@ -362,6 +366,14 @@ protected:
 	uint32 on_read() override {
 		return m_register & readable_mask;
 	}
+public:
+	SND4CNTL* operator->() {
+		return this->template as<SND4CNTL>();
+	}
+
+	SND4CNTL const* operator->() const {
+		return this->template as<SND4CNTL>();
+	}
 };
 
 class Sound4CtlH final : public IOReg32<0x0400007C> {
@@ -374,6 +386,14 @@ protected:
 	}
 	uint32 on_read() override {
 		return m_register & readable_mask;
+	}
+public:
+	SND4CNTH* operator->() {
+		return this->template as<SND4CNTH>();
+	}
+
+	SND4CNTH const* operator->() const {
+		return this->template as<SND4CNTH>();
 	}
 };
 

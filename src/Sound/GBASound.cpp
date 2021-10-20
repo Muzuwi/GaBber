@@ -2,8 +2,44 @@
 #include "GBASound.hpp"
 #include "Headers/GaBber.hpp"
 
-Array<uint8, 16>& Sound3Bank::current_bank() {
-	return GaBber::instance().mem().io.ch3ctlL->bank ? m_bank1 : m_bank0;
+void GBASound::push_samples(float left, float right) {
+	m_internal_samples[m_current_sample] = left;
+	m_internal_samples[m_current_sample+1] = right;
+
+	if(m_current_sample != m_internal_samples.size() - 2) {
+		m_current_sample += 2;
+		return;
+	}
+	m_current_sample = 0;
+
+	const unsigned queued_size = SDL_GetQueuedAudioSize(m_device) / (sizeof(float)*2);
+	const unsigned half_buffer_size = (output_sample_count/2) / 2;
+	if(queued_size < half_buffer_size) {
+		m_speed_scale += 1;
+	} else {
+		m_speed_scale = (m_speed_scale > 1 ? m_speed_scale - 1 : 1);
+	}
+
+	assert(
+			SDL_BuildAudioCVT(&m_out_converter, AUDIO_F32, 2, psg_sample_rate, AUDIO_F32, 2, output_sample_rate)
+			> 0
+	);
+	std::vector<uint8> output;
+	output.resize(m_internal_samples.size() * sizeof(float) * m_out_converter.len_mult);
+	std::memcpy(&output[0], &m_internal_samples[0], m_internal_samples.size() * sizeof(float));
+
+	m_out_converter.len = m_internal_samples.size() * sizeof(float);
+	m_out_converter.buf = &output[0];
+
+	if(SDL_ConvertAudio(&m_out_converter) != 0) {
+		fmt::print("Sound/ Format conversion failed: {}\n", SDL_GetError());
+		return;
+	}
+
+	auto rc = SDL_QueueAudio(m_device, &output[0], m_out_converter.len_cvt);
+	if(rc != 0) {
+		fmt::print("Sound/ Queue failed: {}\n", SDL_GetError());
+	}
 }
 
 void GBASound::init() {
@@ -31,20 +67,31 @@ void GBASound::cycle() {
 	//  "The PSG channels 1-4 are internally generated at 262.144kHz"
 	//  One internal sample generated every 64 CPU cycles (main clock 16MHz)
 	m_cycles++;
+
+	if(m_cycles % 65536 == 0) {
+		timer_tick_length();
+	}
+	if(m_cycles % 131072 == 0) {
+		timer_tick_sweep();
+	}
+	if(m_cycles % 262144 == 0) {
+		timer_tick_envelope();
+	}
+	timer_tick_wave();
+
 	if((m_cycles % 64) != 0)
 		return;
 
 	auto& io = GaBber::instance().mem().io;
-	const float ch1 = generate_sample_ch1();
-	const float ch2 = generate_sample_ch2();
-	const float ch3 = generate_sample_ch3();
-	const float ch4 = generate_sample_ch4();
+	const int16 ch1 = generate_sample_square1();
+	const int16 ch2 = generate_sample_square2();
+	const int16 ch3 = generate_sample_noise();
+	const int16 ch4 = generate_sample_wave();
 
-	const float master_volume = 1.0f;
-	const float vol_l = (float)io.soundctlL->volume_l / 7.0f;
-	const float vol_r = (float)io.soundctlL->volume_r / 7.0f;
-	float left_sample = 0.0f;
-	float right_sample = 0.0f;
+	const int16 vol_l = io.soundctlL->volume_l + 1;
+	const int16 vol_r = io.soundctlL->volume_r + 1;
+	int16 left_sample = 0;
+	int16 right_sample = 0;
 
 	if(io.soundctlL->channel_enable_l & 0b0001) {
 		left_sample += ch1 * vol_l;
@@ -71,135 +118,262 @@ void GBASound::cycle() {
 		right_sample += ch4 * vol_r;
 	}
 
-	m_internal_samples[m_current_sample] = master_volume * left_sample;
-	m_internal_samples[m_current_sample+1] = master_volume * right_sample;
+	const uint16 bias = (*io.soundbias >> 1u) & 0x1FF;
+	const uint8 resolution = (*io.soundbias >> 14u) & 0b11u;
 
-	if(m_current_sample != m_internal_samples.size() - 2) {
-		m_current_sample += 2;
-		return;
+	left_sample  += bias;
+	right_sample += bias;
+
+	left_sample  = std::clamp(left_sample,  (int16)0, (int16)0x3FF);
+	right_sample = std::clamp(right_sample, (int16)0, (int16)0x3FF);
+
+	//  Change bit depth
+	left_sample  = left_sample / (1u << (resolution + 1));
+	right_sample = right_sample / (1u << (resolution + 1));
+
+	const unsigned max = 0x400 / (1u << (resolution));
+	const float normalized_left  = ((float)left_sample / max);
+	const float normalized_right = ((float)right_sample / max);
+
+	auto capL = [](float in) -> float {
+		static float capacitor = 0.0f;
+		float out = 0.0f;
+		out = in - capacitor;
+		capacitor = in - out * 0.999958f;
+		return out;
+	};
+	auto capR = [](float in) -> float {
+		static float capacitor = 0.0f;
+		float out = 0.0f;
+		out = in - capacitor;
+		capacitor = in - out * 0.999958f;
+		return out;
+	};
+
+	const float master_volume = 1.0f;
+	push_samples(capL(master_volume * normalized_left),
+	             capR(master_volume * normalized_right));
+}
+
+/*
+ *  Timer connected to sound length
+ */
+void GBASound::timer_tick_length() {
+	if(m_square1.running && m_square1.length_counter != 0) {
+		m_square1.length_counter--;
+		if(m_square1.length_counter == 0) {
+			m_square1.running = false;
+		}
 	}
-	m_current_sample = 0;
 
-	const unsigned queued_size = SDL_GetQueuedAudioSize(m_device) / (sizeof(float)*2);
-	const unsigned half_buffer_size = (output_sample_count/2) / 2;
-	if(queued_size < half_buffer_size) {
-//		fmt::print("Sound/ Lagging behind! Increasing sound rate\n");
-		m_speed_scale += 1;
-	} else if(queued_size >= half_buffer_size) {
-//		fmt::print("Sound/ Buffer is more than half full, decreasing sound rate\n");
-		m_speed_scale = (m_speed_scale > 1 ? m_speed_scale - 1 : 1);
+	if(m_square2.running && m_square2.length_counter != 0) {
+		m_square2.length_counter--;
+		if(m_square2.length_counter == 0) {
+			m_square2.running = false;
+		}
 	}
 
-	assert(
-			SDL_BuildAudioCVT(&m_out_converter, AUDIO_F32, 2, psg_sample_rate, AUDIO_F32, 2, output_sample_rate)
-			> 0
-	);
-	std::vector<uint8> output;
-	output.resize(m_internal_samples.size() * sizeof(float) * m_out_converter.len_mult);
-	std::memcpy(&output[0], &m_internal_samples[0], m_internal_samples.size() * sizeof(float));
-
-	m_out_converter.len = m_internal_samples.size() * sizeof(float);
-	m_out_converter.buf = &output[0];
-
-	if(SDL_ConvertAudio(&m_out_converter) != 0) {
-		fmt::print("Sound/ Format conversion failed: {}\n", SDL_GetError());
-		return;
-	}
-
-//	fmt::print("Sound/ Samples in queue: {}\n", SDL_GetQueuedAudioSize(m_device) / sizeof(float));
-	auto rc = SDL_QueueAudio(m_device, &output[0], m_out_converter.len_cvt);
-	if(rc != 0) {
-		fmt::print("Sound/ Queue failed: {}\n", SDL_GetError());
+	if(m_wave.running && m_wave.length_counter != 0) {
+		m_wave.length_counter--;
+		if(m_wave.length_counter == 0) {
+			m_wave.running = false;
+		}
 	}
 }
 
-float GBASound::generate_sample_ch1() {
-	static unsigned s_last_freq {0};
-	static float s_last_phi {0.0f};
-	static float s_ch1_phi {0.0f};
-	static constexpr const float pi = M_PI;
+/*
+ *  Timer connected to sweep
+ */
+void GBASound::timer_tick_sweep() {
+
+}
+
+/*
+ *  Timer connected to envelope
+ */
+void GBASound::timer_tick_envelope() {
+	auto const& io = GaBber::instance().mem().io;
+	auto const& ch1 = io.ch1ctlH;
+	auto const& ch2 = io.ch2ctlL;
+
+	if(m_square1.running && m_square1.envelope_step != 0) {
+		if(m_square1.envelope_counter != 0) {
+			m_square1.envelope_counter--;
+		} else {
+			m_square1.envelope_counter = m_square1.envelope_step;
+
+			if(ch1->envelope_inc && m_square1.volume_counter < 15) {
+				m_square1.volume_counter++;
+			}  else if(m_square1.volume_counter > 0) {
+				m_square1.volume_counter--;
+			}
+		}
+	}
+
+
+	if(m_square2.running && m_square2.envelope_step != 0) {
+		if(m_square2.envelope_counter != 0) {
+			m_square2.envelope_counter--;
+		} else {
+			m_square2.envelope_counter = m_square2.envelope_step;
+
+			if(ch2->envelope_inc && m_square2.volume_counter < 15) {
+				m_square2.volume_counter++;
+			}  else if(m_square2.volume_counter > 0) {
+				m_square2.volume_counter--;
+			}
+		}
+	}
+}
+
+/*
+ *  Timer used by the wave output channel, represents the sample rate
+ *  of the output digital data.
+ */
+void GBASound::timer_tick_wave() {
+	if(!m_wave.running) {
+		return;
+	}
+
+	if(m_wave.cycles != 0) {
+		m_wave.cycles--;
+		return;
+	}
+
+	//  Reload the cycle counter with the amount of CPU cycles
+	//  for the current sample rate
+	m_wave.cycles = 16 * kB * kB / m_wave.frequency;
 
 	auto& io = GaBber::instance().mem().io;
-	auto& ch1 = io.ch1ctlX;
+
+	//  Consume 1 digit
+	if(io.ch3ctlL->dimension) {
+		m_wave.current_digit = (m_wave.current_digit + 1) % 64;
+	} else {
+		m_wave.current_digit = (m_wave.current_digit + 1) % 32;
+	}
+}
+
+
+int16 GBASound::generate_sample_square1() {
+	auto& io = GaBber::instance().mem().io;
+	auto& ch1h = io.ch1ctlH;
+
+	if(!m_square1.running) {
+		return 0;
+	}
 
 	const unsigned sample_rate = 262144;    //  in Hz
 	const unsigned sample_number = m_cycles / 64;
-	const unsigned freq = 131072u / (2048u - ch1->frequency);
+	const unsigned freq = m_square1.frequency;
 	const auto samples_per_period = (unsigned)(((float)sample_rate / (float)freq));
-
-	//  Asin(wt + phi)
 	const float ft = ((float)(sample_number % samples_per_period) / (float)samples_per_period);
-	const float wt = 2 * pi * ft;
 
-	if(s_last_freq != freq) {
-		const float delta = ft - s_last_phi;
-		const float phi = s_ch1_phi + 2 * pi * delta;
-		s_ch1_phi = phi;
-	}
-
-	const float phi = s_ch1_phi;
-	const float sample = 0.4f * std::sin(wt - phi);
-
-	s_last_phi = ft;
-	s_last_freq = freq;
+	const float duty = duty_lookup[ch1h->duty];
+	const auto envelope = static_cast<int16>(m_square1.volume_counter);
+	const int16 sample = (ft >= duty) ? (int16)0 : envelope;
 
 	return sample;
 }
 
-float GBASound::generate_sample_ch2() {
-	static unsigned s_last_freq {0};
-	static float s_last_phi {0.0f};
-	static float s_ch2_phi {0.0f};
-	static constexpr const float pi = M_PI;
-
+int16 GBASound::generate_sample_square2() {
 	auto& io = GaBber::instance().mem().io;
-	auto& ch2 = io.ch2ctlH;
+	auto& ch2l = io.ch2ctlL;
+
+	if(!m_square2.running) {
+		return 0;
+	}
 
 	const unsigned sample_rate = 262144;    //  in Hz
 	const unsigned sample_number = m_cycles / 64;
-	const unsigned freq = 131072u / (2048u - ch2->frequency);
+	const unsigned freq = m_square2.frequency;
 	const auto samples_per_period = (unsigned)(((float)sample_rate / (float)freq));
-
-	//  Asin(wt + phi)
 	const float ft = ((float)(sample_number % samples_per_period) / (float)samples_per_period);
-	const float wt = 2 * pi * ft;
 
-	if(s_last_freq != freq) {
-		const float delta = ft - s_last_phi;
-		const float phi = s_ch2_phi + 2 * pi * delta;
-		s_ch2_phi = phi;
-	}
-
-	const float phi = s_ch2_phi;
-	const float sample = 0.4f * sin(wt - phi);
-
-	s_last_phi = ft;
-	s_last_freq = freq;
+	const float duty = duty_lookup[ch2l->duty];
+	const auto envelope = static_cast<int16>(m_square2.volume_counter);
+	const int16 sample = (ft >= duty) ? (int16)0 : envelope;
 
 	return sample;
 }
 
-float GBASound::generate_sample_ch3() {
-	static unsigned s_which_digit {0};
-	auto& io = GaBber::instance().mem().io;
+int16 GBASound::generate_sample_noise() {
+	if(!m_wave.running ) {
+		return 0;
+	}
+	IOContainer const& io = GaBber::instance().mem().io;
 
-	if(!(io.soundctlL->channel_enable_l & 0b0100) && !(io.soundctlL->channel_enable_r & 0b0100)) {
-		return 0.0f;
+	const unsigned which_bank =
+			((unsigned)io.ch3ctlL->bank +
+			(m_wave.current_digit / 32)) % 2;
+	const unsigned which_digit = m_wave.current_digit % 32;
+	auto const& bank = (which_bank == 0) ? io.ch3bank.bank0() : io.ch3bank.bank1();
+	const unsigned byte = which_digit / 2;
+	const bool upper = (which_digit % 2) == 0;
+
+	uint8 digit;
+	if(upper) {
+		digit = bank[byte] >> 4u;
+	} else {
+		digit = bank[byte] & 0x0Fu;
 	}
 
-	if(!io.ch3ctlL->enabled) {
-		return 0.0f;
+	if(io.ch3ctlH->force_volume) {
+		return (int16) ((digit * 3) / 4);
 	}
 
-	const float volume = 0.2;
-	const unsigned sample_rate = 4194304 / (32 * (2048 - io.ch3ctlX->rate));
-
-
-
-	return 0.0f;
-
+	const unsigned shift = (io.ch3ctlH->volume == 0) ? 4 : (io.ch3ctlH->volume - 1);
+	return (int16)(digit >> shift);
 }
 
-float GBASound::generate_sample_ch4() {
+int16 GBASound::generate_sample_wave() {
 	return 0;
+}
+
+void GBASound::reload_square1() {
+	IOContainer& io = GaBber::instance().mem().io;
+
+	m_square1.running = true;
+	m_square1.frequency = 131072 / (2048 - io.ch1ctlX->frequency);
+	if(io.ch1ctlX->length_flag) {
+		m_square1.length_counter = 64 - io.ch1ctlH->length;
+	} else {
+		m_square1.length_counter = 0;
+	}
+	m_square1.volume_counter = io.ch1ctlH->envelope_vol;
+	m_square1.envelope_step = io.ch1ctlH->envelope_step;
+	m_square1.envelope_counter = io.ch1ctlH->envelope_step;
+}
+
+void GBASound::reload_square2() {
+	IOContainer& io = GaBber::instance().mem().io;
+
+	m_square2.running = true;
+	m_square2.frequency = 131072 / (2048 - io.ch2ctlH->frequency);
+	if(io.ch2ctlH->length_flag) {
+		m_square2.length_counter = 64 - io.ch2ctlL->length;
+	} else {
+		m_square2.length_counter = 0;
+	}
+	m_square2.volume_counter = io.ch2ctlL->envelope_vol;
+	m_square2.envelope_step = io.ch2ctlL->envelope_step;
+	m_square2.envelope_counter = io.ch2ctlL->envelope_step;
+}
+
+void GBASound::reload_wave() {
+	IOContainer& io = GaBber::instance().mem().io;
+
+	m_wave.running = true;
+	m_wave.frequency = 2097152 / (2048 - io.ch3ctlX->rate);
+	if(io.ch3ctlX->length_flag) {
+		m_wave.length_counter = 256 - io.ch3ctlH->length;
+	} else {
+		m_wave.length_counter = 0;
+	}
+	m_wave.current_digit = 0;
+	m_wave.cycles = 0;
+}
+
+void GBASound::set_wave_running(bool running) {
+	m_wave.running = running;
 }

@@ -109,7 +109,7 @@ void GaBber::emulator_next_state() {
 	const unsigned cycles = m_cpu.run_next_instruction();
 	for(unsigned i = 0; i < cycles; ++i) {
 		m_ppu.cycle();
-		const auto count = m_sound.m_speed_scale;
+		const auto count = m_sound.speed_scale();
 		for(unsigned j = 0; j < (unsigned)count; ++j) {
 			m_sound.cycle();
 		}
