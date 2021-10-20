@@ -3,6 +3,32 @@
 #include "Headers/StdTypes.hpp"
 
 namespace ARM {
+	constexpr inline unsigned mult_m_cycles(uint64 multiplier) {
+		multiplier >>= 8;
+		if(multiplier == 0 || multiplier == 0xFFFFFF)
+			return 1;
+		multiplier >>= 8;
+		if(multiplier == 0 || multiplier == 0xFFFF)
+			return 2;
+		multiplier >>= 8;
+		if(multiplier == 0 || multiplier == 0xFF)
+			return 3;
+		return 4;
+	}
+
+	constexpr inline unsigned unsigned_mult_m_cycles(uint64 multiplier) {
+		multiplier >>= 8;
+		if(multiplier == 0)
+			return 1;
+		multiplier >>= 8;
+		if(multiplier == 0)
+			return 2;
+		multiplier >>= 8;
+		if(multiplier == 0)
+			return 3;
+		return 4;
+	}
+
 	enum class InstructionType {
 		BX  = 0,
 		BBL,

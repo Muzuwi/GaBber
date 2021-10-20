@@ -1,8 +1,7 @@
 #pragma once
-#include <fstream>
 #include <fmt/format.h>
-#include "Headers/ARM_Instruction.hpp"
 #include "Headers/StdTypes.hpp"
+#include "Headers/ARM_Instruction.hpp"
 #include "Headers/THUMB_Instruction.hpp"
 #include "CPU/GPR.hpp"
 #include "CPU/PSR.hpp"
@@ -155,7 +154,6 @@ protected:
 	void execute_THUMB(uint16 opcode);
 	uint32 fetch_instruction();
 	[[nodiscard]] inline size_t current_instr_len() const { return ((cspr().state() == INSTR_MODE::ARM) ? 4 : 2); }
-	inline void pc_increment() { m_registers.m_base[15] += current_instr_len(); }
 
 
 	[[nodiscard]] bool irqs_enabled_globally() const { return io.ime.enabled() && !cspr().is_set(CSPR_REGISTERS::IRQn); }
@@ -187,30 +185,6 @@ protected:
 		if(!instr.immediate_is_value() && instr.is_shift_reg() && instr.operand1_reg() == 15)
 			pc_offset = 4;
 		return creg(instr.operand1_reg()) + pc_offset;
-	}
-	inline unsigned mult_m_cycles(uint64 multiplier) {
-		multiplier >>= 8;
-		if(multiplier == 0 || multiplier == 0xFFFFFF)
-			return 1;
-		multiplier >>= 8;
-		if(multiplier == 0 || multiplier == 0xFFFF)
-			return 2;
-		multiplier >>= 8;
-		if(multiplier == 0 || multiplier == 0xFF)
-			return 3;
-		return 4;
-	}
-	inline unsigned unsigned_mult_m_cycles(uint64 multiplier) {
-		multiplier >>= 8;
-		if(multiplier == 0)
-			return 1;
-		multiplier >>= 8;
-		if(multiplier == 0)
-			return 2;
-		multiplier >>= 8;
-		if(multiplier == 0)
-			return 3;
-		return 4;
 	}
 
 	uint32 evaluate_operand2(ARM::DataProcessInstruction instr, bool affect_carry = false);

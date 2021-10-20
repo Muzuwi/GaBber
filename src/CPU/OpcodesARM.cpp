@@ -460,7 +460,7 @@ void ARM7TDMI::MLL(ARM::MultLongInstruction instr) {
 	}
 
 	m_wait_cycles += 1/*S*/
-					+ (instr.is_signed() ? mult_m_cycles(m) : unsigned_mult_m_cycles(m)) + 1
+					+ (instr.is_signed() ? ARM::mult_m_cycles(m) : ARM::unsigned_mult_m_cycles(m)) + 1
 	                + (instr.should_accumulate() ? 1 : 0);
 }
 
@@ -479,7 +479,7 @@ void ARM7TDMI::MUL(ARM::MultInstruction instr) {
 		cspr().set(CSPR_REGISTERS::Carry, false); //  "is set to a meaningless value"
 	}
 
-	m_wait_cycles += 1/*S*/ + mult_m_cycles(s) + (instr.should_accumulate() ? 1 : 0);
+	m_wait_cycles += 1/*S*/ + ARM::mult_m_cycles(s) + (instr.should_accumulate() ? 1 : 0);
 }
 
 void ARM7TDMI::BDT(ARM::BDTInstruction instr) {

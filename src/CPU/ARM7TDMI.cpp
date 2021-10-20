@@ -91,7 +91,8 @@ void ARM7TDMI::exec_opcode() {
 				: ~1u;
 		m_pc_dirty = false;
 	} else {
-		pc_increment();
+		pc() += current_instr_len();
+		m_pc_dirty = false;
 	}
 }
 
