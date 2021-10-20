@@ -8,7 +8,7 @@
 #include "imgui/imgui_impl_opengl3.h"
 
 bool GaBber::display_initialize() {
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO) != 0) {
 		fmt::print("SDL initialization failed!\n");
 		return false;
 	}

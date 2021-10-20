@@ -40,12 +40,6 @@ void GaBber::parse_args(int argc, char** argv) {
 
 
 int GaBber::start() {
-	auto rc = SDL_Init(SDL_INIT_EVERYTHING);
-	if(rc != 0) {
-		std::cerr << "Failed initializing SDL!\n";
-		return -1;
-	}
-
 	auto bios_image = load_from_file("bios.bin");
 	if(!bios_image.has_value()) {
 		std::cerr << "Failed loading BIOS image!";
@@ -107,6 +101,7 @@ void GaBber::emulator_loop() {
 
 void GaBber::emulator_next_state() {
 	const unsigned cycles = m_cpu.run_next_instruction();
+	assert(cycles > 0 && "Trying to emulate zero cycles!");
 	for(unsigned i = 0; i < cycles; ++i) {
 		m_ppu.cycle();
 		const auto count = m_sound.speed_scale();
