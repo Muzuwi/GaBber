@@ -213,22 +213,7 @@ protected:
 		return 4;
 	}
 
-
-	uint32 rotr32 (uint32_t n, unsigned int c);
-
 	uint32 evaluate_operand2(ARM::DataProcessInstruction instr, bool affect_carry = false);
-
-	template<size_t value_size>
-	constexpr uint32 sign_extend(uint32 value) {
-		static_assert(value_size < sizeof(uint32)*8);
-
-		const auto mask = ((1 << value_size) - 1);
-		const auto shift_count = 32 - value_size;
-
-		auto u = (static_cast<uint32>(value) & mask);
-		return ((signed int)(u << shift_count)) >> shift_count;
-	}
-
 	void stack_push32(uint32 val);
 	uint32 stack_pop32();
 

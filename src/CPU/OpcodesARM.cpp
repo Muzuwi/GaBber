@@ -1,5 +1,6 @@
 #include "Headers/ARM7TDMI.hpp"
 #include "MMU/BusInterface.hpp"
+#include "Headers/Bits.hpp"
 
 void ARM7TDMI::B(ARM::BInstruction instr) {
 	const auto old_pc = const_pc();
@@ -295,7 +296,7 @@ void ARM7TDMI::HDT(ARM::HDTInstruction instr) {
 				auto word = static_cast<uint32>(mem_read16(address & ~1u));
 
 				if(address&1)   //  Misaligned LDRH
-					word = rotr32(word, 8);
+					word = Bits::rotr32(word, 8);
 
 				word_for_load = word;
 			} else
@@ -305,7 +306,7 @@ void ARM7TDMI::HDT(ARM::HDTInstruction instr) {
 		}
 		case 2: {//  Signed byte
 			if(instr.load_from_memory())
-				word_for_load = sign_extend<8>(mem_read8(address));
+				word_for_load = Bits::sign_extend<8>(mem_read8(address));
 			else
 				mem_write8(address, target);
 
@@ -316,9 +317,9 @@ void ARM7TDMI::HDT(ARM::HDTInstruction instr) {
 				uint32 word;
 
 				if(address & 1u)
-					word = sign_extend<8>(mem_read8(address));
+					word = Bits::sign_extend<8>(mem_read8(address));
 				else
-					word = sign_extend<16>(mem_read16(address));
+					word = Bits::sign_extend<16>(mem_read16(address));
 
 				word_for_load = word;
 			} else
@@ -380,7 +381,7 @@ void ARM7TDMI::SDT(ARM::SDTInstruction instr) {
         	word = mem_read32(address & ~3u);  //  Force align
         	//  Rotate
         	if(address & 3u)
-				word = rotr32(word, (address&3u)*8);
+				word = Bits::rotr32(word, (address&3u)*8);
         }
 
 	    if(!instr.preindex())

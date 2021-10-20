@@ -1,6 +1,6 @@
 #include "MMU/BusInterface.hpp"
 #include "Headers/ARM7TDMI.hpp"
-#include <fmt/format.h>
+#include "Headers/Bits.hpp"
 
 void ARM7TDMI::THUMB_ALU(THUMB::InstructionFormat4 instr) {
 	/*
@@ -39,7 +39,7 @@ void ARM7TDMI::THUMB_FMT1(THUMB::InstructionFormat1 instr) {
 			break;
 		}
 		default: {
-			fmt::print("ARM7TDMI/ Invalid opcode {:04x} for THUMB mov shifted at pc {:08x}, instr {:04x}",
+			log("ARM7TDMI/ Invalid opcode {:04x} for THUMB mov shifted at pc {:08x}, instr {:04x}",
 						opcode, pc() - 4, instr.raw());
 			break;
 		}
@@ -160,7 +160,7 @@ void ARM7TDMI::THUMB_FMT7(THUMB::InstructionFormat7 instr) {
 			auto word = mem_read32(address & ~3u);  //  Force align
 			//  Rotate
 			if(address & 3u) {
-				word = rotr32(word, (address&3u)*8);
+				word = Bits::rotr32(word, (address&3u)*8);
 			}
 
 			target = word;
@@ -197,7 +197,7 @@ void ARM7TDMI::THUMB_FMT8(THUMB::InstructionFormat8 instr) {
 			auto& destination = reg(instr.destination_reg());
 
 			uint8 val = mem_read8(address);
-			destination = sign_extend<8>(val);
+			destination = Bits::sign_extend<8>(val);
 
 			m_wait_cycles += 1/*S*/ + 1/*N*/ + 1/*I*/;
 			break;
@@ -209,7 +209,7 @@ void ARM7TDMI::THUMB_FMT8(THUMB::InstructionFormat8 instr) {
 			word = static_cast<uint32>(mem_read16(address & ~1u));
 			if(address&1u) {
 				log("Undefined behaviour: LDRH with unaligned address!");
-				word = rotr32(word, 8);
+				word = Bits::rotr32(word, 8);
 			}
 
 			destination = word;
@@ -224,10 +224,10 @@ void ARM7TDMI::THUMB_FMT8(THUMB::InstructionFormat8 instr) {
 			if(address&1u) {
 				log("Undefined behaviour: LDRSH with unaligned address!");
 				auto byte = mem_read8(address);
-				word = sign_extend<8>(byte);
+				word = Bits::sign_extend<8>(byte);
 			} else {
 				auto hword = mem_read16(address);
-				word = sign_extend<16>(hword);
+				word = Bits::sign_extend<16>(hword);
 			}
 
 			destination = word;
@@ -257,7 +257,7 @@ void ARM7TDMI::THUMB_FMT9(THUMB::InstructionFormat9 instr) {
 			auto word = mem_read32(address & ~3u);  //  Force align
 			//  Rotate
 			if(address & 3u) {
-				word = rotr32(word, (address&3u)*8);
+				word = Bits::rotr32(word, (address&3u)*8);
 			}
 
 			target = word;
@@ -289,7 +289,7 @@ void ARM7TDMI::THUMB_FMT10(THUMB::InstructionFormat10 instr) {
 		word = static_cast<uint32>(mem_read16(address & ~1u));
 		if(address&1u) {
 			log("Undefined behaviour: LDRH with unaligned address!");
-			word = rotr32(word, 8);
+			word = Bits::rotr32(word, 8);
 		}
 
 		target = word;
@@ -314,7 +314,7 @@ void ARM7TDMI::THUMB_FMT11(THUMB::InstructionFormat11 instr) {
 
 		//  Rotate
 		if(address & 3u) {
-			word = rotr32(word, (address&3u)*8);
+			word = Bits::rotr32(word, (address&3u)*8);
 		}
 
 		destination = word;
@@ -446,7 +446,7 @@ void ARM7TDMI::THUMB_FMT16(THUMB::InstructionFormat16 instr) {
 		return;
 	}
 
-	const auto offset = sign_extend<9>(static_cast<uint16>(instr.offset()) << 1u);
+	const auto offset = Bits::sign_extend<9>(static_cast<uint16>(instr.offset()) << 1u);
 	const auto new_pc = pc() + offset;
 
 	pc() = new_pc;
@@ -459,7 +459,7 @@ void ARM7TDMI::THUMB_FMT17(THUMB::InstructionFormat17) {
 }
 
 void ARM7TDMI::THUMB_FMT18(THUMB::InstructionFormat18 instr) {
-	auto new_pc = pc() + sign_extend<12>(instr.offset() << 1u);
+	auto new_pc = pc() + Bits::sign_extend<12>(instr.offset() << 1u);
 	pc() = new_pc;
 
 	m_wait_cycles += 2/*S*/ + 1/*N*/;
@@ -467,7 +467,7 @@ void ARM7TDMI::THUMB_FMT18(THUMB::InstructionFormat18 instr) {
 
 void ARM7TDMI::THUMB_FMT19(THUMB::InstructionFormat19 instr) {
 	if(!instr.low()) {
-		auto offset = sign_extend<23>(static_cast<uint32>(instr.offset()) << 12u);
+		auto offset = Bits::sign_extend<23>(static_cast<uint32>(instr.offset()) << 12u);
 		lr() = (const_pc() + offset);
 
 		m_wait_cycles += 1/*S*/;

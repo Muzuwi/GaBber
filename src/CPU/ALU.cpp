@@ -1,18 +1,5 @@
 #include "Headers/ARM7TDMI.hpp"
-
-template<unsigned n>
-constexpr bool bit(uint32 val) {
-	static_assert(n >= 0 && n < 32);
-	return val & (1u << n);
-}
-
-
-uint32_t ARM7TDMI::rotr32 (uint32_t n, unsigned int c) {
-	const unsigned int mask = (std::numeric_limits<uint32>::digits - 1);
-	c &= mask;
-	return (n>>c) | (n<<( (-c)&mask ));
-}
-
+#include "Headers/Bits.hpp"
 
 uint32 ARM7TDMI::evaluate_operand2(ARM::DataProcessInstruction instr, bool affect_carry) {
 	affect_carry = instr.should_set_condition() && affect_carry;
@@ -28,7 +15,7 @@ uint32 ARM7TDMI::evaluate_operand2(ARM::DataProcessInstruction instr, bool affec
 
 		const bool new_carry = (shift_count != 0) ? (operand2 & (1u << (shift_count-1)))
 												  : operand2 & 1; //  FIXME: Might be terribly wrong?
-		const uint32 result = rotr32(operand2, shift_count);
+		const uint32 result = Bits::rotr32(operand2, shift_count);
 		if(affect_carry)
 			cspr().set(CSPR_REGISTERS::Carry, new_carry);
 
@@ -76,11 +63,12 @@ uint32 ARM7TDMI::_alu_add(uint32 op1, uint32 op2, bool should_affect_flags) {
 	const uint32 v = op1 + op2;
 
 	if(should_affect_flags) {
-		cspr().set(CSPR_REGISTERS::Overflow, (bit<31>(op1) == bit<31>(op2)) && (bit<31>(v) != bit<31>(op1)));
+		const bool overflow =
+				(Bits::bit<31>(op1) == Bits::bit<31>(op2)) &&
+				(Bits::bit<31>(v)   != Bits::bit<31>(op1));
+		cspr().set(CSPR_REGISTERS::Overflow, overflow);
 		_alu_set_flags_logical_op(v);
 	}
-
-//	log("alu add op1={:08x} op2={:08x} result={:08x} cpsr={:08x}", op1, op2, v, cspr().raw());
 
 	return v;
 }
@@ -93,11 +81,12 @@ uint32 ARM7TDMI::_alu_sub(uint32 op1, uint32 op2, bool should_affect_flags) {
 	const uint32 v = op1 - op2;
 
 	if(should_affect_flags) {
-		cspr().set(CSPR_REGISTERS::Overflow, (bit<31>(op1) != bit<31>(op2)) && (bit<31>(v) == bit<31>(op2)));
+		const bool overflow =
+				(Bits::bit<31>(op1) != Bits::bit<31>(op2)) &&
+				(Bits::bit<31>(v)   == Bits::bit<31>(op2));
+		cspr().set(CSPR_REGISTERS::Overflow, overflow);
 		_alu_set_flags_logical_op(v);
 	}
-
-//	log("alu sub op1={:08x} op2={:08x} result={:08x} cpsr={:08x}", op1, op2, v, cspr().raw());
 
 	return v;
 }
@@ -109,8 +98,10 @@ uint32 ARM7TDMI::_alu_adc(uint32 op1, uint32 op2, bool should_affect_flags) {
 	uint32 result = op1 + op2 + C;
 
 	if(should_affect_flags) {
-		bool new_C = ((uint64)op1 + (uint64)op2 + (uint64)C) > 0xfffffffful;
-		bool new_V = (bit<31>(op1) == bit<31>(op2)) && (bit<31>(result) != bit<31>(op1));
+		const bool new_C = ((uint64)op1 + (uint64)op2 + (uint64)C) > 0xfffffffful;
+		const bool new_V =
+				(Bits::bit<31>(op1)    == Bits::bit<31>(op2)) &&
+				(Bits::bit<31>(result) != Bits::bit<31>(op1));
 		cspr().set(CSPR_REGISTERS::Carry, new_C);
 		cspr().set(CSPR_REGISTERS::Overflow, new_V);
 		_alu_set_flags_logical_op(result);
@@ -126,8 +117,10 @@ uint32 ARM7TDMI::_alu_sbc(uint32 op1, uint32 op2, bool should_affect_flags) {
 	uint32 result = op1 - op2 - C;
 
 	if(should_affect_flags) {
-		bool new_C = ((uint64)op1 >= (uint64)op2 + (uint64)C);
-		bool new_V = (bit<31>(op1) != bit<31>(op2)) && (bit<31>(result) == bit<31>(op2));
+		const bool new_C = ((uint64)op1 >= (uint64)op2 + (uint64)C);
+		const bool new_V =
+				(Bits::bit<31>(op1)    != Bits::bit<31>(op2)) &&
+				(Bits::bit<31>(result) == Bits::bit<31>(op2));
 		cspr().set(CSPR_REGISTERS::Carry, new_C);
 		cspr().set(CSPR_REGISTERS::Overflow, new_V);
 		_alu_set_flags_logical_op(result);

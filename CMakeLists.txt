@@ -46,7 +46,7 @@ add_executable(GaBber
     src/Sound/GBASound.hpp
     src/Devices/GamePak.cpp
     src/IO/Sound.cpp
-)
+    src/Headers/Bits.hpp)
 
 target_compile_options(GaBber PRIVATE ${GABBER_CXX_FLAGS})
 
