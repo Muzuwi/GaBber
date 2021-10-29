@@ -1,20 +1,23 @@
 #pragma once
 #include "IO/IOContainer.hpp"
-#include "Devices/GamePak.hpp"
-#include "Devices/SystemBIOS.hpp"
+#include "Bus/GamePak.hpp"
 #include "IO/DebugBackdoor.hpp"
-#include "Devices/RAM.hpp"
-#include "Devices/VRAM.hpp"
+#include "Bus/BIOS.hpp"
+#include "Bus/IWRAM.hpp"
+#include "Bus/OAM.hpp"
+#include "Bus/Palette.hpp"
+#include "Bus/ROM.hpp"
+#include "Bus/SRAM.hpp"
+#include "Bus/VRAM.hpp"
+#include "Bus/WRAM.hpp"
 
 struct MemoryLayout {
-	SystemBIOS bios;
-	OnboardWRAM onboard_wram;
-	OnchipWRAM onchip_wram;
+	BIOS bios;
+	WRAM wram;
+	IWRAM iwram;
 	IOContainer io;
-
 	VRAM vram;
-	PaletteRAM palette_ram;
 	OAM oam;
-
+	Palette palette;
 	GamePak pak;
 };

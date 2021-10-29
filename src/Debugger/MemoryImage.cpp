@@ -10,8 +10,8 @@ void MemoryImage::draw_window() {
 		created_tex = true;
 	}
 
-	auto const* ptr = m_emu.mem().onchip_wram.raw();
-    auto size = m_emu.mem().onchip_wram.bytes();
+	auto const* ptr = m_emu.mem().iwram.buffer().begin();
+    auto size = m_emu.mem().iwram.buffer().size();
 
 	const unsigned width = 128;
 	const unsigned height = size / (width * 4);

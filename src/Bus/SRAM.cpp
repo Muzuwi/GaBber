@@ -1,9 +1,9 @@
 #include <algorithm>
-#include "Devices/GamePak.hpp"
+#include "Bus/SRAM.hpp"
 
-uint8 PakSRAM::read8(uint32 offset) {
+uint8 SRAM::read8(uint32 offset) {
 	if(m_type != BackupCartType::FLASH64K && m_type != BackupCartType::FLASH128K) {
-		fmt::print("PakSRAM/ FIXME: Read unimplemented type: {}\n", m_type);
+//		fmt::print("PakSRAM/ FIXME: Read unimplemented type: {}\n", m_type);
 		return 0x00;
 	}
 
@@ -24,17 +24,17 @@ uint8 PakSRAM::read8(uint32 offset) {
 	if(offset >= m_buffer.size()) {
 		return 0xFF;
 	}
-	fmt::print("PakSRAM/ Read {:02x}=[{:04x}]\n", m_buffer[buffer_offset], buffer_offset);
+
 	return m_buffer[buffer_offset];
 }
 
-void PakSRAM::write8(uint32 offset, uint8 value) {
+void SRAM::write8(uint32 offset, uint8 value) {
 	if(m_type != BackupCartType::FLASH64K && m_type != BackupCartType::FLASH128K) {
-		fmt::print("PakSRAM/ FIXME: Write unimplemented type: {}\n", m_type);
+//		fmt::print("PakSRAM/ FIXME: Write unimplemented type: {}\n", m_type);
 		return;
 	}
 
-	fmt::print("PakSRAM/ Flash write[{:04x}]={:02x}\n", offset, value);
+//	fmt::print("PakSRAM/ Flash write[{:04x}]={:02x}\n", offset, value);
 
 	if(m_mode == FlashChipMode::Write) {
 		const unsigned size = m_type == BackupCartType::FLASH64K ? 65536 : 65536*2;
@@ -53,7 +53,7 @@ void PakSRAM::write8(uint32 offset, uint8 value) {
 				m_mode = FlashChipMode::Idle;
 			} else if(value == 0x80) {
 				fmt::print("PakSRAM/ Enter erase mode\n");
- 				m_mode = FlashChipMode::Erase;
+				m_mode = FlashChipMode::Erase;
 			} else if(value == 0x10 && m_mode == FlashChipMode::Erase) {
 				fmt::print("PakSRAM/ Erase entire chip\n");
 				std::fill_n(&m_buffer[0], m_buffer.size(), 0xFF);

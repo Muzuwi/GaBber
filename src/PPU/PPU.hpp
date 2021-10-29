@@ -39,19 +39,19 @@ class PPU {
 		return result;
 	}
 
-	inline Optional<OBJAttr> get_obj_attrs(uint8 obj) const {
+	inline OBJAttr get_obj_attrs(uint8 obj) const {
 		return mem.oam.readT<OBJAttr>(obj*8);
 	}
 
-	inline Optional<Color> get_palette_color(uint8 palette_number, uint16 color) const {
-		return mem.palette_ram.readT<Color>(palette_number * 32 + color * 2);
+	inline Color get_palette_color(uint8 palette_number, uint16 color) const {
+		return mem.palette.readT<Color>(palette_number * 32 + color * 2);
 	}
 
-	inline Optional<Color> get_obj_palette_color(uint8 palette_number, uint16 color) const {
-		return mem.palette_ram.readT<Color>(0x200 + palette_number * 32 + color * 2);
+	inline Color get_obj_palette_color(uint8 palette_number, uint16 color) const {
+		return mem.palette.readT<Color>(0x200 + palette_number * 32 + color * 2);
 	}
 
-	inline Optional<TextScreenData> get_bg_text_data(uint32 screen_base, uint16 ly, uint16 dot) const {
+	inline TextScreenData get_bg_text_data(uint32 screen_base, uint16 ly, uint16 dot) const {
 		return mem.vram.readT<TextScreenData>(screen_base + (ly/8)*0x40 + (dot/8)*2);
 	}
 
@@ -60,10 +60,7 @@ class PPU {
 		const unsigned offset_to_tile = tile * (64/d);
 		const unsigned offset_to_dot = ly_in_tile * (8/d) + (dot_in_tile/d);
 
-		Optional<uint8> ret = mem.vram.readT<uint8>(base + offset_to_tile + offset_to_dot);
-		assert(ret.has_value());
-
-		uint8 byte = (ret.has_value() ? *ret : 0);
+		uint8 byte = mem.vram.readT<uint8>(base + offset_to_tile + offset_to_dot);
 		if(!depth_flag) {
 			const bool is_right_pixel = (dot_in_tile % 2) != 0;
 			if(is_right_pixel) byte >>= 4u;
@@ -80,10 +77,7 @@ class PPU {
 		const unsigned offset_to_tile = tile * 32;
 		const unsigned offset_to_dot = ly_in_tile * (8/d) + (dot_in_tile/d);
 
-		Optional<uint8> ret = mem.vram.readT<uint8>(base + offset_to_tile + offset_to_dot);
-		assert(ret.has_value());
-
-		uint8 byte = (ret.has_value() ? *ret : 0);
+		uint8 byte = mem.vram.readT<uint8>(base + offset_to_tile + offset_to_dot);
 		if(!depth_flag) {
 			const bool is_right_pixel = (dot_in_tile % 2) != 0;
 			if(is_right_pixel) byte >>= 4u;

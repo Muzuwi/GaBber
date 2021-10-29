@@ -18,7 +18,7 @@ add_executable(GaBber
     src/CPU/ARM7TDMI.cpp
     src/main.cpp
     src/GaBber.cpp
-    src/Headers/ARM_Instruction.hpp src/MMU/BusInterface.hpp src/MMU/BusDevice.hpp src/Devices/SystemBIOS.hpp src/PPU/PPU.hpp src/IO/Interrupt.hpp src/MMU/IOReg.hpp src/Headers/THUMB_Instruction.hpp src/Devices/GamePak.hpp
+    src/Headers/ARM_Instruction.hpp src/MMU/BusInterface.hpp src/MMU/BusDevice.hpp src/PPU/PPU.hpp src/IO/Interrupt.hpp src/MMU/IOReg.hpp src/Headers/THUMB_Instruction.hpp src/Bus/GamePak.hpp
     src/MMU/BusInterface.cpp
     src/CPU/OpcodesARM.cpp
     src/PPU/PPU.cpp
@@ -44,9 +44,18 @@ add_executable(GaBber
     src/Debugger/MemoryImage.cpp
     src/Sound/GBASound.cpp
     src/Sound/GBASound.hpp
-    src/Devices/GamePak.cpp
     src/IO/Sound.cpp
-    src/Headers/Bits.hpp)
+    src/Headers/Bits.hpp src/MMU/ReaderArray.hpp
+    src/Bus/BIOS.hpp
+    src/Bus/IWRAM.hpp
+    src/Bus/OAM.hpp
+    src/Bus/Palette.hpp
+    src/Bus/ROM.hpp
+    src/Bus/SRAM.hpp
+    src/Bus/VRAM.hpp
+    src/Bus/WRAM.hpp
+    src/Bus/SRAM.cpp
+    )
 
 target_compile_options(GaBber PRIVATE ${GABBER_CXX_FLAGS})
 
