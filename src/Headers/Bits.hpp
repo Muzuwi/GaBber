@@ -33,4 +33,13 @@ namespace Bits {
 		static_assert(n >= 0 && n < 32);
 		return val & (1u << n);
 	}
+
+	/*
+	 *  Gets the n-th byte of the specified 32-bit value, endianness is assumed to be little.
+	 */
+	template<unsigned n>
+	constexpr uint8 byte_le(uint32 val) {
+		static_assert(n < 4);
+		return (val >> (n*8)) & 0xFFu;
+	}
 }

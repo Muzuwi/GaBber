@@ -118,9 +118,7 @@ protected:
 	static constexpr const uint32 writable_mask = 0xf7e00000u | count_mask | bit11_mask;
 	static constexpr const uint32 readable_mask = 0xf7e00000u | bit11_mask;
 
-	void on_write(uint32 new_value) override {
-		this->m_register = new_value & writable_mask;
-	}
+	void on_write(uint32 new_value) override;
 
 	uint32 on_read() override {
 		return this->m_register & readable_mask;
@@ -142,13 +140,8 @@ struct DMAx final {
 	DMADest<x> m_destination;
 	DMACtrl<x> m_ctrl;
 
-	uint32 m_original_destination_ptr {};
 	bool m_is_running {false};
 	uint32 m_destination_ptr {};
 	uint32 m_source_ptr {};
 	unsigned m_count {};
-
-	uint32 m_fetched_data {};
-	bool m_fetched {false};
-	bool m_finished {false};
 };

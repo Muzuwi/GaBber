@@ -284,14 +284,10 @@ protected:
 	 *                      DMA
 	 *  ==============================================
 	 */
-	template<unsigned x> void dma_start();
-	template<unsigned x> void dma_cycle();
-	template<unsigned x> void dma_cycle_fast();
+	template<unsigned x> void dma_resume();
+	template<unsigned x> void dma_run();
 	template<unsigned x> inline bool dma_is_running()  { return io.template dma_for_num<x>().m_is_running; }
-	template<unsigned x> inline bool dma_is_finished() { return io.template dma_for_num<x>().m_finished; }
-	template<unsigned x> bool dma_try_start_immediate();
-	bool dma_cycle_all();
-	void dma_cycle_all_fast();
+	void dma_run_all();
 
 	/*  ==============================================
      *                      Timers
@@ -312,4 +308,7 @@ public:
 	void raise_irq(IRQType);
 	void dma_start_vblank();
 	void dma_start_hblank();
+	void dma_request_fifoA();
+	void dma_request_fifoB();
+	template<unsigned x> void dma_on_enable();
 };

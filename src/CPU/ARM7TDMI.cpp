@@ -46,13 +46,8 @@ unsigned ARM7TDMI::run_to_next_state() {
 	m_wait_cycles = 0;
 
 	//  If in DMA, emulate the wait states used up by DMA
-	if(dma_try_start_immediate<0>() ||
-	   dma_try_start_immediate<1>() ||
-	   dma_try_start_immediate<2>() ||
-	   dma_try_start_immediate<3>()) {
-		dma_cycle_all_fast();
-//		log("Fast forwarded {} cycles\n", m_wait_cycles);
-//		dma_cycle_all();
+	if(dma_is_running<0>() || dma_is_running<1>() || dma_is_running<2>() || dma_is_running<3>()) {
+		dma_run_all();
 		return m_wait_cycles;
 	}
 
