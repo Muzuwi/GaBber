@@ -1,4 +1,5 @@
 #pragma once
+#include <deque>
 #include <SDL2/SDL_audio.h>
 #include "Headers/StdTypes.hpp"
 
@@ -14,6 +15,10 @@ struct SoundData {
 struct WaveData : public SoundData {
 	unsigned cycles;
 	unsigned current_digit;
+};
+
+struct FifoData {
+	std::deque<uint8> samples;
 };
 
 class GBASound {
@@ -45,13 +50,19 @@ class GBASound {
 	SoundData m_square1;
 	SoundData m_square2;
 	WaveData m_wave;
+	FifoData m_soundA;
+	FifoData m_soundB;
 
+	void push_sample_fifoA(uint8 value, unsigned sample_rate);
+	void push_sample_fifoB(uint8 value, unsigned sample_rate);
 	void push_samples(float left, float right);
 
 	int16 generate_sample_square1();
 	int16 generate_sample_square2();
 	int16 generate_sample_noise();
 	int16 generate_sample_wave();
+	int16 generate_sample_fifoA();
+	int16 generate_sample_fifoB();
 
 	void timer_tick_length();
 	void timer_tick_sweep();
@@ -73,4 +84,6 @@ public:
 	int speed_scale() const {
 		return m_speed_scale;
 	}
+
+	void on_timer_overflow(unsigned timer_num);
 };

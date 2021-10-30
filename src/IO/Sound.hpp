@@ -1,4 +1,6 @@
 #pragma once
+#include <deque>
+#include "Headers/Bits.hpp"
 
 struct SND1CNTL {
 	uint8 sweep_shift : 3;
@@ -47,6 +49,21 @@ struct SNDCNT_L {
 	uint8 _unused2 : 1;
 	uint8 channel_enable_r : 4;
 	uint8 channel_enable_l : 4;
+};
+
+struct SNDCNTH {
+	uint8 psg_volume : 2;
+	uint8 volumeA     : 1;
+	uint8 volumeB     : 1;
+	uint8 _unused    : 4;
+	bool enable_right_A : 1;
+	bool enable_left_A  : 1;
+	uint8 timer_sel_A   : 1;
+	bool _resetA        : 1;
+	bool enable_right_B : 1;
+	bool enable_left_B  : 1;
+	uint8 timer_sel_B   : 1;
+	bool _resetB        : 1;
 };
 
 struct SNDBIAS {
@@ -122,11 +139,17 @@ protected:
 	static constexpr const uint16 writeable_mask = 0xFF0F;
 	static constexpr const uint16 readable_mask  = 0x770F;
 
-	void on_write(uint16 new_value) override {
-		m_register = new_value & writeable_mask;
-	}
+	void on_write(uint16 new_value) override;
 	uint16 on_read() override {
 		return m_register & readable_mask;
+	}
+public:
+	SNDCNTH* operator->() {
+		return this->template as<SNDCNTH>();
+	}
+
+	SNDCNTH const* operator->() const {
+		return this->template as<SNDCNTH>();
 	}
 };
 
@@ -399,23 +422,45 @@ public:
 
 
 class SoundFifoA final : public IOReg32<0x040000A0> {
+	std::deque<uint8> m_fifo;
+	void add_sample(uint8 byte) {
+		m_fifo.push_back(byte);
+	}
 protected:
 	void on_write(uint32 new_value) override {
-		m_register = new_value;
+		add_sample(Bits::byte_le<0>(new_value));
+		add_sample(Bits::byte_le<1>(new_value));
+		add_sample(Bits::byte_le<2>(new_value));
+		add_sample(Bits::byte_le<3>(new_value));
 	}
 	uint32 on_read() override {
 		//  FIXME: unreadable I/O register
 		return 0xBABEBABE;
+	}
+public:
+	std::deque<uint8>& fifo() {
+		return m_fifo;
 	}
 };
 
 class SoundFifoB final : public IOReg32<0x040000A4> {
+	std::deque<uint8> m_fifo;
+	void add_sample(uint8 byte) {
+		m_fifo.push_back(byte);
+	}
 protected:
 	void on_write(uint32 new_value) override {
-		m_register = new_value;
+		add_sample(Bits::byte_le<0>(new_value));
+		add_sample(Bits::byte_le<1>(new_value));
+		add_sample(Bits::byte_le<2>(new_value));
+		add_sample(Bits::byte_le<3>(new_value));
 	}
 	uint32 on_read() override {
 		//  FIXME: unreadable I/O register
 		return 0xBABEBABE;
+	}
+public:
+	std::deque<uint8>& fifo() {
+		return m_fifo;
 	}
 };

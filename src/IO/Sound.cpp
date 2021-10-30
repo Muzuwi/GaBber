@@ -12,7 +12,7 @@ uint32 SoundCtlX::on_read() {
 
 void SoundCtlX::on_write(uint32 new_value) {
 	if(!(new_value & (1u << 7u))) {
-		fmt::print("PSG/FIFO Reset\n");
+		//  TODO: PSG/FIFO reset
 	}
 	m_register = new_value & writeable_mask;
 }
@@ -60,5 +60,15 @@ void Sound3CtlL::on_write(uint16 new_value) {
 		GaBber::instance().sound().set_wave_running(true);
 	} else {
 		GaBber::instance().sound().set_wave_running(false);
+	}
+}
+
+void SoundCtlH::on_write(uint16 new_value) {
+	m_register = new_value & writeable_mask;
+	if((*this)->_resetA) {
+		GaBber::instance().mem().io.fifoA.fifo().clear();
+	}
+	if((*this)->_resetB) {
+		GaBber::instance().mem().io.fifoB.fifo().clear();
 	}
 }

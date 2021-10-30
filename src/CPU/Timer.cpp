@@ -1,5 +1,6 @@
 #include "IO/Timer.hpp"
 #include "Headers/ARM7TDMI.hpp"
+#include "Headers/GaBber.hpp"
 
 
 void ARM7TDMI::timers_cycle_all(size_t n) {
@@ -38,6 +39,8 @@ template<unsigned int timer_num>
 void ARM7TDMI::timers_increment(Timer<timer_num>& timer) {
 	//  Timer overflow
 	if(*timer.m_reload_and_current == 0xFFFF) {
+		GaBber::instance().sound().on_timer_overflow(timer_num);
+
 		*timer.m_reload_and_current = timer.m_reload_and_current.reload_value();
 		if(timer.m_ctl->irq_enable)
 			raise_irq(Timer<timer_num>::irq_for_timer());

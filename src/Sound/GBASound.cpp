@@ -87,6 +87,8 @@ void GBASound::cycle() {
 	const int16 ch2 = generate_sample_square2();
 	const int16 ch3 = generate_sample_noise();
 	const int16 ch4 = generate_sample_wave();
+	const int16 fifoA = generate_sample_fifoA();
+	const int16 fifoB = generate_sample_fifoB();
 
 	const int16 vol_l = io.soundctlL->volume_l + 1;
 	const int16 vol_r = io.soundctlL->volume_r + 1;
@@ -116,6 +118,25 @@ void GBASound::cycle() {
 	}
 	if(io.soundctlL->channel_enable_r & 0b1000) {
 		right_sample += ch4 * vol_r;
+	}
+
+	//  DMA mixing
+	if(io.soundctlH->psg_volume != 3) {
+		left_sample = left_sample   / (1u << (2 - io.soundctlH->psg_volume));
+		right_sample = right_sample / (1u << (2 - io.soundctlH->psg_volume));
+	}
+
+	if(io.soundctlH->enable_left_A) {
+		left_sample += fifoA;
+	}
+	if(io.soundctlH->enable_right_A) {
+		right_sample += fifoA;
+	}
+	if(io.soundctlH->enable_left_B) {
+		left_sample += fifoB;
+	}
+	if(io.soundctlH->enable_right_B) {
+		right_sample += fifoB;
 	}
 
 	const uint16 bias = (*io.soundbias >> 1u) & 0x1FF;
@@ -298,7 +319,7 @@ int16 GBASound::generate_sample_square2() {
 }
 
 int16 GBASound::generate_sample_noise() {
-	if(!m_wave.running ) {
+	if(!m_wave.running) {
 		return 0;
 	}
 	IOContainer const& io = GaBber::instance().mem().io;
@@ -328,6 +349,32 @@ int16 GBASound::generate_sample_noise() {
 
 int16 GBASound::generate_sample_wave() {
 	return 0;
+}
+
+int16 GBASound::generate_sample_fifoA() {
+	if(m_soundA.samples.empty()) {
+		return 0;
+	}
+	IOContainer& io = GaBber::instance().mem().io;
+
+	const int16 sample = static_cast<int16>(static_cast<int8>(m_soundA.samples.front()))
+			/ (2 - io.soundctlH->volumeA);
+	m_soundA.samples.pop_front();
+
+	return sample;
+}
+
+int16 GBASound::generate_sample_fifoB() {
+	if(m_soundB.samples.empty()) {
+		return 0;
+	}
+	IOContainer& io = GaBber::instance().mem().io;
+
+	const int16 sample = static_cast<int16>(static_cast<int8>(m_soundB.samples.front()))
+	                     / (2 - io.soundctlH->volumeB);
+	m_soundB.samples.pop_front();
+
+	return sample;
 }
 
 void GBASound::reload_square1() {
@@ -375,5 +422,65 @@ void GBASound::reload_wave() {
 }
 
 void GBASound::set_wave_running(bool running) {
-	m_wave.running = running;
+	if(!m_wave.running && running) {
+		reload_wave();
+	} else {
+		m_wave.running = running;
+	}
+}
+
+void GBASound::on_timer_overflow(unsigned timer_num) {
+	auto& io = GaBber::instance().mem().io;
+
+	//  Only Timers 0/1 can be used for DMA sound
+	if(timer_num >= 2) {
+		return;
+	}
+
+	const unsigned target_sample_rate = 131072 >> (3 - ((*io.soundbias >> 14u) & 0b11u));
+
+	if((io.soundctlH->enable_left_A || io.soundctlH->enable_right_A) &&
+		io.soundctlH->timer_sel_A == timer_num)
+	{
+		std::deque<uint8>& fifo = io.fifoA.fifo();
+		if(!fifo.empty()) {
+			//  Output sample to audio engine
+			push_sample_fifoA(fifo.front(), target_sample_rate);
+			fifo.pop_front();
+		}
+
+		//  Check if FIFOs contain enough data
+		if(fifo.size() == 16 || fifo.empty()) {
+			GaBber::instance().cpu().dma_request_fifoA();
+		}
+	}
+
+	if((io.soundctlH->enable_left_B || io.soundctlH->enable_right_B) &&
+		io.soundctlH->timer_sel_B == timer_num)
+	{
+		std::deque<uint8>& fifo = io.fifoB.fifo();
+		if(!fifo.empty()) {
+			//  Output sample to audio engine
+			push_sample_fifoB(fifo.front(), target_sample_rate);
+			fifo.pop_front();
+		}
+
+		//  Check if FIFOs contain enough data
+		if(fifo.size() == 16 || fifo.empty()) {
+			GaBber::instance().cpu().dma_request_fifoB();
+		}
+	}
+}
+
+
+void GBASound::push_sample_fifoA(uint8 value, unsigned sample_rate) {
+	for(unsigned i = 0; i < 262144 / sample_rate; ++i) {
+		m_soundA.samples.push_back(value);
+	}
+}
+
+void GBASound::push_sample_fifoB(uint8 value, unsigned sample_rate) {
+	for(unsigned i = 0; i < 262144 / sample_rate; ++i) {
+		m_soundB.samples.push_back(value);
+	}
 }
