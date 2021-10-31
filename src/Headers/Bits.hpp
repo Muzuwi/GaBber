@@ -1,4 +1,5 @@
 #pragma once
+#include <limits>
 #include "Headers/StdTypes.hpp"
 
 namespace Bits {
@@ -42,4 +43,16 @@ namespace Bits {
 		static_assert(n < 4);
 		return (val >> (n*8)) & 0xFFu;
 	}
+
+	/*
+	 *  Copies the bits specified by the input mask from the target to the source,
+	 *  while leaving the unmasked bits from source intact
+	 */
+	template<uint32 mask>
+	constexpr uint32 masked_copy(uint32 source, uint32 target) {
+		source &= ~mask;
+		source |= target & mask;
+		return source;
+	}
+
 }

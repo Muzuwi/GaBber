@@ -30,8 +30,9 @@ void PPU::next_scanline() {
 		mem.io.dispstat->VCounter = false;
 	}
 
+	mem.io.dispstat->HBlank = false;
+
 	if(vcount() == 160) {
-		mem.io.dispstat->HBlank = false;
 		mem.io.dispstat->VBlank = true;
 		cpu.dma_start_vblank();
 		if(mem.io.dispstat->VBlank_IRQ) {

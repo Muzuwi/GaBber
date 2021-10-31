@@ -1,5 +1,6 @@
 #pragma once
 #include "Headers/StdTypes.hpp"
+#include "Headers/Bits.hpp"
 #include "MMU/IOReg.hpp"
 
 enum class KeypadKey {
@@ -218,7 +219,7 @@ class GreenSwap : public IOReg16<0x04000002> {
 
 class DISPSTAT : public IOReg16<0x04000004> {
 	void on_write(uint16 new_value) override {
-		m_register = new_value & 0xFF38u;
+		m_register = Bits::masked_copy<0xFF38u>(m_register, new_value);
 	}
 	uint16 on_read() override {
 		return m_register;
