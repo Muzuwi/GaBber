@@ -1,5 +1,5 @@
-#include "Headers/ARM7TDMI.hpp"
-#include "Headers/ARM_Instruction.hpp"
+#include "CPU/ARM7TDMI.hpp"
+#include "CPU/Instructions/ARM.hpp"
 #include "MMU/BusInterface.hpp"
 #include "Debugger/Debugger.hpp"
 #include "Headers/GaBber.hpp"

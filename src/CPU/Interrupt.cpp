@@ -1,4 +1,4 @@
-#include "Headers/ARM7TDMI.hpp"
+#include "CPU/ARM7TDMI.hpp"
 #include "Debugger/Debugger.hpp"
 
 void ARM7TDMI::enter_irq() {

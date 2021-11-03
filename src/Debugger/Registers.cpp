@@ -1,6 +1,6 @@
 #include "Debugger/WindowDefinitions.hpp"
 #include "Headers/GaBber.hpp"
-#include "Headers/ARM7TDMI.hpp"
+#include "CPU/ARM7TDMI.hpp"
 
 void GPRs::draw_window() {
 	auto& cpu = m_emu.cpu();

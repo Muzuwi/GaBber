@@ -1,5 +1,5 @@
 #include "IO/Timer.hpp"
-#include "Headers/ARM7TDMI.hpp"
+#include "CPU/ARM7TDMI.hpp"
 #include "Headers/GaBber.hpp"
 
 

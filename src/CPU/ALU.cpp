@@ -1,4 +1,4 @@
-#include "Headers/ARM7TDMI.hpp"
+#include "CPU/ARM7TDMI.hpp"
 #include "Headers/Bits.hpp"
 
 uint32 ARM7TDMI::evaluate_operand2(ARM::DataProcessInstruction instr, bool affect_carry) {

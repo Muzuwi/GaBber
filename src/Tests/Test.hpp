@@ -1,6 +1,6 @@
 #pragma once
 #include "Headers/StdTypes.hpp"
-#include "Headers/ARM7TDMI.hpp"
+#include "CPU/ARM7TDMI.hpp"
 
 struct MemState {
 	enum class OpSize {

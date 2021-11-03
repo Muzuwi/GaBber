@@ -1,6 +1,6 @@
 #pragma once
 #include "Headers/StdTypes.hpp"
-#include "Headers/ARM_Instruction.hpp"
+#include "ARM.hpp"
 
 namespace THUMB {
 	enum class InstructionType {

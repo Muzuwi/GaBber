@@ -1,7 +1,7 @@
 #include "Tests/Harness.hpp"
 #include "Headers/GaBber.hpp"
-#include "Headers/ARM_Instruction.hpp"
-#include "Headers/THUMB_Instruction.hpp"
+#include "CPU/Instructions/ARM.hpp"
+#include "CPU/Instructions/THUMB.hpp"
 #include "Test.hpp"
 
 void TestHarness::run_emulator_tests() {

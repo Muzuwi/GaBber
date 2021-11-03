@@ -1,4 +1,4 @@
-#include "Headers/ARM7TDMI.hpp"
+#include "CPU/ARM7TDMI.hpp"
 #include "IO/DMA.hpp"
 
 void ARM7TDMI::dma_run_all() {

@@ -1,4 +1,4 @@
-#include "Headers/ARM7TDMI.hpp"
+#include "CPU/ARM7TDMI.hpp"
 #include "MMU/BusInterface.hpp"
 #include "PPU/PPU.hpp"
 

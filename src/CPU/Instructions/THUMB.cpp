@@ -1,5 +1,5 @@
 #include "MMU/BusInterface.hpp"
-#include "Headers/ARM7TDMI.hpp"
+#include "CPU/ARM7TDMI.hpp"
 #include "Headers/Bits.hpp"
 
 void ARM7TDMI::THUMB_ALU(THUMB::InstructionFormat4 instr) {

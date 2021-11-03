@@ -2,7 +2,7 @@
 #include <SDL2/SDL.h>
 #include "GL/gl3w.h"
 #include "Debugger/Debugger.hpp"
-#include "Headers/ARM7TDMI.hpp"
+#include "CPU/ARM7TDMI.hpp"
 #include "MMU/BusInterface.hpp"
 #include "MMU/MemoryLayout.hpp"
 #include "PPU/PPU.hpp"

@@ -1,8 +1,8 @@
 #pragma once
 #include <fmt/format.h>
 #include "Headers/StdTypes.hpp"
-#include "Headers/ARM_Instruction.hpp"
-#include "Headers/THUMB_Instruction.hpp"
+#include "CPU/Instructions/ARM.hpp"
+#include "CPU/Instructions/THUMB.hpp"
 #include "CPU/GPR.hpp"
 #include "CPU/PSR.hpp"
 #include "IO/Interrupt.hpp"
