@@ -147,7 +147,12 @@ void GaBber::emulator_close() {
 		return;
 	}
 
-	auto const& buffer = mem().pak.sram.buffer();
+	auto const& cart = mem().pak.sram.cart();
+	if(!cart) {
+		return;
+	}
+
+	auto const& buffer = cart->to_vec();
 	save_file.write(reinterpret_cast<char const*>(buffer.data()), buffer.size());
 	save_file.close();
 }

@@ -54,8 +54,8 @@ add_executable(GaBber
     src/Bus/SRAM.hpp
     src/Bus/VRAM.hpp
     src/Bus/WRAM.hpp
-    src/Bus/SRAM.cpp
-    src/IO/DMA.cpp)
+    src/IO/DMA.cpp
+    src/Bus/SRAM/Flash.cpp)
 
 target_compile_options(GaBber PRIVATE ${GABBER_CXX_FLAGS})
 

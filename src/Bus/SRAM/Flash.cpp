@@ -1,11 +1,8 @@
-#include <algorithm>
-#include "Bus/SRAM.hpp"
+#include <fmt/format.h>
+#include "Bus/SRAM/Flash.hpp"
 
-uint8 SRAM::read8(uint32 offset) {
-	if(m_type != BackupCartType::FLASH64K && m_type != BackupCartType::FLASH128K) {
-//		fmt::print("PakSRAM/ FIXME: Read unimplemented type: {}\n", m_type);
-		return 0x00;
-	}
+uint8 Flash::read(uint32 offset) {
+	fmt::print("PakSRAM/ Read [{:x}]\n", offset);
 
 	if(m_mode == FlashChipMode::ID) {
 		if(offset == 0x1) {
@@ -18,8 +15,7 @@ uint8 SRAM::read8(uint32 offset) {
 		}
 	}
 
-	const unsigned size = m_type == BackupCartType::FLASH64K ? 65536 : 65536*2;
-	const auto buffer_offset = (m_bank * 0x10000 + (offset & 0xFFFFu)) % size;
+	const auto buffer_offset = (m_bank * 0x10000 + (offset & 0xFFFFu)) % m_size;
 
 	if(offset >= m_buffer.size()) {
 		return 0xFF;
@@ -28,17 +24,11 @@ uint8 SRAM::read8(uint32 offset) {
 	return m_buffer[buffer_offset];
 }
 
-void SRAM::write8(uint32 offset, uint8 value) {
-	if(m_type != BackupCartType::FLASH64K && m_type != BackupCartType::FLASH128K) {
-//		fmt::print("PakSRAM/ FIXME: Write unimplemented type: {}\n", m_type);
-		return;
-	}
-
-//	fmt::print("PakSRAM/ Flash write[{:04x}]={:02x}\n", offset, value);
+void Flash::write(uint32 offset, uint8 value) {
+	fmt::print("PakSRAM/ Write [{:x}]={:x}\n", offset, value);
 
 	if(m_mode == FlashChipMode::Write) {
-		const unsigned size = m_type == BackupCartType::FLASH64K ? 65536 : 65536*2;
-		m_buffer[(offset + m_bank * 0x10000) % size] = value;
+		m_buffer[(offset + m_bank * 0x10000) % m_size] = value;
 		m_mode = FlashChipMode::Idle;
 		return;
 	}
@@ -87,8 +77,7 @@ void SRAM::write8(uint32 offset, uint8 value) {
 	}
 	if(m_mode == FlashChipMode::Erase && value == 0x30) {
 		fmt::print("PakSRAM/ Erase sector {}\n", offset / 0x1000);
-		const unsigned size = m_type == BackupCartType::FLASH64K ? 65536 : 65536*2;
-		const auto buffer_offset = (m_bank * 0x10000 + (offset & 0xFFFFu)) % size;
+		const auto buffer_offset = (m_bank * 0x10000 + (offset & 0xFFFFu)) % m_size;
 		std::fill_n(&m_buffer[buffer_offset], 0x1000, 0xFF);
 		return;
 	}

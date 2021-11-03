@@ -1,7 +1,9 @@
 #pragma once
+#include <memory>
 #include "Headers/StdTypes.hpp"
 #include "Bus/ROM.hpp"
 #include "Bus/SRAM.hpp"
+#include "Bus/SRAM/Flash.hpp"
 
 struct GamePak {
 	ROM rom;
@@ -39,28 +41,35 @@ struct GamePak {
 	bool load_pak(Vector<uint8>&& rom_, Vector<uint8>&& sram_) {
 		auto result = autodetect_flash(rom_);
 		BackupCartType type;
-		Vector<uint8> s {std::move(sram_)};
 
 		if(!result.has_value()) {
-			fmt::print("GamePak/ Backup cart type autodetection failed! Assuming FLASH 64K\n");
 			type = BackupCartType::FLASH64K;
+			fmt::print("GamePak/ Backup cart type autodetection failed! Assuming FLASH 64K\n");
 		} else {
 			type = *result;
 			fmt::print("GamePak/ Backup cart type: {}\n", type);
-			switch (type) {
-				case BackupCartType::FLASH64K:
-					s.resize(64*kB, 0xFF); break;
-				case BackupCartType::SRAM32K:
-					s.resize(32*kB, 0xFF); break;
-				case BackupCartType::FLASH128K:
-					s.resize(128*kB, 0xFF); break;
-				default:
-					s.resize(64*kB, 0xFF);    //  FIXME:
+		}
+
+		std::unique_ptr<BackupCart> cart;
+		switch (type) {
+			case BackupCartType::FLASH64K: {
+				cart = std::make_unique<Flash>(65536);
+				cart->from_vec(std::move(sram_));
+				break;
+			}
+			case BackupCartType::FLASH128K: {
+				cart = std::make_unique<Flash>(131072);
+				cart->from_vec(std::move(sram_));
+				break;
+			}
+			default: {
+				fmt::print("GamePak/ Unimplemented cart type: {}\n", type);
+				break;
 			}
 		}
 
 		rom.from_vec(std::move(rom_));
-		sram.from_vec(std::move(s), type);
+		sram.set_cart(std::move(cart));
 
 		return true;
 	}

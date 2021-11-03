@@ -1,59 +1,66 @@
 #pragma once
+#include <memory>
 #include "Headers/StdTypes.hpp"
 #include "MMU/BusDevice.hpp"
-
-enum class BackupCartType {
-	EEPROM,
-	SRAM32K,
-	FLASH64K,
-	FLASH128K,
-};
+#include "Bus/SRAM/BackupCart.hpp"
 
 class SRAM final : public BusDevice {
-	enum class FlashChipMode {
-		Idle,
-		ID,
-		Erase,
-		Write,
-		BankChange
-	};
+	std::unique_ptr<BackupCart> m_cart;
 
-	const uint32 m_identifier {0x1cc2};
-	const unsigned m_chip_size = 65536;
-	const unsigned m_sector_size = 4096;
-	FlashChipMode m_mode;
-	uint8 m_bank;
-	uint8 m_reg5555;
-	uint8 m_reg2aaa;
-
-	Vector<uint8> m_buffer;
-	BackupCartType m_type;
+	static inline uint32 mirror(uint32 offset) {
+		return offset & 0xFFFFu;
+	}
 public:
-	SRAM() : BusDevice(0x0e000000, 0x0e010000) {}
+	SRAM() : BusDevice(0x0e000000, 0x10000000) {}
 
-	void from_vec(Vector<uint8>&& save_data, BackupCartType cart_type) {
-		m_buffer = save_data;
-		m_type = cart_type;
+	void set_cart(std::unique_ptr<BackupCart>&& cart) {
+		m_cart = std::move(cart);
 	}
 
-	Vector<uint8>& buffer() {
-		return m_buffer;
+	//  Holy shit this is disgusting
+	std::unique_ptr<BackupCart> const& cart() const {
+		return m_cart;
 	}
 
-	uint8 read8(uint32 offset) override;
-	void write8(uint32 offset, uint8 value) override;
+	uint8 read8(uint32 offset) override {
+		offset = mirror(offset);
+		if(!m_cart) {
+			//  TODO: No cart?
+			return 0xFF;
+		}
+
+		return m_cart->read(offset);
+	}
+
+	void write8(uint32 offset, uint8 value) override {
+		offset = mirror(offset);
+		if(!m_cart) {
+			//  TODO: No cart?
+			return;
+		}
+
+		m_cart->write(offset, value);
+	}
 
 	uint16 read16(uint32 offset) override {
-		//  FIXME: unreadable io register
-		return 0xBABE;
+		offset = mirror(offset);
+		fmt::print("PakSRAM/ 16-bit read from offset {:x}\n", offset);
+		return read8(offset) * 0x0101u;
 	}
 	uint32 read32(uint32 offset) override {
-		//  FIXME: unreadable io register
-		return 0xBABEBABE;
+		offset = mirror(offset);
+		fmt::print("PakSRAM/ 32-bit read from offset {:x}\n", offset);
+		return read8(offset) * 0x01010101u;
 	}
 
-	void write16(uint32 offset, uint16 value) override { }
-	void write32(uint32 offset, uint32 value) override { }
+	void write16(uint32 offset, uint16 value) override {
+		offset = mirror(offset);
+		fmt::print("PakSRAM/ 16-bit write of value {:4x} to offset {:x}\n", value, offset);
+	}
+	void write32(uint32 offset, uint32 value) override {
+		offset = mirror(offset);
+		fmt::print("PakSRAM/ 32-bit write of value {:8x} to offset {:x}\n", value, offset);
+	}
 
 	void reload() override { }
 
