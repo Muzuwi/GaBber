@@ -18,6 +18,18 @@ void GBASound::push_samples(float left, float right) {
 		m_speed_scale += 1;
 	} else {
 		m_speed_scale = (m_speed_scale > 1 ? m_speed_scale - 1 : 1);
+
+		//  We're generating too many samples, which
+		//  will lead to significant audio lag quickly
+		if(queued_size > 4*half_buffer_size) {
+			//  Approach 1 - drop entire buffer
+			fmt::print("Sound/ Going too fast - dropping {} samples ({} over double buffer size)\n",
+					   queued_size,
+					   queued_size - 4*half_buffer_size
+					   );
+			m_current_sample = 0;
+			return;
+		}
 	}
 
 	assert(
