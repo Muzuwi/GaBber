@@ -1,4 +1,5 @@
-cmake-*/
-docs/*
-tests/*
-.idea/
+/*
+!/src
+!/extern
+!/CMakeLists.txt
+!/.gitignore
