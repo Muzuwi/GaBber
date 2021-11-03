@@ -1,6 +1,14 @@
 #include "CPU/ARM7TDMI.hpp"
 #include "Headers/Bits.hpp"
 
+uint32 ARM7TDMI::evaluate_operand1(ARM::DataProcessInstruction instr) const {
+	unsigned pc_offset = 0;
+	if(!instr.immediate_is_value() && instr.is_shift_reg() && instr.operand1_reg() == 15)
+		pc_offset = 4;
+	return creg(instr.operand1_reg()) + pc_offset;
+}
+
+
 uint32 ARM7TDMI::evaluate_operand2(ARM::DataProcessInstruction instr, bool affect_carry) {
 	affect_carry = instr.should_set_condition() && affect_carry;
 
@@ -12,16 +20,6 @@ uint32 ARM7TDMI::evaluate_operand2(ARM::DataProcessInstruction instr, bool affec
 			return operand2;
 		else
 		    return _shift_ror(operand2, shift_count, affect_carry);
-
-		const bool new_carry = (shift_count != 0) ? (operand2 & (1u << (shift_count-1)))
-												  : operand2 & 1; //  FIXME: Might be terribly wrong?
-		const uint32 result = Bits::rotr32(operand2, shift_count);
-		if(affect_carry)
-			cspr().set(CSPR_REGISTERS::Carry, new_carry);
-
-		log("op={:08x} shift immediate={:08x} count={} result={} cout={} newcspr={:08x}", instr.m_data, operand2, shift_count, result, new_carry, cspr().raw());
-
-		return result;
 	} else {
 		const uint32 operand2 = creg(instr.operand2_reg())
 				+ (instr.is_shift_reg() && instr.operand2_reg() == 15 ? current_instr_len() : 0);

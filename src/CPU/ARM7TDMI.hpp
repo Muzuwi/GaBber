@@ -180,13 +180,8 @@ protected:
 	uint32 _alu_lsr(uint32 op1, uint32 op2);
 	uint32 _alu_asr(uint32 op1, uint32 op2);
 	uint32 _alu_ror(uint32 op1, uint32 op2);
-	inline uint32 evaluate_operand1(ARM::DataProcessInstruction instr) const {
-		unsigned pc_offset = 0;
-		if(!instr.immediate_is_value() && instr.is_shift_reg() && instr.operand1_reg() == 15)
-			pc_offset = 4;
-		return creg(instr.operand1_reg()) + pc_offset;
-	}
 
+	uint32 evaluate_operand1(ARM::DataProcessInstruction instr) const;
 	uint32 evaluate_operand2(ARM::DataProcessInstruction instr, bool affect_carry = false);
 	void stack_push32(uint32 val);
 	uint32 stack_pop32();
