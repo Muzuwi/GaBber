@@ -2,12 +2,6 @@
 #include "Headers/StdTypes.hpp"
 #include "MMU/BusInterface.hpp"
 
-enum class IOAccess {
-	R,
-	W,
-	RW
-};
-
 class BusDevice {
 	uint32 m_start;
 	uint32 m_end;
@@ -52,8 +46,6 @@ public:
 	bool contains(uint32 addr) const {
 		return addr >= start() && addr < end();
 	}
-
-	virtual std::string identify() const { return "BusDevice"; }
 
 	virtual void reload() {
 
