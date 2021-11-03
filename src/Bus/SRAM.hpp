@@ -55,11 +55,15 @@ public:
 
 	void write16(uint32 offset, uint16 value) override {
 		offset = mirror(offset);
-		fmt::print("PakSRAM/ 16-bit write of value {:4x} to offset {:x}\n", value, offset);
+		const uint8 byte = (value >> ((offset % 2)*8)) & 0xFFu;
+		write8(offset, byte);
+		fmt::print("PakSRAM/ 16-bit write of value {:4x} to offset {:x} [written byte={:02x}]\n", value, offset, byte);
 	}
 	void write32(uint32 offset, uint32 value) override {
 		offset = mirror(offset);
-		fmt::print("PakSRAM/ 32-bit write of value {:8x} to offset {:x}\n", value, offset);
+		const uint8 byte = (value >> ((offset % 4)*8)) & 0xFFu;
+		write8(offset, byte);
+		fmt::print("PakSRAM/ 32-bit write of value {:8x} to offset {:x} [written byte={:02x}]\n", value, offset, byte);
 	}
 
 	void reload() override { }
