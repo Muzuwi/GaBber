@@ -46,9 +46,9 @@ public:
 		return *reinterpret_cast<uint32*>(&m_rom[0] + offset);
 	}
 
-	void write8(uint32 offset, uint8 value) override {}
-	void write16(uint32 offset, uint16 value) override {}
-	void write32(uint32 offset, uint32 value) override {}
+	void write8(uint32, uint8) override {}
+	void write16(uint32, uint16) override {}
+	void write32(uint32, uint32) override {}
 
 	unsigned int waitcycles32() const override {
 		return 8;

@@ -27,7 +27,7 @@ public:
 		return m_oam.read32(offset);
 	}
 
-	void write8(uint32 offset, uint8 value) override {
+	void write8(uint32, uint8) override {
 		//  8-bit writes are ignored
 	}
 
