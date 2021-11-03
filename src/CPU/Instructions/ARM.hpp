@@ -498,7 +498,7 @@ namespace ARM {
 		}
 
 		uint8 immediate() const {
-			return (offset_reg_or_immediate_low() & 0xF) | (immediate_high() << 0xF);
+			return (offset_reg_or_immediate_low() & 0xF) | (immediate_high() << 4u);
 		}
 
 		uint8 opcode() const {
