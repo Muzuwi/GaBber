@@ -24,7 +24,7 @@ typedef int8_t int8;
 #define kBit (1024 / 8)
 #define Mbit (1024 * 1024 / 8)
 
-#define ASSERT_NOT_REACHED() assert(false && "ASSERT_NOT_REACHED failed");
+#define ASSERT_NOT_REACHED() assert(false && "ASSERT_NOT_REACHED failed")
 
 template<class T>
 using Vector = std::vector<T>;

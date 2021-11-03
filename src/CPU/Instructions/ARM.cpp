@@ -376,7 +376,7 @@ void ARM7TDMI::SDT(ARM::SDTInstruction instr) {
 
 	    uint32 word;
         if(instr.quantity_in_bytes()) {
-			word = static_cast<uint32>(mem_read8(address));;
+			word = static_cast<uint32>(mem_read8(address));
         } else {
         	word = mem_read32(address & ~3u);  //  Force align
         	//  Rotate
