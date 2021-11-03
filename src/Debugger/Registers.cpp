@@ -18,7 +18,7 @@ void GPRs::draw_window() {
 	bool Z = cpu.cspr().is_set(CSPR_REGISTERS::Zero),
 		 N = cpu.cspr().is_set(CSPR_REGISTERS::Negative),
 		 C = cpu.cspr().is_set(CSPR_REGISTERS::Carry),
-		 V = cpu.cspr().is_set(CSPR_REGISTERS::Carry);
+		 V = cpu.cspr().is_set(CSPR_REGISTERS::Overflow);
 	{
 		ImGui::Text("Flags: "); ImGui::SameLine(); ImGui::Dummy(ImVec2(10.0, 0.0)); ImGui::SameLine();
 		ImGui::Checkbox("Z", &Z); ImGui::SameLine();
