@@ -67,6 +67,7 @@ public:
 	GBASound& sound() { return m_sound; }
 
 	void toggle_debug_mode();
+	void enter_debug_mode();
 	unsigned window_scale() const { return m_window_scale; }
 	GLuint gba_texture() const { return m_gba_texture; }
 	bool running() const { return m_running; }

@@ -127,13 +127,18 @@ void GaBber::toggle_debug_mode() {
 		SDL_SetWindowResizable(m_gabberWindow, SDL_FALSE);
 		SDL_RestoreWindow(m_gabberWindow);
 	} else {
-		m_debugger.set_debug_mode(true);
-		m_running = false;
-
-		SDL_SetWindowResizable(m_gabberWindow, SDL_TRUE);
-		SDL_MaximizeWindow(m_gabberWindow);
+		enter_debug_mode();
 	}
 }
+
+void GaBber::enter_debug_mode() {
+	m_debugger.set_debug_mode(true);
+	m_running = false;
+
+	SDL_SetWindowResizable(m_gabberWindow, SDL_TRUE);
+	SDL_MaximizeWindow(m_gabberWindow);
+}
+
 
 void GaBber::emulator_reset() {
 	m_cpu.reset();
