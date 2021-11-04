@@ -7,7 +7,7 @@ void MemEditor::draw_window() {
 	static uint32 start = 0;
 	static uint32 size  = 0x4000;
 
-	ImGui::SetWindowSize(ImVec2(720.0f, -FLT_MIN));
+	ImGui::SetWindowSize(ImVec2(720.0f, 600.0f));
 
 	if(ImGui::BeginTabBar("ioreg_tabs")) {
 		if(ImGui::BeginTabItem("BIOS")) {
