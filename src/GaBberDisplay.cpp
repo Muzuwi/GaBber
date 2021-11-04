@@ -169,12 +169,20 @@ void GaBber::_disp_draw_frame() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 240, 160, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, m_ppu.framebuffer());
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplSDL2_NewFrame(m_gabberWindow);
+	ImGui::NewFrame();
+
 	_disp_draw_common();
 
 	if(!m_debugger.is_debug_mode())
 		_disp_draw_gba_screen();
 	else
 		_disp_draw_debugger();
+
+	ImGui::EndFrame();
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 	int w, h;
 	SDL_GetWindowSize(m_gabberWindow, &w, &h);
@@ -184,17 +192,32 @@ void GaBber::_disp_draw_frame() {
 }
 
 void GaBber::_disp_draw_common() {
-	//  ImGui toolbar and other cool pop-ups go here
+	if(ImGui::BeginMainMenuBar()) {
+		if(ImGui::BeginMenu("File")) {
+			ImGui::EndMenu();
+		}
+		if(ImGui::BeginMenu("Debugger")) {
+			ImGui::EndMenu();
+		}
+		if(ImGui::BeginMenu("Options")) {
+			if(ImGui::MenuItem("Audio")) {
+				m_shell_flags.audio_options_open = true;
+			}
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndMainMenuBar();
+	}
+
+	if(m_shell_flags.audio_options_open) {
+		ImGui::Begin("Audio", &m_shell_flags.audio_options_open, ImGuiWindowFlags_AlwaysAutoResize);
+		_shell_draw_options_audio();
+		ImGui::End();
+	}
 }
 
 void GaBber::_disp_draw_debugger() {
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplSDL2_NewFrame(m_gabberWindow);
-	ImGui::NewFrame();
 	m_debugger.draw_debugger_contents();
-	ImGui::EndFrame();
-	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void GaBber::_disp_draw_gba_screen() {

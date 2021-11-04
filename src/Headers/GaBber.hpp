@@ -8,10 +8,14 @@
 #include "PPU/PPU.hpp"
 #include "Tests/Harness.hpp"
 #include "Sound/GBASound.hpp"
+#include "Headers/ShellFlags.hpp"
+#include "Headers/Config.hpp"
 
 
 class GaBber {
 	std::string m_rom_filename;
+
+	Config m_config;
 
 	Debugger m_debugger;
 	BusInterface m_mmu;
@@ -31,6 +35,7 @@ class GaBber {
 	GLuint m_fb, m_gba_texture;
 	unsigned m_current_sample;
 	Array<unsigned, 10000> m_cycle_samples;
+	ShellFlags m_shell_flags;
 
 	void _disp_create_gl_state();
 	void _disp_poll_events();
@@ -38,6 +43,7 @@ class GaBber {
 	void _disp_draw_debugger();
 	void _disp_draw_common();
 	void _disp_draw_frame();
+	void _shell_draw_options_audio();
 
 	void display_update();
 	bool display_initialize();
@@ -65,6 +71,7 @@ public:
 	Debugger& debugger() { return m_debugger; }
 	MemoryLayout& mem() { return m_mem; }
 	GBASound& sound() { return m_sound; }
+	Config& config() { return m_config; }
 
 	void toggle_debug_mode();
 	void enter_debug_mode();

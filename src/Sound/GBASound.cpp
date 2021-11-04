@@ -3,8 +3,9 @@
 #include "Headers/GaBber.hpp"
 
 void GBASound::push_samples(float left, float right) {
-	m_internal_samples[m_current_sample] = left;
-	m_internal_samples[m_current_sample+1] = right;
+	const float master_volume = GaBber::instance().config().volume;
+	m_internal_samples[m_current_sample] = master_volume * left;
+	m_internal_samples[m_current_sample+1] = master_volume * right;
 
 	if(m_current_sample != m_internal_samples.size() - 2) {
 		m_current_sample += 2;
@@ -183,9 +184,8 @@ void GBASound::cycle() {
 		return out;
 	};
 
-	const float master_volume = 1.0f;
-	push_samples(capL(master_volume * normalized_left),
-	             capR(master_volume * normalized_right));
+	push_samples(capL(normalized_left),
+	             capR(normalized_right));
 }
 
 /*

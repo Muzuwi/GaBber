@@ -64,7 +64,10 @@ add_executable(GaBber
     src/Bus/SRAM/Flash.cpp
     src/Debugger/BreakpointControl.cpp
     src/Debugger/Stacktrace.cpp
-    src/Debugger/Breakpoint.hpp)
+    src/Debugger/Breakpoint.hpp
+    src/GaBberShell.cpp
+    src/Headers/ShellFlags.hpp
+    src/Headers/Config.hpp)
 
 target_compile_options(GaBber PRIVATE ${GABBER_CXX_FLAGS})
 
