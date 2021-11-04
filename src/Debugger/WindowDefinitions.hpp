@@ -32,7 +32,9 @@ class Screen : public DebuggerWindow {
 	void draw_window() override;
 public:
 	Screen(GaBber& emu)
-	: DebuggerWindow("Screen", emu) {}
+	: DebuggerWindow("Screen", emu) {
+		m_flags = ImGuiWindowFlags_AlwaysAutoResize;
+	}
 };
 
 class IORegisters : public DebuggerWindow {
