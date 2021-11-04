@@ -1,6 +1,7 @@
 #include <iostream>
 #include "MMU/BusInterface.hpp"
 #include "MMU/BusDevice.hpp"
+#include "Headers/GaBber.hpp"
 
 Vector<BusDevice*> BusInterface::s_devices {};
 
@@ -58,6 +59,7 @@ uint32 BusInterface::read32(uint32 address) {
 		auto* dev = find_device(current_address);
 		if(!dev) {
 			this->log("Undefined read to {:08x}", current_address);
+			GaBber::instance().debugger().on_undefined_access(current_address);
 			data |= (0xFF << read*8);
 			read++;
 			continue;
@@ -105,6 +107,7 @@ uint16 BusInterface::read16(uint32 address) {
 		auto* dev = find_device(current_address);
 		if(!dev) {
 			this->log("Undefined read to {:08x}", current_address);
+			GaBber::instance().debugger().on_undefined_access(current_address);
 			data |= (0xFF << read*8);
 			read++;
 			continue;
@@ -138,6 +141,7 @@ uint8 BusInterface::read8(uint32 address) {
 	auto* dev = find_device(address);
 	if(!dev) {
 		this->log("Undefined read8 from {:08x}", address);
+		GaBber::instance().debugger().on_undefined_access(address);
 		return 0xFF;
 	}
 
@@ -158,6 +162,7 @@ void BusInterface::write32(uint32 address, uint32 value) {
 		auto* dev = find_device(current_address);
 		if(!dev) {
 			this->log("Undefined write32 to {:08x}, word: {:08x}", current_address, value);
+			GaBber::instance().debugger().on_undefined_access(current_address);
 			written++;
 			continue;
 		}
@@ -203,6 +208,7 @@ void BusInterface::write16(uint32 address, uint16 value) {
 		auto* dev = find_device(current_address);
 		if(!dev) {
 			this->log("Undefined write16 to {:08x}, word: {:08x}", current_address, value);
+			GaBber::instance().debugger().on_undefined_access(current_address);
 			written++;
 			continue;
 		}
@@ -234,7 +240,8 @@ void BusInterface::write8(uint32 address, uint8 value) {
 
 	auto* dev = find_device(address);
 	if(!dev) {
-//		this->log("Undefined write8 to {:08x}, byte: {:02x}", address, value);
+		this->log("Undefined write8 to {:08x}, byte: {:02x}", address, value);
+		GaBber::instance().debugger().on_undefined_access(address);
 		return;
 	}
 

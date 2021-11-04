@@ -63,3 +63,19 @@ public:
 	MemoryImage(GaBber& emu)
 	: DebuggerWindow("Memory Image", emu) {}
 };
+
+class Breakpoints : public DebuggerWindow {
+	uint32 m_break_address;
+	void draw_window() override;
+public:
+	Breakpoints(GaBber& emu)
+	: DebuggerWindow("Breakpoints", emu) {}
+};
+
+class Stacktrace : public DebuggerWindow {
+	MemoryEditor m_stack;
+	void draw_window() override;
+public:
+	Stacktrace(GaBber& emu)
+	: DebuggerWindow("Stacktrace", emu) {}
+};

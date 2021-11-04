@@ -34,6 +34,7 @@ protected:
 	friend class GPRs;
 	friend class IORegisters;
 	friend class TestHarness;
+	friend class Stacktrace;
 
 	IOContainer& io;
 	BusInterface& m_mmu;

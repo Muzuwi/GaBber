@@ -62,7 +62,10 @@ add_executable(GaBber
     src/Bus/VRAM.hpp
     src/Bus/WRAM.hpp
     src/IO/DMA.cpp
-    src/Bus/SRAM/Flash.cpp)
+    src/Bus/SRAM/Flash.cpp
+    src/Debugger/Breakpoints.cpp
+    src/Debugger/Stacktrace.cpp
+    )
 
 target_compile_options(GaBber PRIVATE ${GABBER_CXX_FLAGS})
 

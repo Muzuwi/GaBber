@@ -7,6 +7,7 @@
 
 class GaBber;
 class Debugger {
+	friend class Breakpoints;
 	GaBber& emu;
 
 	MemEditor m_mem_editor;
@@ -14,7 +15,11 @@ class Debugger {
 	GPRs m_registers;
 	IORegisters m_io_registers;
 	MemoryImage m_memimg;
+	Breakpoints m_breakpoints;
+	Stacktrace m_stacktrace;
+	Vector<uint32> m_execution_breakpoints;
 
+	bool m_break_on_undefined {false};
 	bool m_debug_mode {false};
 public:
 	Debugger(GaBber& v);
@@ -27,5 +32,7 @@ public:
 	void on_memory_access(uint32 address, uint32 val, bool write);
 	void on_memory_access(uint32 address, uint16 val, bool write);
 	void on_memory_access(uint32 address, uint8  val, bool write);
+	void on_execute_opcode(uint32 address);
+	void on_undefined_access(uint32 address);
 };
 

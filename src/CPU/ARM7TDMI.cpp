@@ -72,6 +72,7 @@ uint32 ARM7TDMI::fetch_instruction() {
 
 void ARM7TDMI::exec_opcode() {
 	const auto opcode = fetch_instruction();
+	m_debugger.on_execute_opcode(const_pc() - 2*current_instr_len());
 
 	if (cspr().state() == INSTR_MODE::ARM)
 		execute_ARM(opcode);
