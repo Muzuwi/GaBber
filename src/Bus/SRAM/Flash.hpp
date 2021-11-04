@@ -27,7 +27,7 @@ public:
 
 	void from_vec(Vector<uint8>&& vector) override {
 		m_buffer = vector;
-		m_buffer.resize(m_size);
+		m_buffer.resize(m_size, 0xFF);
 	}
 
 	Vector<uint8> const& to_vec() override {
