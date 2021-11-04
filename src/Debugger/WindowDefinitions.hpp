@@ -14,7 +14,9 @@ class MemEditor : public DebuggerWindow {
 	void draw_window() override;
 public:
 	MemEditor(GaBber& emu)
-	: DebuggerWindow("RAM", emu) {}
+	: DebuggerWindow("RAM", emu) {
+		m_flags = ImGuiWindowFlags_None;
+	}
 };
 
 
