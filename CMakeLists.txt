@@ -48,7 +48,6 @@ add_executable(GaBber
     src/IO/IOContainer.hpp
     src/MMU/MemoryLayout.hpp
     src/CPU/Bus.cpp
-    src/Debugger/MemoryImage.cpp
     src/Sound/GBASound.cpp
     src/Sound/GBASound.hpp
     src/IO/Sound.cpp

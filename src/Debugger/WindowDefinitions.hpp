@@ -58,15 +58,6 @@ public:
 	void draw_dma();
 };
 
-class MemoryImage : public DebuggerWindow {
-	bool created_tex;
-	GLuint64 tex;
-	void draw_window() override;
-public:
-	MemoryImage(GaBber& emu)
-	: DebuggerWindow("Memory Image", emu) {}
-};
-
 class BreakpointControl : public DebuggerWindow {
 	Breakpoint m_break;
 	void draw_window() override;

@@ -15,7 +15,6 @@ class Debugger {
 	Screen m_screen;
 	GPRs m_registers;
 	IORegisters m_io_registers;
-	MemoryImage m_memimg;
 	BreakpointControl m_breakpoint_control;
 	Stacktrace m_stacktrace;
 

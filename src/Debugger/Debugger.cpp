@@ -6,7 +6,6 @@ void Debugger::draw_debugger_contents() {
 	m_screen.draw();
 	m_registers.draw();
 	m_io_registers.draw();
-	m_memimg.draw();
 	m_breakpoint_control.draw();
 	m_stacktrace.draw();
 	ImGui::ShowDemoWindow();
@@ -18,7 +17,6 @@ Debugger::Debugger(GaBber& v)
   m_screen(v),
   m_registers(v),
   m_io_registers(v),
-  m_memimg(v),
   m_breakpoint_control(v),
   m_stacktrace(v)
 {
