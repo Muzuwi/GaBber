@@ -4,10 +4,11 @@
 #include <Headers/StdTypes.hpp>
 #include "imgui/imgui.h"
 #include "Debugger/WindowDefinitions.hpp"
+#include "Debugger/Breakpoint.hpp"
 
 class GaBber;
 class Debugger {
-	friend class Breakpoints;
+	friend class BreakpointControl;
 	GaBber& emu;
 
 	MemEditor m_mem_editor;
@@ -15,10 +16,11 @@ class Debugger {
 	GPRs m_registers;
 	IORegisters m_io_registers;
 	MemoryImage m_memimg;
-	Breakpoints m_breakpoints;
+	BreakpointControl m_breakpoint_control;
 	Stacktrace m_stacktrace;
-	Vector<uint32> m_execution_breakpoints;
 
+	static bool match_breakpoint(Breakpoint const& breakpoint, MemoryEvent event);
+	Vector<Breakpoint> m_breakpoints;
 	bool m_break_on_undefined {false};
 	bool m_debug_mode {false};
 public:

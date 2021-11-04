@@ -5,6 +5,7 @@
 #include "Headers/StdTypes.hpp"
 #include "Debugger/DebuggerWindow.hpp"
 #include "MMU/BusDevice.hpp"
+#include "Debugger/Breakpoint.hpp"
 
 
 class MemEditor : public DebuggerWindow {
@@ -64,12 +65,14 @@ public:
 	: DebuggerWindow("Memory Image", emu) {}
 };
 
-class Breakpoints : public DebuggerWindow {
-	uint32 m_break_address;
+class BreakpointControl : public DebuggerWindow {
+	Breakpoint m_break;
 	void draw_window() override;
 public:
-	Breakpoints(GaBber& emu)
-	: DebuggerWindow("Breakpoints", emu) {}
+	BreakpointControl(GaBber& emu)
+	: DebuggerWindow("Breakpoints", emu) {
+		m_flags = ImGuiWindowFlags_AlwaysAutoResize;
+	}
 };
 
 class Stacktrace : public DebuggerWindow {
