@@ -31,6 +31,7 @@ class GaBber {
 	bool m_closed;
 	SDL_Window* m_gabberWindow;
 	SDL_GLContext m_gabberGLContext;
+	float m_last_frame_time {0.001f};
 	unsigned m_window_scale {5};
 	GLuint m_fb, m_gba_texture;
 	unsigned m_current_sample;

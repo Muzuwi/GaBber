@@ -78,7 +78,7 @@ bool GaBber::display_initialize() {
 
 	ImGui::GetIO().Fonts->AddFontFromFileTTF("Roboto-Medium.ttf", 18);
 
-	SDL_GL_SetSwapInterval(1);
+	SDL_GL_SetSwapInterval(0);
 
 	_disp_create_gl_state();
 
@@ -87,20 +87,28 @@ bool GaBber::display_initialize() {
 
 void GaBber::display_update() {
 	using hrc = std::chrono::high_resolution_clock;
-
-	static constexpr unsigned target_millis = 1000 / 60;
-
 	static std::optional<hrc::time_point> s_last_drawn;
+
+	const int64 target_micros = 1000000 / m_config.target_framerate;
 	if(s_last_drawn.has_value()) {
 		auto duration = hrc::now() - *s_last_drawn;
-		auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
-		if(millis.count() < target_millis) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(target_millis - millis.count()));
+		auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration);
+		if(micros.count() < target_micros) {
+			std::this_thread::sleep_for(std::chrono::microseconds(target_micros - micros.count()));
 		}
+
+		const auto now = hrc::now();
+		const auto real_frame_duration = now - *s_last_drawn;
+		const auto real_frame_micros = std::chrono::duration_cast<std::chrono::microseconds>(real_frame_duration);
+		m_last_frame_time = (float)real_frame_micros.count() / 1000000.0f;
 	}
+
+	auto str = fmt::format("GaBber - {:.1f} FPS", 1.0f / m_last_frame_time);
+	SDL_SetWindowTitle(m_gabberWindow, str.c_str());
+	s_last_drawn = hrc::now();
+
 	_disp_poll_events();
 	_disp_draw_frame();
-	s_last_drawn = hrc::now();
 }
 
 void GaBber::_disp_poll_events() {
