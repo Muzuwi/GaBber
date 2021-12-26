@@ -49,98 +49,64 @@ uint32 ensure_align(uint32 address, uint8 alignment) {
 
 uint32 BusInterface::read32(uint32 address) {
 	address = ensure_align(address, 4);
-//	address = _handle_memory_images(address);
 
-	uint32 data {0};
-	uint32 read = 0;
-	while(read < 4) {
-		const auto current_address = address + read;
-
-		auto* dev = find_device(current_address);
-		if(!dev) {
-			this->log("Undefined read to {:08x}", current_address);
-			GaBber::instance().debugger().on_undefined_access(current_address);
-			data |= (0xFF << read*8);
-			read++;
-			continue;
-		}
-
-		const auto address_in_device = (current_address - dev->start());
-		if(read == 0 && dev->size() >= 4) {
-			m_last_wait_cycles = dev->waitcycles32();
-			data = dev->read32(address_in_device);
-#ifdef SPLIT_DEBUG
-			log("read32 from {} -> {:08x}", (void*)dev, data);
-#endif
-			read += 4;
-		} else if((read % 2 == 0) && dev->size() >= 2) {
-			m_last_wait_cycles = dev->waitcycles32();
-			uint16 read_value = dev->read16(address_in_device);
-#ifdef SPLIT_DEBUG
-			log("read16 from {} -> {:04x}", (void*)dev, data);
-#endif
-			data |= (read_value << (read*8));
-			read += 2;
-		} else {
-			m_last_wait_cycles = dev->waitcycles32();
-			uint8 read_value = dev->read8(address_in_device);
-#ifdef SPLIT_DEBUG
-			log("read8 from {} -> {:02x}", (void*)dev, read_value);
-#endif
-			data |= (read_value << (read*8));
-			read += 1;
-		}
+	auto dev = find_device(address, 4);
+	if (!dev) {
+		const uint16 lower  = read16(address);
+		const uint16 higher = read16(address+2);
+		return (static_cast<uint32>(higher) << 16u) | static_cast<uint32>(lower);
 	}
 
-	return data;
+	m_last_wait_cycles = dev->waitcycles32();
+	return dev->read32(address - dev->start());
+}
+
+void BusInterface::write32(uint32 address, uint32 value) {
+	address = ensure_align(address, 4);
+
+	auto dev = find_device(address, 4);
+	if (!dev) {
+		write16(address, value & 0xFFFFu);
+		write16(address+2, value >> 16u);
+		return;
+	}
+
+	m_last_wait_cycles = dev->waitcycles32();
+	dev->write32(address - dev->start(), value);
 }
 
 uint16 BusInterface::read16(uint32 address) {
 	address = ensure_align(address, 2);
-//	address = _handle_memory_images(address);
 
-	uint16 data {0};
-	uint32 read = 0;
-	while(read < 2) {
-		const auto current_address = address + read;
-
-		auto* dev = find_device(current_address);
-		if(!dev) {
-			this->log("Undefined read to {:08x}", current_address);
-			GaBber::instance().debugger().on_undefined_access(current_address);
-			data |= (0xFF << read*8);
-			read++;
-			continue;
-		}
-
-		const auto address_in_device = (current_address - dev->start());
-		if(read == 0 && dev->size() >= 2) {
-			m_last_wait_cycles = dev->waitcycles16();
-			data = dev->read16(address_in_device);
-#ifdef SPLIT_DEBUG
-			log("read16 from {} -> {:04x}", (void*)dev, data);
-#endif
-			read += 2;
-		} else {
-			m_last_wait_cycles = dev->waitcycles16();
-			uint8 read_value = dev->read8(address_in_device);
-#ifdef SPLIT_DEBUG
-			log("read8 from {} -> {:02x}", (void*)dev, read_value);
-#endif
-			data |= (read_value << (read*8));
-			read += 1;
-		}
+	auto dev = find_device(address, 2);
+	if (!dev) {
+		const uint8 lower  = read8(address);
+		const uint8 higher = read8(address+1);
+		return (static_cast<uint16>(higher) << 8u) | static_cast<uint16>(lower);
 	}
 
-	return data;
+	m_last_wait_cycles = dev->waitcycles16();
+	return dev->read16(address - dev->start());
+}
+
+void BusInterface::write16(uint32 address, uint16 value) {
+	address = ensure_align(address, 2);
+
+	auto dev = find_device(address, 2);
+	if (!dev) {
+		write8(address, value & 0xFFu);
+		write8(address+1, value >> 8u);
+		return;
+	}
+
+	m_last_wait_cycles = dev->waitcycles16();
+	dev->write16(address - dev->start(), value);
 }
 
 uint8 BusInterface::read8(uint32 address) {
-//	address = _handle_memory_images(address);
-
-	auto* dev = find_device(address);
+	auto* dev = find_device(address, 1);
 	if(!dev) {
-		this->log("Undefined read8 from {:08x}", address);
+		this->log("Undefined byte read from {:08x}", address);
 		GaBber::instance().debugger().on_undefined_access(address);
 		return 0xFF;
 	}
@@ -149,98 +115,10 @@ uint8 BusInterface::read8(uint32 address) {
 	return dev->read8(address - dev->start());
 }
 
-void BusInterface::write32(uint32 address, uint32 value) {
-	address = ensure_align(address, 4);
-//	address = _handle_memory_images(address);
-
-//	log("Write32 {:08x} <- {:08x}", address, value);
-
-	uint32 written = 0;
-	while(written < 4) {
-		const auto current_address = address + written;
-
-		auto* dev = find_device(current_address);
-		if(!dev) {
-			this->log("Undefined write32 to {:08x}, word: {:08x}", current_address, value);
-			GaBber::instance().debugger().on_undefined_access(current_address);
-			written++;
-			continue;
-		}
-
-		const auto address_in_device = (current_address - dev->start());
-		if(written == 0 && dev->size() >= 4) {
-#ifdef SPLIT_DEBUG
-			log("write32 to {} <- {:08x}", (void*)dev, value);
-#endif
-			m_last_wait_cycles = dev->waitcycles32();
-			dev->write32(address_in_device, value);
-			written += 4;
-		} else if((written % 2 == 0) && dev->size() >= 2) {
-			uint16 write_value = (value >> written*8) & 0xFFFFu;
-#ifdef SPLIT_DEBUG
-			log("write16 to {} <- {:04x}, written: {}", (void*)dev, write_value, written);
-#endif
-			m_last_wait_cycles = dev->waitcycles32();
-			dev->write16(address_in_device, write_value);
-			written += 2;
-		} else {
-			uint8 write_value = (value >> written*8) & 0xFFu;
-#ifdef SPLIT_DEBUG
-			log("write8 to {} <- {:02x}", (void*)dev, write_value);
-#endif
-			m_last_wait_cycles = dev->waitcycles32();
-			dev->write8(address_in_device, write_value);
-			written += 1;
-		}
-	}
-}
-
-void BusInterface::write16(uint32 address, uint16 value) {
-	address = ensure_align(address, 2);
-//	address = _handle_memory_images(address);
-
-//	log("Write16 {:08x} <- {:04x}", address, value);
-
-	uint32 written = 0;
-	while(written < 2) {
-		const auto current_address = address + written;
-
-		auto* dev = find_device(current_address);
-		if(!dev) {
-			this->log("Undefined write16 to {:08x}, word: {:08x}", current_address, value);
-			GaBber::instance().debugger().on_undefined_access(current_address);
-			written++;
-			continue;
-		}
-
-		const auto address_in_device = (current_address - dev->start());
-		if(written == 0 && dev->size() >= 2) {
-#ifdef SPLIT_DEBUG
-			log("write16 to {} <- {:04x}", (void*)dev, value);
-#endif
-			m_last_wait_cycles = dev->waitcycles16();
-			dev->write16(address_in_device, value);
-			written += 2;
-		} else {
-			uint8 write_value = (value >> written*8) & 0xFFu;
-#ifdef SPLIT_DEBUG
-			log("write8 to {} <- {:02x}", (void*)dev, write_value);
-#endif
-			m_last_wait_cycles = dev->waitcycles16();
-			dev->write8(address_in_device, write_value);
-			written += 1;
-		}
-	}
-}
-
 void BusInterface::write8(uint32 address, uint8 value) {
-//	address = _handle_memory_images(address);
-
-//	log("Write8 {:08x} <- {:02x}", address, value);
-
-	auto* dev = find_device(address);
+	auto* dev = find_device(address, 1);
 	if(!dev) {
-		this->log("Undefined write8 to {:08x}, byte: {:02x}", address, value);
+		log("Undefined byte write to {:08x}, byte: {:02x}", address, value);
 		GaBber::instance().debugger().on_undefined_access(address);
 		return;
 	}
@@ -249,21 +127,10 @@ void BusInterface::write8(uint32 address, uint8 value) {
 	dev->write8(address - dev->start(), value);
 }
 
-uint8 BusInterface::peek(uint32 address) {
-//	address = _handle_memory_images(address);
-
-	auto* dev = find_device(address);
-	if(!dev) {
-		return 0xFF;
-	}
-
-	return dev->read8(address - dev->start());
-}
-
-BusDevice* BusInterface::find_device(uint32 address) {
+BusDevice* BusInterface::find_device(uint32 address, size_t size) {
 	static BusDevice* cache {nullptr};
 
-	if(cache && cache->contains(address)) {
+	if(cache && cache->contains(address) && cache->contains(address+size-1)) {
 		cache_hit++;
 		return cache;
 	} else {
@@ -271,7 +138,7 @@ BusDevice* BusInterface::find_device(uint32 address) {
 	}
 
 	for(auto& dev : s_devices) {
-		if(dev->contains(address)) {
+		if(dev->contains(address) && dev->contains(address+size-1)) {
 			cache = dev;
 			return dev;
 		}
@@ -279,13 +146,22 @@ BusDevice* BusInterface::find_device(uint32 address) {
 	return nullptr;
 }
 
+uint8 BusInterface::peek(uint32 address) {
+	auto* dev = find_device(address, 1);
+	if(!dev) {
+		return 0xFF;
+	}
 
-void BusInterface::poke(uint32 addr, uint8 val) {
-	auto* dev = find_device(addr);
-	if(!dev) return;
-	dev->write8(addr - dev->start(), val);
+	return dev->read8(address - dev->start());
 }
 
+void BusInterface::poke(uint32 addr, uint8 val) {
+	auto* dev = find_device(addr, 1);
+	if(!dev) {
+		return;
+	}
+	dev->write8(addr - dev->start(), val);
+}
 
 void BusInterface::reload_all() {
 	for(auto& dev : s_devices) {

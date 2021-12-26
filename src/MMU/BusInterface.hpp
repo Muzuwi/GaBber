@@ -10,7 +10,7 @@ class BusInterface {
 
 	static Vector<BusDevice*> s_devices;
 
-	BusDevice* find_device(uint32 address);
+	BusDevice* find_device(uint32 address, size_t size);
 
 	unsigned m_last_wait_cycles;
 
