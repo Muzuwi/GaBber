@@ -9,14 +9,10 @@ class BusInterface {
 	friend class TestHarness;
 
 	static Vector<BusDevice*> s_devices;
-
-	BusDevice* find_device(uint32 address, size_t size);
+	static bool register_device(BusDevice&);
 
 	unsigned m_last_wait_cycles;
-
-	uint64 cache_hit {0};
-	uint64 cache_miss {0};
-	static bool register_device(BusDevice&);
+	BusDevice* find_device(uint32 address, size_t size);
 public:
 
 	template<typename... Args>
@@ -43,10 +39,7 @@ public:
 	uint8 peek(uint32 address);
 	void poke(uint32 address, uint8 val);
 
-	uint64 hits() const { return cache_hit; }
-	uint64 misses() const { return cache_miss; }
-
-	void reload_all();
+	void reload();
 
 	void debug();
 };

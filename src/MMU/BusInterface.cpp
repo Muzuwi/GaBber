@@ -5,9 +5,6 @@
 
 Vector<BusDevice*> BusInterface::s_devices {};
 
-//#define SPLIT_DEBUG
-
-
 void BusInterface::debug() {
 	log("Device dump:");
 	for(auto& device: s_devices) {
@@ -129,12 +126,8 @@ void BusInterface::write8(uint32 address, uint8 value) {
 
 BusDevice* BusInterface::find_device(uint32 address, size_t size) {
 	static BusDevice* cache {nullptr};
-
 	if(cache && cache->contains(address) && cache->contains(address+size-1)) {
-		cache_hit++;
 		return cache;
-	} else {
-		cache_miss++;
 	}
 
 	for(auto& dev : s_devices) {
@@ -163,7 +156,7 @@ void BusInterface::poke(uint32 addr, uint8 val) {
 	dev->write8(addr - dev->start(), val);
 }
 
-void BusInterface::reload_all() {
+void BusInterface::reload() {
 	for(auto& dev : s_devices) {
 		dev->reload();
 	}

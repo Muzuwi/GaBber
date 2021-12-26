@@ -142,7 +142,7 @@ void GaBber::enter_debug_mode() {
 
 void GaBber::emulator_reset() {
 	m_cpu.reset();
-	m_mmu.reload_all();
+	m_mmu.reload();
 }
 
 void GaBber::emulator_close() {
