@@ -1,9 +1,11 @@
-#include <iostream>
-#include <fstream>
 #include "Headers/GaBber.hpp"
+#include <fstream>
+#include <iostream>
+#include <optional>
+#include <vector>
 #include "MMU/IOReg.hpp"
 
-Optional<Vector<uint8>> load_from_file(const std::string& path){
+std::optional<std::vector<uint8>> load_from_file(const std::string& path) {
 	std::ifstream file;
 	std::vector<char> temp;
 	file.open(path, std::ios::binary);
@@ -17,11 +19,10 @@ Optional<Vector<uint8>> load_from_file(const std::string& path){
 	temp.resize(fileSize);
 	file.read(&temp[0], fileSize);
 	file.close();
-	Vector<uint8> rom(temp.begin(), temp.end());
+	std::vector<uint8> rom(temp.begin(), temp.end());
 
-	return {rom};
+	return { rom };
 }
-
 
 void GaBber::parse_args(int argc, char** argv) {
 	for(int i = 1; i < argc; ++i) {
@@ -38,7 +39,6 @@ void GaBber::parse_args(int argc, char** argv) {
 	}
 }
 
-
 int GaBber::start() {
 	auto bios_image = load_from_file("bios.bin");
 	if(!bios_image.has_value()) {
@@ -54,7 +54,7 @@ int GaBber::start() {
 			return -1;
 		}
 
-		Vector<uint8> save = {};
+		std::vector<uint8> save = {};
 		auto maybe_save = load_from_file(m_rom_filename + ".sav");
 		if(maybe_save.has_value()) {
 			save = *maybe_save;
@@ -84,7 +84,6 @@ int GaBber::start() {
 	return 0;
 }
 
-
 void GaBber::emulator_loop() {
 	while(!m_closed) {
 		if(m_running || m_do_step) {
@@ -112,7 +111,7 @@ void GaBber::emulator_next_state() {
 
 	m_cycle_samples[m_current_sample++] = cycles;
 	if(mem().io.haltcnt.m_halt) {
-		m_cycle_samples[m_current_sample-1] += 1000;
+		m_cycle_samples[m_current_sample - 1] += 1000;
 	}
 	if(m_current_sample == 10000) {
 		m_current_sample = 0;
@@ -139,14 +138,13 @@ void GaBber::enter_debug_mode() {
 	SDL_MaximizeWindow(m_gabberWindow);
 }
 
-
 void GaBber::emulator_reset() {
 	m_cpu.reset();
 	m_mmu.reload();
 }
 
 void GaBber::emulator_close() {
-	std::ofstream save_file {m_rom_filename + ".sav", std::ios_base::binary};
+	std::ofstream save_file { m_rom_filename + ".sav", std::ios_base::binary };
 	if(!save_file.good()) {
 		fmt::print("Failed opening save file!\n");
 		return;

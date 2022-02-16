@@ -3,7 +3,7 @@
 #include "MMU/IOReg.hpp"
 
 enum class IRQType : uint8 {
-	VBlank      = 0,
+	VBlank = 0,
 	HBlank,
 	VCounter,
 	Timer0,
@@ -61,23 +61,21 @@ class HALTCNT final : public IOReg8<0x04000301> {
 		//  Halt
 		if(val == 0) {
 			m_halt = true;
-		}
-		else if (val == 0x80)
+		} else if(val == 0x80)
 			m_stop = true;
 	}
 public:
-	bool m_halt {false};
-	bool m_stop {false};
+	bool m_halt { false };
+	bool m_stop { false };
 };
 
 class POSTFLG final : public IOReg8<0x04000300> {
-
 };
 
 class WaitControl final : public IOReg32<0x04000204> {
 protected:
 	static constexpr const uint32 writeable_mask = 0x00005FFF;
-	static constexpr const uint32 readable_mask  = 0x00005FFF;
+	static constexpr const uint32 readable_mask = 0x00005FFF;
 
 	void on_write(uint32 new_value) override {
 		m_register = new_value & writeable_mask;
@@ -90,7 +88,7 @@ protected:
 class MemCtl final : public IOReg32<0x04000800> {
 protected:
 	static constexpr const uint32 writeable_mask = 0xFF00002F;
-	static constexpr const uint32 readable_mask  = 0xFF00002F;
+	static constexpr const uint32 readable_mask = 0xFF00002F;
 
 	void on_write(uint32 new_value) override {
 		m_register = new_value & writeable_mask;
@@ -104,7 +102,6 @@ template<unsigned address>
 class EmptyReg : public IOReg32<address> {
 protected:
 	void on_write(uint32) override {
-
 	}
 
 	uint32 on_read() override {

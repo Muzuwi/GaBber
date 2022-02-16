@@ -1,9 +1,10 @@
 #pragma once
+#include "Headers/StdTypes.hpp"
 
 enum BreakpointType {
-	BreakRead  = 0x01,
+	BreakRead = 0x01,
 	BreakWrite = 0x02,
-	BreakExec  = 0x04
+	BreakExec = 0x04
 };
 
 struct Breakpoint {
@@ -14,7 +15,9 @@ struct Breakpoint {
 	Breakpoint() = default;
 
 	Breakpoint(uint32 start_, uint32 size_, BreakpointType type_)
-	: start(start_), size(size_), type(type_) {}
+	    : start(start_)
+	    , size(size_)
+	    , type(type_) {}
 };
 
 struct MemoryEvent {
@@ -24,6 +27,8 @@ struct MemoryEvent {
 	BreakpointType type;
 
 	MemoryEvent(uint32 addr, uint32 val, uint32 size_, BreakpointType event_type)
-	: address(addr), value(val), size(size_), type(event_type) {}
+	    : address(addr)
+	    , value(val)
+	    , size(size_)
+	    , type(event_type) {}
 };
-

@@ -1,8 +1,8 @@
 #include "CPU/ARM7TDMI.hpp"
 #include "CPU/Instructions/ARM.hpp"
-#include "MMU/BusInterface.hpp"
 #include "Debugger/Debugger.hpp"
 #include "Headers/GaBber.hpp"
+#include "MMU/BusInterface.hpp"
 
 void ARM7TDMI::reset() {
 	cspr().set_state(INSTR_MODE::ARM);
@@ -17,10 +17,10 @@ void ARM7TDMI::reset() {
 	m_saved_status.m_SVC.set_raw(0x10);
 	m_saved_status.m_UND.set_raw(0x10);
 
-	for (unsigned i = 0; i < 16; ++i) {
+	for(unsigned i = 0; i < 16; ++i) {
 		m_registers.m_base[i] = 0;
-		if (i < 7) m_registers.m_gFIQ[i] = 0;
-		if (i < 2) {
+		if(i < 7) m_registers.m_gFIQ[i] = 0;
+		if(i < 2) {
 			m_registers.m_gSVC[i] = 0;
 			m_registers.m_gABT[i] = 0;
 			m_registers.m_gIRQ[i] = 0;
@@ -32,7 +32,6 @@ void ARM7TDMI::reset() {
 	m_pc_dirty = false;
 }
 
-
 unsigned ARM7TDMI::run_next_instruction() {
 	const unsigned n = run_to_next_state();
 	timers_cycle_all(n);
@@ -40,7 +39,6 @@ unsigned ARM7TDMI::run_next_instruction() {
 	m_cycles += n;
 	return n;
 }
-
 
 unsigned ARM7TDMI::run_to_next_state() {
 	m_wait_cycles = 0;
@@ -62,19 +60,17 @@ unsigned ARM7TDMI::run_to_next_state() {
 	return m_wait_cycles;
 }
 
-
 uint32 ARM7TDMI::fetch_instruction() {
-	const auto op = (cspr().state() == INSTR_MODE::ARM) ? mem_read_arm_opcode(const_pc() - 2*current_instr_len())
-	                                                    : mem_read_thumb_opcode(const_pc() - 2*current_instr_len());
+	const auto op = (cspr().state() == INSTR_MODE::ARM) ? mem_read_arm_opcode(const_pc() - 2 * current_instr_len())
+	                                                    : mem_read_thumb_opcode(const_pc() - 2 * current_instr_len());
 	return op;
 }
 
-
 void ARM7TDMI::exec_opcode() {
 	const auto opcode = fetch_instruction();
-	m_debugger.on_execute_opcode(const_pc() - 2*current_instr_len());
+	m_debugger.on_execute_opcode(const_pc() - 2 * current_instr_len());
 
-	if (cspr().state() == INSTR_MODE::ARM)
+	if(cspr().state() == INSTR_MODE::ARM)
 		execute_ARM(opcode);
 	else
 		execute_THUMB(opcode);
@@ -82,9 +78,9 @@ void ARM7TDMI::exec_opcode() {
 	//  Always make sure the PC is 2 instructions ahead
 	if(m_pc_dirty) {
 		pc() += 2 * current_instr_len();
-		pc() &= (cspr().state() == INSTR_MODE::ARM)  //  Force alignment for ALU opcodes modifying pc
-				? ~3u
-				: ~1u;
+		pc() &= (cspr().state() == INSTR_MODE::ARM)//  Force alignment for ALU opcodes modifying pc
+		                ? ~3u
+		                : ~1u;
 		m_pc_dirty = false;
 	} else {
 		pc() += current_instr_len();
@@ -92,18 +88,17 @@ void ARM7TDMI::exec_opcode() {
 	}
 }
 
-
 void ARM7TDMI::execute_ARM(uint32 opcode) {
-	if (!cspr().evaluate_condition(ARM::Instruction(opcode).condition())) {
+	if(!cspr().evaluate_condition(ARM::Instruction(opcode).condition())) {
 		//  Unevaluated instructions take 1 cycle anyway
 		m_wait_cycles += 1;
 		return;
 	}
 
 	auto op = ARM::opcode_decode(opcode);
-	switch (op) {
+	switch(op) {
 		case ARM::InstructionType::BBL: this->B(ARM::BInstruction(opcode)); return;
-		case ARM::InstructionType::BX:  this->BX(ARM::BXInstruction(opcode)); return;
+		case ARM::InstructionType::BX: this->BX(ARM::BXInstruction(opcode)); return;
 		case ARM::InstructionType::ALU: this->DPI(ARM::DataProcessInstruction(opcode)); return;
 		case ARM::InstructionType::MUL: this->MUL(ARM::MultInstruction(opcode)); return;
 		case ARM::InstructionType::MLL: this->MLL(ARM::MultLongInstruction(opcode)); return;
@@ -122,19 +117,18 @@ void ARM7TDMI::execute_ARM(uint32 opcode) {
 	}
 }
 
-
 void ARM7TDMI::execute_THUMB(uint16 opcode) {
 	auto op = THUMB::opcode_decode(opcode);
 	switch(op) {
-		case THUMB::InstructionType::FMT1:  THUMB_FMT1(THUMB::InstructionFormat1(opcode)); return;
-		case THUMB::InstructionType::FMT2:  THUMB_FMT2(THUMB::InstructionFormat2(opcode)); return;
-		case THUMB::InstructionType::FMT3:  THUMB_FMT3(THUMB::InstructionFormat3(opcode)); return;
-		case THUMB::InstructionType::FMT4:  THUMB_ALU(THUMB::InstructionFormat4(opcode)); return;
-		case THUMB::InstructionType::FMT5:  THUMB_FMT5(THUMB::InstructionFormat5(opcode)); return;
-		case THUMB::InstructionType::FMT6:  THUMB_FMT6(THUMB::InstructionFormat6(opcode)); return;
-		case THUMB::InstructionType::FMT7:  THUMB_FMT7(THUMB::InstructionFormat7(opcode)); return;
-		case THUMB::InstructionType::FMT8:  THUMB_FMT8(THUMB::InstructionFormat8(opcode)); return;
-		case THUMB::InstructionType::FMT9:  THUMB_FMT9(THUMB::InstructionFormat9(opcode)); return;
+		case THUMB::InstructionType::FMT1: THUMB_FMT1(THUMB::InstructionFormat1(opcode)); return;
+		case THUMB::InstructionType::FMT2: THUMB_FMT2(THUMB::InstructionFormat2(opcode)); return;
+		case THUMB::InstructionType::FMT3: THUMB_FMT3(THUMB::InstructionFormat3(opcode)); return;
+		case THUMB::InstructionType::FMT4: THUMB_ALU(THUMB::InstructionFormat4(opcode)); return;
+		case THUMB::InstructionType::FMT5: THUMB_FMT5(THUMB::InstructionFormat5(opcode)); return;
+		case THUMB::InstructionType::FMT6: THUMB_FMT6(THUMB::InstructionFormat6(opcode)); return;
+		case THUMB::InstructionType::FMT7: THUMB_FMT7(THUMB::InstructionFormat7(opcode)); return;
+		case THUMB::InstructionType::FMT8: THUMB_FMT8(THUMB::InstructionFormat8(opcode)); return;
+		case THUMB::InstructionType::FMT9: THUMB_FMT9(THUMB::InstructionFormat9(opcode)); return;
 		case THUMB::InstructionType::FMT10: THUMB_FMT10(THUMB::InstructionFormat10(opcode)); return;
 		case THUMB::InstructionType::FMT11: THUMB_FMT11(THUMB::InstructionFormat11(opcode)); return;
 		case THUMB::InstructionType::FMT12: THUMB_FMT12(THUMB::InstructionFormat12(opcode)); return;
@@ -155,12 +149,10 @@ void ARM7TDMI::execute_THUMB(uint16 opcode) {
 	}
 }
 
-
 void ARM7TDMI::stack_push32(uint32 val) {
 	sp() -= 4;
 	mem_write32(sp() & ~3u, val);
 }
-
 
 uint32 ARM7TDMI::stack_pop32() {
 	auto val = mem_read32(sp() & ~3u);
@@ -168,15 +160,14 @@ uint32 ARM7TDMI::stack_pop32() {
 	return val;
 }
 
-
 void ARM7TDMI::dump_memory_around_pc() const {
-	const uint32 pc = const_pc() - 2*current_instr_len();
+	const uint32 pc = const_pc() - 2 * current_instr_len();
 	const uint32 prev = (pc - 32) & ~0xf;
 	const uint32 next = (pc + 32) & ~0xf;
 	const unsigned size = cspr().state() == INSTR_MODE::ARM ? 4 : 2;
 
 	for(uint32 addr = prev; addr < next; addr++) {
-		if(((addr%16) == 0)) {
+		if(((addr % 16) == 0)) {
 			fmt::print("${:08x}: ", addr);
 		}
 
@@ -185,12 +176,12 @@ void ARM7TDMI::dump_memory_around_pc() const {
 		else
 			fmt::print(" ");
 		fmt::print("{:02x}", m_mmu.read8(addr));
-		if(addr == (pc+size-1))
+		if(addr == (pc + size - 1))
 			fmt::print("]");
 		else
 			fmt::print(" ");
 
-		if((addr%16) == 15)
+		if((addr % 16) == 15)
 			fmt::print("\n");
 	}
 

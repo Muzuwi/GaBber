@@ -2,14 +2,12 @@
 #include "CPU/ARM7TDMI.hpp"
 #include "Headers/GaBber.hpp"
 
-
 void ARM7TDMI::timers_cycle_all(size_t n) {
 	timers_cycle_n(io.timer0, n);
 	timers_cycle_n(io.timer1, n);
 	timers_cycle_n(io.timer2, n);
 	timers_cycle_n(io.timer3, n);
 }
-
 
 template<unsigned int timer_num>
 void ARM7TDMI::timers_cycle_n(Timer<timer_num>& timer, size_t n) {
@@ -34,7 +32,6 @@ void ARM7TDMI::timers_cycle_n(Timer<timer_num>& timer, size_t n) {
 	}
 }
 
-
 template<unsigned int timer_num>
 void ARM7TDMI::timers_increment(Timer<timer_num>& timer) {
 	//  Timer overflow
@@ -46,9 +43,9 @@ void ARM7TDMI::timers_increment(Timer<timer_num>& timer) {
 			raise_irq(Timer<timer_num>::irq_for_timer());
 
 		if constexpr(timer_num != 3) {
-			Timer<timer_num+1>& other_timer = io.template timer_for_num<timer_num+1>();
+			Timer<timer_num + 1>& other_timer = io.template timer_for_num<timer_num + 1>();
 			if(other_timer.m_ctl->count_up)
-				timers_increment<timer_num+1>(other_timer);
+				timers_increment<timer_num + 1>(other_timer);
 		}
 
 	} else {

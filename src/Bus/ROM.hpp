@@ -1,20 +1,23 @@
 #pragma once
+#include <vector>
 #include "Headers/StdTypes.hpp"
 #include "MMU/BusDevice.hpp"
 
 class ROM final : public BusDevice {
-	Vector<uint8> m_rom {};
+	std::vector<uint8> m_rom {};
 
 	static inline uint32 mirror(uint32 offset) {
 		return offset % 0x02000000;
 	}
 public:
-	ROM() : BusDevice(0x08000000, 0x0e000000), m_rom() {}
+	ROM()
+	    : BusDevice(0x08000000, 0x0e000000)
+	    , m_rom() {}
 
-	void from_vec(Vector<uint8>&& vec) {
+	void from_vec(std::vector<uint8>&& vec) {
 		m_rom = vec;
-		if(m_rom.size() > 32*MB) {
-			m_rom.resize(32*MB);
+		if(m_rom.size() > 32 * MB) {
+			m_rom.resize(32 * MB);
 		}
 	}
 

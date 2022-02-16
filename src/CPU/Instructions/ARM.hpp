@@ -30,7 +30,7 @@ namespace ARM {
 	}
 
 	enum class InstructionType {
-		BX  = 0,
+		BX = 0,
 		BBL,
 		ALU,
 		MUL,
@@ -44,23 +44,23 @@ namespace ARM {
 		_End
 	};
 
-	#define PATTERN(mask, pattern) ((arm_opcode & mask) == pattern)
+#define PATTERN(mask, pattern) ((arm_opcode & mask) == pattern)
 	static inline InstructionType opcode_decode(uint32 arm_opcode) {
-		if (PATTERN(0x0f000000, 0x0f000000)) return InstructionType::SWI;
-		if (PATTERN(0x0e000000, 0x0a000000)) return InstructionType::BBL;
-		if (PATTERN(0x0e000000, 0x08000000)) return InstructionType::BDT;
-		if (PATTERN(0x0c000000, 0x04000000)) return InstructionType::SDT;
-		if (PATTERN(0x0ffffff0, 0x12fff10)) return InstructionType::BX;
-		if (PATTERN(0xfb00ff0, 0x01000090)) return InstructionType::SWP;
-		if (PATTERN(0x0fc000f0, 0x90)) return InstructionType::MUL;
-		if (PATTERN(0x0f8000f0, 0x00800090)) return InstructionType::MLL;
-		if (PATTERN(0x0e400f90, 0x90)) return InstructionType::HDT;
-		if (PATTERN(0x0e400090, 0x400090)) return InstructionType::HDT;
-		if (PATTERN(0x0c000000, 0)) return InstructionType::ALU;
+		if(PATTERN(0x0f000000, 0x0f000000)) return InstructionType::SWI;
+		if(PATTERN(0x0e000000, 0x0a000000)) return InstructionType::BBL;
+		if(PATTERN(0x0e000000, 0x08000000)) return InstructionType::BDT;
+		if(PATTERN(0x0c000000, 0x04000000)) return InstructionType::SDT;
+		if(PATTERN(0x0ffffff0, 0x12fff10)) return InstructionType::BX;
+		if(PATTERN(0xfb00ff0, 0x01000090)) return InstructionType::SWP;
+		if(PATTERN(0x0fc000f0, 0x90)) return InstructionType::MUL;
+		if(PATTERN(0x0f8000f0, 0x00800090)) return InstructionType::MLL;
+		if(PATTERN(0x0e400f90, 0x90)) return InstructionType::HDT;
+		if(PATTERN(0x0e400090, 0x400090)) return InstructionType::HDT;
+		if(PATTERN(0x0c000000, 0)) return InstructionType::ALU;
 
 		return InstructionType::UD;
 	}
-	#undef PATTERN
+#undef PATTERN
 
 	enum class InstructionCondition : uint8 {
 		EQ = 0b0000,
@@ -82,10 +82,10 @@ namespace ARM {
 	};
 
 	enum class ShiftType : uint8 {
-		LogicalLeft  = 0b00,
+		LogicalLeft = 0b00,
 		LogicalRight = 0b01,
 		ArithmeticRight = 0b10,
-		RotateRight  = 0b11
+		RotateRight = 0b11
 	};
 
 	class Instruction {
@@ -93,7 +93,7 @@ namespace ARM {
 		uint32 m_data;
 	public:
 		Instruction(uint32 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		InstructionCondition condition() const {
 			const auto c = static_cast<InstructionCondition>((m_data & 0xf0000000u) >> 28u);
@@ -105,18 +105,18 @@ namespace ARM {
 	public:
 		union Reg {
 			struct {
-				uint8 reg : 4;
-				uint32 _dummy : 24;
+				uint8 reg                      : 4;
+				uint32 _dummy                  : 24;
 				InstructionCondition condition : 4;
 			} __attribute__((packed));
 			uint32 _opcode;
 		};
 
 		BXInstruction(uint32 data)
-		: Instruction(data) {}
+		    : Instruction(data) {}
 
 		BXInstruction(Reg reg)
-		: Instruction(reg._opcode) {}
+		    : Instruction(reg._opcode) {}
 
 		uint8 reg() const {
 			return m_data & 0b1111;
@@ -127,24 +127,24 @@ namespace ARM {
 	public:
 		union Reg {
 			struct {
-				uint8 multiplicand_reg : 4;
-				uint8 _dummy1 : 4;
-				uint8 source_reg : 4;
-				uint8 accumulate_reg : 4;
-				uint8 target_reg : 4;
-				uint32 _dummy2 : 6;
-				bool set_condition_flag : 1;
-				bool accumulate_flag : 1;
+				uint8 multiplicand_reg         : 4;
+				uint8 _dummy1                  : 4;
+				uint8 source_reg               : 4;
+				uint8 accumulate_reg           : 4;
+				uint8 target_reg               : 4;
+				uint32 _dummy2                 : 6;
+				bool set_condition_flag        : 1;
+				bool accumulate_flag           : 1;
 				InstructionCondition condition : 4;
 			} __attribute__((packed));
 			uint32 _opcode;
 		};
 
 		MultInstruction(uint32 data)
-		: Instruction(data) {}
+		    : Instruction(data) {}
 
 		MultInstruction(Reg reg)
-		: Instruction(reg._opcode) {}
+		    : Instruction(reg._opcode) {}
 
 		uint8 multiplicand_reg() const {
 			return m_data & 0b1111;
@@ -175,19 +175,19 @@ namespace ARM {
 	public:
 		union Reg {
 			struct {
-				uint32 offset : 24;
-				bool link_flag : 1;
-				uint32 _dummy : 3;
+				uint32 offset                  : 24;
+				bool link_flag                 : 1;
+				uint32 _dummy                  : 3;
 				InstructionCondition condition : 4;
 			} __attribute__((packed));
 			uint32 _opcode;
 		};
 
 		BInstruction(uint32 data)
-		: Instruction(data) {}
+		    : Instruction(data) {}
 
 		BInstruction(Reg reg)
-		: Instruction(reg._opcode) {}
+		    : Instruction(reg._opcode) {}
 
 		bool is_link() const {
 			return m_data & (1u << 24u);
@@ -203,24 +203,24 @@ namespace ARM {
 	public:
 		union Reg {
 			struct {
-				uint8 source_reg : 4;
-				uint8 _bitseq4 : 4;
-				uint8 _bitseq3 : 4;
-				uint8 destination_reg : 4;
-				uint8 base_reg : 4;
-				uint8 _bitseq2 : 2;
-				bool quantity : 1;
-				uint8 _bitseq1 : 5;
+				uint8 source_reg               : 4;
+				uint8 _bitseq4                 : 4;
+				uint8 _bitseq3                 : 4;
+				uint8 destination_reg          : 4;
+				uint8 base_reg                 : 4;
+				uint8 _bitseq2                 : 2;
+				bool quantity                  : 1;
+				uint8 _bitseq1                 : 5;
 				InstructionCondition condition : 4;
 			} __attribute__((packed));
 			uint32 _opcode;
 		};
 
 		SWPInstruction(uint32 data)
-		: Instruction(data) {}
+		    : Instruction(data) {}
 
 		SWPInstruction(Reg data)
-		: Instruction(data._opcode) {}
+		    : Instruction(data._opcode) {}
 
 		bool swap_byte() const {
 			return m_data & (1u << 22u);
@@ -243,23 +243,23 @@ namespace ARM {
 	public:
 		union Reg {
 			struct {
-				uint16 operand2 : 12;
-				uint8 destination_reg : 4;
-				uint8 operand1_reg : 4;
-				bool set_condition : 1;
-				uint8 opcode : 4;
-				bool immediate_operand : 1;
-				uint8 _bitseq1 : 2;
+				uint16 operand2                : 12;
+				uint8 destination_reg          : 4;
+				uint8 operand1_reg             : 4;
+				bool set_condition             : 1;
+				uint8 opcode                   : 4;
+				bool immediate_operand         : 1;
+				uint8 _bitseq1                 : 2;
 				InstructionCondition condition : 4;
 			} __attribute__((packed));
 			uint32 _opcode;
 		};
 
 		DataProcessInstruction(uint32 data)
-		: Instruction(data) {}
+		    : Instruction(data) {}
 
 		DataProcessInstruction(Reg data)
-		: Instruction(data._opcode) {}
+		    : Instruction(data._opcode) {}
 
 		bool immediate_is_value() const {
 			return m_data & (1u << 25u);
@@ -294,9 +294,9 @@ namespace ARM {
 
 		uint8 shift_amount_or_reg() const {
 			if(is_shift_reg())
-				return (m_data >> 8u) & 0b1111;     //  Register number encoded in instruction
+				return (m_data >> 8u) & 0b1111;//  Register number encoded in instruction
 			else
-				return (m_data >> 7u) & 0b11111;    //  Immediate encoded in instruction
+				return (m_data >> 7u) & 0b11111;//  Immediate encoded in instruction
 		}
 
 		uint8 operand2_reg() const {
@@ -318,7 +318,7 @@ namespace ARM {
 	class SDTInstruction : public Instruction {
 	public:
 		SDTInstruction(uint32 data)
-		: Instruction(data) {}
+		    : Instruction(data) {}
 
 		bool immediate_is_offset() const {
 			return !(m_data & (1u << 25u));
@@ -355,13 +355,12 @@ namespace ARM {
 		uint16 offset() const {
 			return m_data & 0xFFF;
 		}
-
 	};
 
 	class BDTInstruction : public Instruction {
 	public:
 		BDTInstruction(uint32 data)
-		: Instruction(data) {}
+		    : Instruction(data) {}
 
 		bool preindex() const {
 			return (m_data & (1u << 24u));
@@ -388,8 +387,10 @@ namespace ARM {
 		}
 
 		bool is_register_in_list(uint8 reg) const {
-			if(reg > 15) return false;
-			else return m_data & (1u << reg);
+			if(reg > 15)
+				return false;
+			else
+				return m_data & (1u << reg);
 		}
 
 		bool is_rlist_empty() const {
@@ -413,7 +414,7 @@ namespace ARM {
 	class SWIInstruction : public Instruction {
 	public:
 		SWIInstruction(uint32 data)
-		: Instruction(data) {}
+		    : Instruction(data) {}
 
 		uint32 comment() const {
 			return m_data & 0x00ffffffu;
@@ -423,7 +424,7 @@ namespace ARM {
 	class MultLongInstruction : public Instruction {
 	public:
 		MultLongInstruction(uint32 data)
-		: Instruction(data) {}
+		    : Instruction(data) {}
 
 		bool is_signed() const {
 			return m_data & (1u << 22u);
@@ -452,13 +453,12 @@ namespace ARM {
 		uint8 operand2_reg() const {
 			return m_data & 0b1111u;
 		}
-
 	};
 
 	class HDTInstruction : public Instruction {
 	public:
 		HDTInstruction(uint32 data)
-		: Instruction(data) {}
+		    : Instruction(data) {}
 
 		bool preindex() const {
 			return m_data & (1u << 24u);
@@ -487,7 +487,6 @@ namespace ARM {
 		uint8 target_reg() const {
 			return (m_data >> 12u) & 0xF;
 		}
-
 
 		uint8 offset_reg_or_immediate_low() const {
 			return m_data & 0xF;

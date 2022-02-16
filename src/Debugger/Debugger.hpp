@@ -1,10 +1,11 @@
 #pragma once
-#include <string>
 #include <functional>
-#include <Headers/StdTypes.hpp>
 #include <imgui.h>
-#include "Debugger/WindowDefinitions.hpp"
+#include <string>
+#include <vector>
 #include "Debugger/Breakpoint.hpp"
+#include "Debugger/WindowDefinitions.hpp"
+#include "Headers/StdTypes.hpp"
 
 class GaBber;
 class Debugger {
@@ -19,9 +20,9 @@ class Debugger {
 	Stacktrace m_stacktrace;
 
 	static bool match_breakpoint(Breakpoint const& breakpoint, MemoryEvent event);
-	Vector<Breakpoint> m_breakpoints;
-	bool m_break_on_undefined {false};
-	bool m_debug_mode {false};
+	std::vector<Breakpoint> m_breakpoints;
+	bool m_break_on_undefined { false };
+	bool m_debug_mode { false };
 public:
 	Debugger(GaBber& v);
 
@@ -32,8 +33,7 @@ public:
 
 	void on_memory_access(uint32 address, uint32 val, bool write);
 	void on_memory_access(uint32 address, uint16 val, bool write);
-	void on_memory_access(uint32 address, uint8  val, bool write);
+	void on_memory_access(uint32 address, uint8 val, bool write);
 	void on_execute_opcode(uint32 address);
 	void on_undefined_access(uint32 address);
 };
-

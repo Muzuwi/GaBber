@@ -1,12 +1,14 @@
 #pragma once
+#include <array>
 #include <deque>
 #include "Headers/Bits.hpp"
+#include "MMU/IOReg.hpp"
 
 struct SND1CNTL {
-	uint8 sweep_shift : 3;
-	bool  sweep_decreases : 1;
-	uint8 sweep_time : 3;
-	uint16 _unused : 9;
+	uint8 sweep_shift    : 3;
+	bool sweep_decreases : 1;
+	uint8 sweep_time     : 3;
+	uint16 _unused       : 9;
 };
 
 struct SND1CNTH {
@@ -18,11 +20,11 @@ struct SND1CNTH {
 };
 
 struct SND1CNTX {
-	uint16 frequency    : 11;
-	uint8 _unused1      : 3;
-	bool  length_flag   : 1;
-	bool  initial       : 1;
-	uint16 _unused2     : 16;
+	uint16 frequency : 11;
+	uint8 _unused1   : 3;
+	bool length_flag : 1;
+	bool initial     : 1;
+	uint16 _unused2  : 16;
 };
 
 struct SND2CNTL {
@@ -35,27 +37,27 @@ struct SND2CNTL {
 };
 
 struct SND2CNTH {
-	uint16 frequency    : 11;
-	uint8 _unused1      : 3;
-	bool  length_flag   : 1;
-	bool  initial       : 1;
-	uint16 _unused2     : 16;
+	uint16 frequency : 11;
+	uint8 _unused1   : 3;
+	bool length_flag : 1;
+	bool initial     : 1;
+	uint16 _unused2  : 16;
 };
 
 struct SNDCNT_L {
-	uint8 volume_r : 3;
-	uint8 _unused1 : 1;
-	uint8 volume_l : 3;
-	uint8 _unused2 : 1;
+	uint8 volume_r         : 3;
+	uint8 _unused1         : 1;
+	uint8 volume_l         : 3;
+	uint8 _unused2         : 1;
 	uint8 channel_enable_r : 4;
 	uint8 channel_enable_l : 4;
 };
 
 struct SNDCNTH {
-	uint8 psg_volume : 2;
-	uint8 volumeA     : 1;
-	uint8 volumeB     : 1;
-	uint8 _unused    : 4;
+	uint8 psg_volume    : 2;
+	uint8 volumeA       : 1;
+	uint8 volumeB       : 1;
+	uint8 _unused       : 4;
 	bool enable_right_A : 1;
 	bool enable_left_A  : 1;
 	uint8 timer_sel_A   : 1;
@@ -75,26 +77,26 @@ struct SNDBIAS {
 };
 
 struct SND3CNTL {
-	uint8 _unused1  : 5;
-	bool  dimension : 1;
-	bool  bank      : 1;
-	bool  enabled   : 1;
-	uint8 _unused2  : 8;
+	uint8 _unused1 : 5;
+	bool dimension : 1;
+	bool bank      : 1;
+	bool enabled   : 1;
+	uint8 _unused2 : 8;
 };
 
 struct SND3CNTH {
-	uint8 length        : 8;
-	uint8 _unused1      : 5;
-	uint8 volume        : 2;
-	bool force_volume   : 1;
+	uint8 length      : 8;
+	uint8 _unused1    : 5;
+	uint8 volume      : 2;
+	bool force_volume : 1;
 };
 
 struct SND3CNTX {
-	uint16  rate        : 11;
-	uint8 _unused1      : 3;
-	bool length_flag    : 1;
-	bool initial        : 1;
-	uint16 _unused2     : 16;
+	uint16 rate      : 11;
+	uint8 _unused1   : 3;
+	bool length_flag : 1;
+	bool initial     : 1;
+	uint16 _unused2  : 16;
 };
 
 struct SND4CNTL {
@@ -116,7 +118,6 @@ struct SND4CNTH {
 	uint16 _unused2    : 16;
 };
 
-
 class SoundCtlL final : public IOReg16<0x04000080> {
 	uint16 on_read() override {
 		return this->m_register & 0xFF77u;
@@ -137,7 +138,7 @@ public:
 class SoundCtlH final : public IOReg16<0x04000082> {
 protected:
 	static constexpr const uint16 writeable_mask = 0xFF0F;
-	static constexpr const uint16 readable_mask  = 0x770F;
+	static constexpr const uint16 readable_mask = 0x770F;
 
 	void on_write(uint16 new_value) override;
 	uint16 on_read() override {
@@ -156,7 +157,7 @@ public:
 class SoundCtlX final : public IOReg32<0x04000084> {
 protected:
 	static constexpr const uint32 writeable_mask = 0x00000080;
-	static constexpr const uint32 readable_mask  = 0x0000008F;
+	static constexpr const uint32 readable_mask = 0x0000008F;
 
 	void on_write(uint32 new_value) override;
 	uint32 on_read() override;
@@ -165,7 +166,7 @@ protected:
 class SoundBias final : public IOReg32<0x04000088> {
 protected:
 	static constexpr const uint32 writeable_mask = 0x0000C3FE;
-	static constexpr const uint32 readable_mask  = 0x0000C3FE;
+	static constexpr const uint32 readable_mask = 0x0000C3FE;
 
 	void on_write(uint32 new_value) override {
 		m_register = new_value & writeable_mask;
@@ -174,7 +175,6 @@ protected:
 		return m_register & readable_mask;
 	}
 };
-
 
 class Sound1CtlL final : public IOReg16<0x04000060> {
 	void on_write(uint16 new_value) override {
@@ -223,7 +223,6 @@ public:
 	}
 };
 
-
 class Sound2CtlL final : public IOReg32<0x04000068> {
 protected:
 	void on_write(uint32 new_value) override;
@@ -254,7 +253,6 @@ public:
 		return this->template as<SND2CNTH>();
 	}
 };
-
 
 class Sound3CtlL final : public IOReg16<0x04000070> {
 protected:
@@ -299,7 +297,7 @@ public:
 class Sound3CtlX final : public IOReg32<0x04000074> {
 protected:
 	static constexpr const uint32 writeable_mask = 0x0000C7FF;
-	static constexpr const uint32 readable_mask  = 0x00004000;
+	static constexpr const uint32 readable_mask = 0x00004000;
 
 	void on_write(uint32 new_value) override;
 	uint32 on_read() override {
@@ -316,11 +314,11 @@ public:
 };
 
 class Sound3Bank final : public BusDevice {
-	Array<uint8, 16> m_bank0;
-	Array<uint8, 16> m_bank1;
+	std::array<uint8, 16> m_bank0;
+	std::array<uint8, 16> m_bank1;
 
 	template<class R>
-	inline R read_safe(uint32 offset, Array<uint8, 16>& bank) const {
+	inline R read_safe(uint32 offset, std::array<uint8, 16>& bank) const {
 		if(offset < 16 && offset + sizeof(R) <= 16) {
 			return *reinterpret_cast<R const*>(&bank[offset]);
 		} else {
@@ -330,7 +328,7 @@ class Sound3Bank final : public BusDevice {
 	}
 
 	template<class R>
-	inline void write_safe(uint32 offset, R val, Array<uint8, 16>& bank) {
+	inline void write_safe(uint32 offset, R val, std::array<uint8, 16>& bank) {
 		if(offset < 16 && offset + sizeof(R) <= 16) {
 			*reinterpret_cast<R*>(&bank[offset]) = val;
 		} else {
@@ -338,10 +336,10 @@ class Sound3Bank final : public BusDevice {
 		}
 	}
 
-	Array<uint8, 16>& current_bank();
+	std::array<uint8, 16>& current_bank();
 public:
 	Sound3Bank()
-	: BusDevice(0x04000090, 0x040000A0) {}
+	    : BusDevice(0x04000090, 0x040000A0) {}
 
 	uint32 read32(uint32 offset) override {
 		return read_safe<uint32>(offset, current_bank());
@@ -367,16 +365,14 @@ public:
 		write_safe<uint8>(offset, value, current_bank());
 	}
 
-	Array<uint8, 16> const& bank0() const {
+	std::array<uint8, 16> const& bank0() const {
 		return m_bank0;
 	}
 
-	Array<uint8, 16> const& bank1() const {
+	std::array<uint8, 16> const& bank1() const {
 		return m_bank1;
 	}
-
 };
-
 
 class Sound4CtlL final : public IOReg32<0x04000078> {
 protected:
@@ -419,7 +415,6 @@ public:
 		return this->template as<SND4CNTH>();
 	}
 };
-
 
 class SoundFifoA final : public IOReg32<0x040000A0> {
 	std::deque<uint8> m_fifo;

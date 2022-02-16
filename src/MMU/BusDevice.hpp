@@ -7,7 +7,8 @@ class BusDevice {
 	uint32 m_end;
 public:
 	BusDevice(uint32 start, uint32 end) noexcept
-	: m_start(start), m_end(end) {
+	    : m_start(start)
+	    , m_end(end) {
 		BusInterface::register_device(*this);
 	}
 
@@ -25,18 +26,18 @@ public:
 
 	virtual uint32 read32(uint32 offset) = 0;
 	virtual uint16 read16(uint32 offset) = 0;
-	virtual uint8 read8(uint32 offset)   = 0;
+	virtual uint8 read8(uint32 offset) = 0;
 
 	virtual void write32(uint32 offset, uint32 value) = 0;
 	virtual void write16(uint32 offset, uint16 value) = 0;
-	virtual void write8(uint32 offset, uint8 value)   = 0;
+	virtual void write8(uint32 offset, uint8 value) = 0;
 
 	uint32 start() const {
 		return m_start;
 	}
 
 	uint32 size() const {
-		return m_end-m_start;
+		return m_end - m_start;
 	}
 
 	uint32 end() const {
@@ -48,6 +49,5 @@ public:
 	}
 
 	virtual void reload() {
-
 	}
 };

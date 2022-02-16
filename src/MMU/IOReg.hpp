@@ -1,29 +1,13 @@
 #pragma once
+#include <cassert>
 #include <fmt/format.h>
 #include "MMU/BusDevice.hpp"
 
-template<unsigned n> struct __TypeForNumericSize;
-
-template<>
-struct __TypeForNumericSize<1> {
-	typedef uint8 RawType;
-};
-
-template<>
-struct __TypeForNumericSize<2> {
-	typedef uint16 RawType;
-};
-
-template<>
-struct __TypeForNumericSize<4> {
-	typedef uint32 RawType;
-};
-
-template<uint32 base_address, unsigned reg_size>
+template<uint32 base_address, unsigned reg_size, typename RegType>
 class __IORegister : public BusDevice {
 protected:
 	static_assert(reg_size == 4 || reg_size == 2 || reg_size == 1, "Unsupported register size");
-	using T = typename __TypeForNumericSize<reg_size>::RawType;
+	using T = RegType;
 
 	T m_register;
 
@@ -63,7 +47,8 @@ protected:
 	}
 public:
 	__IORegister() noexcept
-	: BusDevice(base_address, base_address + reg_size), m_register() {
+	    : BusDevice(base_address, base_address + reg_size)
+	    , m_register() {
 		this->reload();
 	}
 
@@ -105,7 +90,6 @@ public:
 
 	void write16(uint32 offset, uint16 value) override {
 		_write_typed<uint16>(offset, value);
-
 	}
 
 	void write8(uint32 offset, uint8 value) override {
@@ -118,10 +102,10 @@ public:
 };
 
 template<uint32 base_address>
-using IOReg32 = __IORegister<base_address, 4>;
+using IOReg32 = __IORegister<base_address, 4, uint32>;
 
 template<uint32 base_address>
-using IOReg16 = __IORegister<base_address, 2>;
+using IOReg16 = __IORegister<base_address, 2, uint16>;
 
 template<uint32 base_address>
-using IOReg8  = __IORegister<base_address, 1>;
+using IOReg8 = __IORegister<base_address, 1, uint8>;

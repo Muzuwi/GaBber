@@ -1,6 +1,6 @@
 #pragma once
-#include "Headers/StdTypes.hpp"
 #include "ARM.hpp"
+#include "Headers/StdTypes.hpp"
 
 namespace THUMB {
 	enum class InstructionType {
@@ -27,37 +27,37 @@ namespace THUMB {
 		_End
 	};
 
-	#define PATTERN(mask, pattern) ((thumb_opcode & mask) == pattern)
+#define PATTERN(mask, pattern) ((thumb_opcode & mask) == pattern)
 	static inline InstructionType opcode_decode(uint16 thumb_opcode) {
-		if (PATTERN(0xf800, 0x1800)) return InstructionType::FMT2;
-		if (PATTERN(0xe000, 0x0)) return InstructionType::FMT1;
-		if (PATTERN(0xe000, 0x2000)) return InstructionType::FMT3;
-		if (PATTERN(0xfc00, 0x4000)) return InstructionType::FMT4;
-		if (PATTERN(0xfc00, 0x4400)) return InstructionType::FMT5;
-		if (PATTERN(0xf800, 0x4800)) return InstructionType::FMT6;
-		if (PATTERN(0xf200, 0x5000)) return InstructionType::FMT7;
-		if (PATTERN(0xf200, 0x5200)) return InstructionType::FMT8;
-		if (PATTERN(0xe000, 0x6000)) return InstructionType::FMT9;
-		if (PATTERN(0xf000, 0x8000)) return InstructionType::FMT10;
-		if (PATTERN(0xf000, 0x9000)) return InstructionType::FMT11;
-		if (PATTERN(0xf000, 0xa000)) return InstructionType::FMT12;
-		if (PATTERN(0xff00, 0xb000)) return InstructionType::FMT13;
-		if (PATTERN(0xf600, 0xb400)) return InstructionType::FMT14;
-		if (PATTERN(0xf000, 0xc000)) return InstructionType::FMT15;
-		if (PATTERN(0xff00, 0xdf00)) return InstructionType::FMT17;
-		if (PATTERN(0xf000, 0xd000)) return InstructionType::FMT16;
-		if (PATTERN(0xf800, 0xe000)) return InstructionType::FMT18;
-		if (PATTERN(0xf000, 0xf000)) return InstructionType::FMT19;
+		if(PATTERN(0xf800, 0x1800)) return InstructionType::FMT2;
+		if(PATTERN(0xe000, 0x0)) return InstructionType::FMT1;
+		if(PATTERN(0xe000, 0x2000)) return InstructionType::FMT3;
+		if(PATTERN(0xfc00, 0x4000)) return InstructionType::FMT4;
+		if(PATTERN(0xfc00, 0x4400)) return InstructionType::FMT5;
+		if(PATTERN(0xf800, 0x4800)) return InstructionType::FMT6;
+		if(PATTERN(0xf200, 0x5000)) return InstructionType::FMT7;
+		if(PATTERN(0xf200, 0x5200)) return InstructionType::FMT8;
+		if(PATTERN(0xe000, 0x6000)) return InstructionType::FMT9;
+		if(PATTERN(0xf000, 0x8000)) return InstructionType::FMT10;
+		if(PATTERN(0xf000, 0x9000)) return InstructionType::FMT11;
+		if(PATTERN(0xf000, 0xa000)) return InstructionType::FMT12;
+		if(PATTERN(0xff00, 0xb000)) return InstructionType::FMT13;
+		if(PATTERN(0xf600, 0xb400)) return InstructionType::FMT14;
+		if(PATTERN(0xf000, 0xc000)) return InstructionType::FMT15;
+		if(PATTERN(0xff00, 0xdf00)) return InstructionType::FMT17;
+		if(PATTERN(0xf000, 0xd000)) return InstructionType::FMT16;
+		if(PATTERN(0xf800, 0xe000)) return InstructionType::FMT18;
+		if(PATTERN(0xf000, 0xf000)) return InstructionType::FMT19;
 
 		return InstructionType::UD;
 	}
-	#undef PATTERN
+#undef PATTERN
 
 	class InstructionFormat1 {
 		uint16 m_data;
 	public:
 		InstructionFormat1(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		uint16 raw() const {
 			return m_data;
@@ -76,7 +76,7 @@ namespace THUMB {
 		}
 
 		uint8 destination_reg() const {
-			return (m_data) & 0b111;
+			return (m_data)&0b111;
 		}
 	};
 
@@ -84,7 +84,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat2(uint16 data)
-				: m_data(data) {}
+		    : m_data(data) {}
 
 		bool immediate_is_value() const {
 			return m_data & (1u << 10u);
@@ -103,7 +103,7 @@ namespace THUMB {
 		}
 
 		uint8 destination_reg() const {
-			return (m_data) & 0b111;
+			return (m_data)&0b111;
 		}
 	};
 
@@ -111,7 +111,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat3(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		uint8 opcode() const {
 			return (m_data >> 11u) & 0b11;
@@ -130,7 +130,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat4(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		uint8 opcode() const {
 			return (m_data >> 6u) & 0xF;
@@ -149,7 +149,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat5(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		uint8 opcode() const {
 			return (m_data >> 8u) & 0b11;
@@ -168,7 +168,7 @@ namespace THUMB {
 		}
 
 		uint8 destination_reg() const {
-			return ((m_data) & 0b111) | (MSBd() ? 0x8 : 0);
+			return ((m_data)&0b111) | (MSBd() ? 0x8 : 0);
 		}
 	};
 
@@ -176,7 +176,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat6(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		uint8 destination_reg() const {
 			return (m_data >> 8u) & 0b111u;
@@ -185,14 +185,13 @@ namespace THUMB {
 		uint8 immediate() const {
 			return m_data & 0xFF;
 		}
-
 	};
 
 	class InstructionFormat7 {
 		uint16 m_data;
 	public:
 		InstructionFormat7(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		bool load_from_memory() const {
 			return m_data & (1u << 11u);
@@ -211,16 +210,15 @@ namespace THUMB {
 		}
 
 		uint8 target_reg() const {
-			return (m_data) & 0b111;
+			return (m_data)&0b111;
 		}
-
 	};
 
 	class InstructionFormat8 {
 		uint16 m_data;
 	public:
 		InstructionFormat8(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		bool h_flag() const {
 			return m_data & (1u << 11u);
@@ -243,16 +241,15 @@ namespace THUMB {
 		}
 
 		uint8 destination_reg() const {
-			return (m_data) & 0b111;
+			return (m_data)&0b111;
 		}
-
 	};
 
 	class InstructionFormat9 {
 		uint16 m_data;
 	public:
 		InstructionFormat9(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		bool load_from_memory() const {
 			return m_data & (1u << 11u);
@@ -271,7 +268,7 @@ namespace THUMB {
 		}
 
 		uint8 target_reg() const {
-			return (m_data) & 0b111;
+			return (m_data)&0b111;
 		}
 	};
 
@@ -279,7 +276,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat10(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		bool load_from_memory() const {
 			return m_data & (1u << 11u);
@@ -294,7 +291,7 @@ namespace THUMB {
 		}
 
 		uint8 target_reg() const {
-			return (m_data) & 0b111;
+			return (m_data)&0b111;
 		}
 	};
 
@@ -302,7 +299,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat11(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		bool load_from_memory() const {
 			return m_data & (1u << 11u);
@@ -321,7 +318,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat12(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		bool source_is_sp() const {
 			return m_data & (1u << 11u);
@@ -340,7 +337,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat13(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		bool offset_is_negative() const {
 			return m_data & (1u << 7u);
@@ -355,7 +352,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat14(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		bool load_from_memory() const {
 			return m_data & (1u << 11u);
@@ -366,8 +363,10 @@ namespace THUMB {
 		}
 
 		bool is_register_in_list(uint8 reg) {
-			if(reg > 7) return false;
-			else return m_data & (1u << reg);
+			if(reg > 7)
+				return false;
+			else
+				return m_data & (1u << reg);
 		}
 	};
 
@@ -375,7 +374,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat15(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		bool load_from_memory() const {
 			return m_data & (1u << 11u);
@@ -386,8 +385,10 @@ namespace THUMB {
 		}
 
 		bool is_register_in_list(uint8 reg) const {
-			if(reg > 7) return false;
-			else return m_data & (1u << reg);
+			if(reg > 7)
+				return false;
+			else
+				return m_data & (1u << reg);
 		}
 
 		bool is_rlist_empty() const {
@@ -412,7 +413,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat16(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		ARM::InstructionCondition condition() const {
 			return static_cast<ARM::InstructionCondition>((m_data >> 8u) & 0b1111u);
@@ -427,7 +428,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat17(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		uint8 comment() const {
 			return m_data & 0xFF;
@@ -438,7 +439,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat18(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		uint16 offset() const {
 			return m_data & 0x7ff;
@@ -449,7 +450,7 @@ namespace THUMB {
 		uint16 m_data;
 	public:
 		InstructionFormat19(uint16 data)
-		: m_data(data) {}
+		    : m_data(data) {}
 
 		bool low() const {
 			return m_data & (1u << 11u);

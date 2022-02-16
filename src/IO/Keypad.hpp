@@ -1,6 +1,6 @@
 #pragma once
-#include "MMU/IOReg.hpp"
 #include "IO/PPU.hpp"
+#include "MMU/IOReg.hpp"
 
 class Keypad final : public IOReg16<0x04000130> {
 	void on_write(uint16) override {}
@@ -20,11 +20,10 @@ public:
 
 	void set(KeypadKey key, State state) {
 		const uint16 mask = (1u << (uint16)key);
-		const uint16 val  = m_register & ~mask;
+		const uint16 val = m_register & ~mask;
 		m_register = val | (state == State::Pressed ? 0 : mask);
 	}
 };
-
 
 class KeypadCnt final : public IOReg16<0x04000132> {
 	void on_write(uint16 new_value) override {

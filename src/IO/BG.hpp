@@ -7,7 +7,6 @@ struct __BGExtraVars {
 	static_assert(n < 4, "Invalid BG number");
 };
 
-
 template<>
 struct __BGExtraVars<2> {
 	IOReg16<0x04000020> m_dx;
@@ -18,7 +17,6 @@ struct __BGExtraVars<2> {
 	IOReg32<0x0400002C> m_refy;
 };
 
-
 template<>
 struct __BGExtraVars<3> {
 	IOReg16<0x04000030> m_dx;
@@ -28,7 +26,6 @@ struct __BGExtraVars<3> {
 	IOReg32<0x04000038> m_refx;
 	IOReg32<0x0400003C> m_refy;
 };
-
 
 template<unsigned address>
 class OffsetReg final : public IOReg16<address> {
@@ -42,12 +39,11 @@ class OffsetReg final : public IOReg16<address> {
 	}
 };
 
-
 template<unsigned x, unsigned address>
 class BGCNT final : public IOReg16<address> {
 	void on_write(uint16 val) override {
 		constexpr const uint32 mask = (x == 0 || x == 1) ? 0xDFFF
-														 : 0xFFFF;
+		                                                 : 0xFFFF;
 		this->m_register = val & mask;
 	}
 public:
@@ -60,7 +56,6 @@ public:
 	}
 };
 
-
 template<unsigned n>
 struct BG : public __BGExtraVars<n> {
 private:
@@ -70,5 +65,5 @@ private:
 public:
 	BGCNT<n, ctl_addr> m_control;
 	OffsetReg<xy_base> m_xoffset;
-	OffsetReg<xy_base+2> m_yoffset;
+	OffsetReg<xy_base + 2> m_yoffset;
 };

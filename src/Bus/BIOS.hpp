@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include "Headers/StdTypes.hpp"
 #include "MMU/BusDevice.hpp"
 #include "MMU/ReaderArray.hpp"
@@ -6,9 +7,11 @@
 class BIOS final : public BusDevice {
 	ReaderArray<0x4000> m_bios;
 public:
-	BIOS() : BusDevice(0x00000000, 0x00004000), m_bios() {}
+	BIOS()
+	    : BusDevice(0x00000000, 0x00004000)
+	    , m_bios() {}
 
-	void from_vec(Vector<uint8> const& vec) {
+	void from_vec(std::vector<uint8> const& vec) {
 		assert(vec.size() == 0x4000);
 		std::memcpy(&m_bios.array()[0], &vec[0], 0x4000);
 	}
@@ -22,7 +25,7 @@ public:
 	}
 
 	uint16 read16(uint32 offset) override {
-		if(offset >= m_bios.size() || offset+1 >= m_bios.size()) {
+		if(offset >= m_bios.size() || offset + 1 >= m_bios.size()) {
 			//  FIXME: unreadable I/O register
 			return 0xBABE;
 		}
@@ -30,7 +33,7 @@ public:
 	}
 
 	uint32 read32(uint32 offset) override {
-		if(offset >= m_bios.size() || offset+3 >= m_bios.size()) {
+		if(offset >= m_bios.size() || offset + 3 >= m_bios.size()) {
 			//  FIXME: unreadable I/O register
 			return 0xBABEBABE;
 		}

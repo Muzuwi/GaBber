@@ -1,6 +1,6 @@
+#include "CPU/ARM7TDMI.hpp"
 #include "Debugger/WindowDefinitions.hpp"
 #include "Headers/GaBber.hpp"
-#include "CPU/ARM7TDMI.hpp"
 
 void IORegisters::draw_window() {
 	if(ImGui::BeginTabBar("ioreg_tabs")) {
@@ -23,7 +23,7 @@ void IORegisters::draw_window() {
 		ImGui::EndTabBar();
 	}
 
-	switch (m_which_tab) {
+	switch(m_which_tab) {
 		case WindowTab::Interrupts: this->draw_interrupts(); break;
 		case WindowTab::PPU: this->draw_ppu(); break;
 		case WindowTab::Sound: this->draw_sound(); break;
@@ -49,8 +49,10 @@ void IORegisters::draw_interrupts() {
 	}
 
 	ImGui::NewLine();
-	ImGui::SameLine(106.0f); ImGui::Text("IE");
-	ImGui::SameLine(156.0f); ImGui::Text("IF");
+	ImGui::SameLine(106.0f);
+	ImGui::Text("IE");
+	ImGui::SameLine(156.0f);
+	ImGui::Text("IF");
 	for(unsigned i = 0; i < 14; ++i) {
 		ImGui::Text("%s", labels[i]);
 		ImGui::SameLine(100.0f);
@@ -69,17 +71,18 @@ void IORegisters::draw_interrupts() {
 	ImGui::Checkbox("##ime", &ime);
 	ImGui::Text("Wait cycles: %d\n", cpu.m_wait_cycles);
 
-	ImGui::PlotLines("Cycle count per state update",
-	                 [](void* data, int index) -> float {
-		                 return static_cast<float>(reinterpret_cast<unsigned*>(data)[index]);
-	                 },
-	                 (void*)&GaBber::instance().cycle_samples()[0],
-	                 GaBber::instance().cycle_samples().size(),
-					 0,
-					 nullptr,
-					 0,
-					 100,
-					 ImVec2(800.0, 200.0));
+	ImGui::PlotLines(
+	        "Cycle count per state update",
+	        [](void* data, int index) -> float {
+		        return static_cast<float>(reinterpret_cast<unsigned*>(data)[index]);
+	        },
+	        (void*)&GaBber::instance().cycle_samples()[0],
+	        GaBber::instance().cycle_samples().size(),
+	        0,
+	        nullptr,
+	        0,
+	        100,
+	        ImVec2(800.0, 200.0));
 }
 
 void IORegisters::draw_ppu() {
@@ -94,43 +97,52 @@ void IORegisters::draw_ppu() {
 		ImGui::Text("OBJ Mapping: %s", ctl->obj_one_dim ? "One-dimensional" : "Two-dimensional");
 		ImGui::Text("Forced blank: %d", ctl->forced_blank);
 		bool values[5] = {
-				ctl->BG0,
-				ctl->BG1,
-				ctl->BG2,
-				ctl->BG3,
-				ctl->OBJ
+			ctl->BG0,
+			ctl->BG1,
+			ctl->BG2,
+			ctl->BG3,
+			ctl->OBJ
 		};
-		ImGui::Checkbox("BG0", &values[0]); ImGui::SameLine();
-		ImGui::Checkbox("BG1", &values[1]); ImGui::SameLine();
-		ImGui::Checkbox("BG2", &values[2]); ImGui::SameLine();
-		ImGui::Checkbox("BG3", &values[3]); ImGui::SameLine();
+		ImGui::Checkbox("BG0", &values[0]);
+		ImGui::SameLine();
+		ImGui::Checkbox("BG1", &values[1]);
+		ImGui::SameLine();
+		ImGui::Checkbox("BG2", &values[2]);
+		ImGui::SameLine();
+		ImGui::Checkbox("BG3", &values[3]);
+		ImGui::SameLine();
 		ImGui::Checkbox("OBJ", &values[4]);
 
 		bool windowValues[3] = {
-				ctl->window0,
-				ctl->window1,
-				ctl->objWindow
+			ctl->window0,
+			ctl->window1,
+			ctl->objWindow
 		};
-		ImGui::Checkbox("Window 0", &windowValues[0]); ImGui::SameLine();
-		ImGui::Checkbox("Window 1", &windowValues[1]); ImGui::SameLine();
+		ImGui::Checkbox("Window 0", &windowValues[0]);
+		ImGui::SameLine();
+		ImGui::Checkbox("Window 1", &windowValues[1]);
+		ImGui::SameLine();
 		ImGui::Checkbox("OBJ Window", &windowValues[2]);
 	};
 	auto draw_dispstat = [this] {
 		auto& stat = m_emu.mem().io.dispstat;
 		bool values[] = {
-				stat->VBlank,
-				stat->HBlank,
-				stat->VCounter,
-				stat->VBlank_IRQ,
-				stat->HBlank_IRQ,
-				stat->VCounter_IRQ
+			stat->VBlank,
+			stat->HBlank,
+			stat->VCounter,
+			stat->VBlank_IRQ,
+			stat->HBlank_IRQ,
+			stat->VCounter_IRQ
 		};
 
-		ImGui::Checkbox("VBlank", &values[0]); ImGui::SameLine();
+		ImGui::Checkbox("VBlank", &values[0]);
+		ImGui::SameLine();
 		ImGui::Checkbox("IRQ", &values[3]);
-		ImGui::Checkbox("HBlank", &values[1]); ImGui::SameLine();
+		ImGui::Checkbox("HBlank", &values[1]);
+		ImGui::SameLine();
 		ImGui::Checkbox("IRQ", &values[4]);
-		ImGui::Checkbox("VCounter", &values[2]); ImGui::SameLine();
+		ImGui::Checkbox("VCounter", &values[2]);
+		ImGui::SameLine();
 		ImGui::Checkbox("IRQ", &values[5]);
 		ImGui::Text("LYC: %d", stat->VCounter);
 		ImGui::Text("LY: %d", *m_emu.mem().io.vcount);
@@ -195,8 +207,10 @@ void IORegisters::draw_ppu() {
 	ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0, 5.0));
 	if(ImGui::BeginTable("dispcntstat", 2, ImGuiTableFlags_Borders)) {
 		ImGui::TableNextRow();
-		ImGui::TableNextColumn(); ImGui::TableHeader("DISPCNT");
-		ImGui::TableNextColumn(); ImGui::TableHeader("DISPSTAT");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("DISPCNT");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("DISPSTAT");
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
@@ -214,8 +228,10 @@ void IORegisters::draw_ppu() {
 	ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0, 5.0));
 	if(ImGui::BeginTable("pputab", 2, ImGuiTableFlags_Borders)) {
 		ImGui::TableNextRow();
-		ImGui::TableNextColumn(); ImGui::TableHeader("BG0");
-		ImGui::TableNextColumn(); ImGui::TableHeader("BG1");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("BG0");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("BG1");
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
@@ -228,8 +244,10 @@ void IORegisters::draw_ppu() {
 		}
 
 		ImGui::TableNextRow();
-		ImGui::TableNextColumn(); ImGui::TableHeader("BG2");
-		ImGui::TableNextColumn(); ImGui::TableHeader("BG3");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("BG2");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("BG3");
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
@@ -244,7 +262,6 @@ void IORegisters::draw_ppu() {
 		ImGui::EndTable();
 	}
 	ImGui::PopStyleVar(1);
-
 }
 
 void IORegisters::draw_sound() {
@@ -253,8 +270,10 @@ void IORegisters::draw_sound() {
 	ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0, 5.0));
 	if(ImGui::BeginTable("soundtab", 2, ImGuiTableFlags_Borders)) {
 		ImGui::TableNextRow();
-		ImGui::TableNextColumn(); ImGui::TableHeader("Channel 1");
-		ImGui::TableNextColumn(); ImGui::TableHeader("Channel 2");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("Channel 1");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("Channel 2");
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
@@ -272,8 +291,10 @@ void IORegisters::draw_sound() {
 		}
 
 		ImGui::TableNextRow();
-		ImGui::TableNextColumn(); ImGui::TableHeader("Channel 3");
-		ImGui::TableNextColumn(); ImGui::TableHeader("Channel 4");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("Channel 3");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("Channel 4");
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
@@ -292,15 +313,17 @@ void IORegisters::draw_sound() {
 	ImGui::PopStyleVar(1);
 
 	const char* strings[] = {
-			"1", "2", "3", "4"
+		"1", "2", "3", "4"
 	};
-	ImGui::Text("Channels [L]: "); ImGui::SameLine();
+	ImGui::Text("Channels [L]: ");
+	ImGui::SameLine();
 	for(unsigned i = 0; i < 4; ++i) {
 		bool v = io.soundctlL->channel_enable_l & (1 << i);
 		ImGui::Checkbox(strings[i], &v);
 		if(i != 3) ImGui::SameLine();
 	}
-	ImGui::Text("Channels [R]: "); ImGui::SameLine();
+	ImGui::Text("Channels [R]: ");
+	ImGui::SameLine();
 	for(unsigned i = 0; i < 4; ++i) {
 		bool v = io.soundctlL->channel_enable_r & (1 << i);
 		ImGui::Checkbox(strings[i], &v);
@@ -309,24 +332,25 @@ void IORegisters::draw_sound() {
 
 	int vol_l = io.soundctlL->volume_l;
 	int vol_r = io.soundctlL->volume_r;
-	ImGui::Text("Volume [L]"); ImGui::SameLine();
+	ImGui::Text("Volume [L]");
+	ImGui::SameLine();
 	ImGui::PushID("volL");
 	ImGui::SliderInt("", &vol_l, 0, 7);
 	ImGui::PopID();
 
-	ImGui::Text("Volume [R]"); ImGui::SameLine();
+	ImGui::Text("Volume [R]");
+	ImGui::SameLine();
 	ImGui::PushID("volR");
 	ImGui::SliderInt("", &vol_r, 0, 7);
 	ImGui::PopID();
 
 	ImGui::PlotLines("Internal samples @ 262.144kHz",
-					 &GaBber::instance().sound().internal_samples()[0],
-					 GaBber::instance().sound().internal_samples().size(),
-					 0,
-					 nullptr,
-					 -1.0,
-					 1.0, ImVec2(800.0, 100.0));
-
+	                 &GaBber::instance().sound().internal_samples()[0],
+	                 GaBber::instance().sound().internal_samples().size(),
+	                 0,
+	                 nullptr,
+	                 -1.0,
+	                 1.0, ImVec2(800.0, 100.0));
 }
 
 void IORegisters::draw_dma() {
@@ -335,8 +359,6 @@ void IORegisters::draw_dma() {
 	DMAx<1> const& dma1 = cpu.io.dma1;
 	DMAx<2> const& dma2 = cpu.io.dma2;
 	DMAx<3> const& dma3 = cpu.io.dma3;
-
-
 
 	auto draw_dma_stats = []<const unsigned n>(DMAx<n> const& dma) {
 		bool active = dma.m_is_running;
@@ -353,7 +375,7 @@ void IORegisters::draw_dma() {
 
 		auto timing = dma.m_ctrl->start_timing;
 		auto timing_str = [](DMAStartTiming timing) -> const char* {
-			switch (timing) {
+			switch(timing) {
 				case DMAStartTiming::HBlank:
 					return "HBlank";
 				case DMAStartTiming::VBlank:
@@ -374,14 +396,15 @@ void IORegisters::draw_dma() {
 
 		ImGui::Text("Internal Source: %08x", dma.m_source_ptr);
 		ImGui::Text("Internal Destination: %08x", dma.m_destination_ptr);
-
 	};
 
 	ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5.0, 5.0));
 	if(ImGui::BeginTable("dmatab", 2, ImGuiTableFlags_Borders)) {
 		ImGui::TableNextRow();
-		ImGui::TableNextColumn(); ImGui::TableHeader("DMA0");
-		ImGui::TableNextColumn(); ImGui::TableHeader("DMA1");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("DMA0");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("DMA1");
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
@@ -390,8 +413,10 @@ void IORegisters::draw_dma() {
 		draw_dma_stats(dma1);
 
 		ImGui::TableNextRow();
-		ImGui::TableNextColumn(); ImGui::TableHeader("DMA2");
-		ImGui::TableNextColumn(); ImGui::TableHeader("DMA3");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("DMA2");
+		ImGui::TableNextColumn();
+		ImGui::TableHeader("DMA3");
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
@@ -402,5 +427,4 @@ void IORegisters::draw_dma() {
 		ImGui::EndTable();
 	}
 	ImGui::PopStyleVar(1);
-
 }

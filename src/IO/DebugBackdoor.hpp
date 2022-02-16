@@ -1,14 +1,15 @@
 #pragma once
 #include <algorithm>
-#include "MMU/ReaderArray.hpp"
 #include "MMU/IOReg.hpp"
+#include "MMU/ReaderArray.hpp"
 
 class DebugBackdoor final : public BusDevice {
 	static constexpr const unsigned bufsize = 0x60;
 	ReaderArray<bufsize> m_buffer;
 public:
 	DebugBackdoor()
-	: BusDevice(0x04fff600, 0x04fff600 + bufsize), m_buffer() {}
+	    : BusDevice(0x04fff600, 0x04fff600 + bufsize)
+	    , m_buffer() {}
 
 	uint32 read32(uint32 offset) override {
 		return m_buffer.read32(offset);
@@ -48,7 +49,6 @@ public:
 		return str;
 	}
 };
-
 
 class Backdoor final : public IOReg16<0x04fff700> {
 	DebugBackdoor m_backdoor;

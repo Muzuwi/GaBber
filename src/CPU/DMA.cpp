@@ -1,5 +1,5 @@
-#include "CPU/ARM7TDMI.hpp"
 #include "IO/DMA.hpp"
+#include "CPU/ARM7TDMI.hpp"
 
 void ARM7TDMI::dma_run_all() {
 	if(dma_is_running<0>()) {
@@ -20,7 +20,6 @@ void ARM7TDMI::dma_run_all() {
 	}
 }
 
-
 template<unsigned int x>
 void ARM7TDMI::dma_run() {
 	DMAx<x>& s = io.template dma_for_num<x>();
@@ -33,9 +32,9 @@ void ARM7TDMI::dma_run() {
 	while(s.m_count--) {
 		//  In FIFO mode, a 32-bit transfer is forced
 		const bool size_flag =
-				(s.m_ctrl->start_timing == DMAStartTiming::Special && (x == 1 || x == 2))
-				? true
-				: s.m_ctrl->transfer_size;
+		        (s.m_ctrl->start_timing == DMAStartTiming::Special && (x == 1 || x == 2))
+		                ? true
+		                : s.m_ctrl->transfer_size;
 
 		const uint32 data = (size_flag) ? mem_read32(s.m_source_ptr)
 		                                : mem_read16(s.m_source_ptr);
@@ -73,7 +72,7 @@ void ARM7TDMI::dma_run() {
 		s.m_ctrl->enable = false;
 	}
 
-	m_wait_cycles += 2/*N*/ + 2*(n-1)/*S*/ + 2/*I*/;
+	m_wait_cycles += 2 /*N*/ + 2 * (n - 1) /*S*/ + 2 /*I*/;
 }
 
 /*
@@ -101,7 +100,6 @@ void ARM7TDMI::dma_on_enable() {
 		s.m_is_running = true;
 	}
 }
-
 
 /*
  *  Called when a specified DMA transfer should be restarted (for start timings other than Immediate)
@@ -131,7 +129,6 @@ void ARM7TDMI::dma_resume() {
 		dma.m_destination_ptr = *dma.m_destination;
 	}
 }
-
 
 void ARM7TDMI::dma_start_vblank() {
 	DMAx<0>& dma0 = io.dma0;
@@ -186,15 +183,13 @@ void ARM7TDMI::dma_request_fifoA() {
 
 	if(dma1.m_ctrl->enable &&
 	   dma1.m_ctrl->start_timing == DMAStartTiming::Special &&
-	   *dma1.m_destination == address)
-	{
+	   *dma1.m_destination == address) {
 		dma_resume<1>();
 	}
 
 	if(dma2.m_ctrl->enable &&
 	   dma2.m_ctrl->start_timing == DMAStartTiming::Special &&
-	   *dma2.m_destination == address)
-	{
+	   *dma2.m_destination == address) {
 		dma_resume<2>();
 	}
 }
@@ -206,15 +201,13 @@ void ARM7TDMI::dma_request_fifoB() {
 
 	if(dma1.m_ctrl->enable &&
 	   dma1.m_ctrl->start_timing == DMAStartTiming::Special &&
-	   *dma1.m_destination == address)
-	{
+	   *dma1.m_destination == address) {
 		dma_resume<1>();
 	}
 
 	if(dma2.m_ctrl->enable &&
 	   dma2.m_ctrl->start_timing == DMAStartTiming::Special &&
-	   *dma2.m_destination == address)
-	{
+	   *dma2.m_destination == address) {
 		dma_resume<2>();
 	}
 }

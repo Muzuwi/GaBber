@@ -1,5 +1,5 @@
-#include <fmt/format.h>
 #include "Bus/SRAM/Flash.hpp"
+#include <fmt/format.h>
 
 uint8 Flash::read(uint32 offset) {
 	fmt::print("PakSRAM/ Read [{:x}]\n", offset);
@@ -53,8 +53,7 @@ void Flash::write(uint32 offset, uint8 value) {
 			} else if(value == 0xB0) {
 				fmt::print("PakSRAM/ Enter bank change mode\n");
 				m_mode = FlashChipMode::BankChange;
-			}
-			else {
+			} else {
 				fmt::print("PakSRAM/ Flash command id={:02x}\n", value);
 			}
 			m_reg2aaa = 0x0;

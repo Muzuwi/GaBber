@@ -15,7 +15,7 @@ class TestHarness {
 	bool test_validate_reg(RegState const&);
 	bool test_validate_flag(FlagState const&);
 	bool test_validate(Expectation const& expect) {
-		switch (expect.m_type) {
+		switch(expect.m_type) {
 			case ExpectType::Memory: return test_validate_mem(expect.m_data.m_mem_expect);
 			case ExpectType::Register: return test_validate_reg(expect.m_data.m_reg_expect);
 			case ExpectType::Flag: return test_validate_flag(expect.m_data.m_flag_expect);
@@ -27,7 +27,7 @@ class TestHarness {
 	void test_set_reg(RegState const&);
 	void test_set_flag(FlagState const&);
 	inline void test_set(InitialState const& expect) {
-		switch (expect.m_type) {
+		switch(expect.m_type) {
 			case ExpectType::Memory: {
 				test_set_mem(expect.m_data.m_mem_expect);
 				break;
@@ -46,7 +46,7 @@ class TestHarness {
 	void test_run(Test&);
 public:
 	TestHarness(GaBber& v)
-	: m_gba(v) {}
+	    : m_gba(v) {}
 
 	void run_emulator_tests();
 };

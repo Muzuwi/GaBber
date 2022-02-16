@@ -18,11 +18,11 @@ class Backgrounds {
 	void draw_mode4();
 	void draw_mode5();
 
-	template<unsigned n> constexpr BG<n>& current_bg();
+	template<unsigned n>
+	constexpr BG<n>& current_bg();
 public:
 	Backgrounds(PPU& v)
-	: m_ppu(v) {}
+	    : m_ppu(v) {}
 
 	void draw_scanline();
-
 };

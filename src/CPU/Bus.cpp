@@ -1,6 +1,6 @@
 #include "CPU/ARM7TDMI.hpp"
-#include "MMU/BusInterface.hpp"
 #include "Debugger/Debugger.hpp"
+#include "MMU/BusInterface.hpp"
 
 uint8 ARM7TDMI::mem_read8(uint32 address) const {
 	auto v = m_mmu.read8(address);
@@ -43,7 +43,6 @@ void ARM7TDMI::mem_write32(uint32 address, uint32 val) {
 	m_mmu.write32(address, val);
 	m_wait_cycles += m_mmu.last_wait_cycles() - 1;
 }
-
 
 uint32 ARM7TDMI::mem_read_arm_opcode(uint32 address) const {
 	auto v = m_mmu.read32(address);

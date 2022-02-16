@@ -1,12 +1,12 @@
+#include <imgui_internal.h>
 #include "Debugger/WindowDefinitions.hpp"
 #include "Headers/GaBber.hpp"
-#include <imgui_internal.h>
 
 void BreakpointControl::draw_window() {
 	auto& flag = m_emu.debugger().m_break_on_undefined;
 	ImGui::Checkbox("Break on undefined access", &flag);
 	ImGui::InputScalar("Address",
-					   ImGuiDataType_U32, &m_break.start, nullptr, nullptr, "%08x", ImGuiInputTextFlags_CharsHexadecimal);
+	                   ImGuiDataType_U32, &m_break.start, nullptr, nullptr, "%08x", ImGuiInputTextFlags_CharsHexadecimal);
 
 	bool R = m_break.type & BreakRead;
 	bool W = m_break.type & BreakWrite;
@@ -46,7 +46,7 @@ void BreakpointControl::draw_window() {
 
 		unsigned n = 0;
 		for(auto& breakpoint : m_emu.debugger().m_breakpoints) {
-			ImGui::Text("0x%08x - 0x%08x [%c%c%c]", breakpoint.start, breakpoint.start+breakpoint.size-1,
+			ImGui::Text("0x%08x - 0x%08x [%c%c%c]", breakpoint.start, breakpoint.start + breakpoint.size - 1,
 			            (breakpoint.type & BreakRead) ? 'R' : '-',
 			            (breakpoint.type & BreakWrite) ? 'W' : '-',
 			            (breakpoint.type & BreakExec) ? 'X' : '-');

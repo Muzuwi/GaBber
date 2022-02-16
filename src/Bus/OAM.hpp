@@ -10,7 +10,9 @@ class OAM final : public BusDevice {
 		return address & 0x3ff;
 	}
 public:
-	OAM() : BusDevice(0x07000000, 0x08000000), m_oam() {}
+	OAM()
+	    : BusDevice(0x07000000, 0x08000000)
+	    , m_oam() {}
 
 	uint8 read8(uint32 offset) override {
 		offset = mirror(offset);

@@ -5,8 +5,8 @@
 #include "IO/Interrupt.hpp"
 #include "IO/Keypad.hpp"
 #include "IO/PPU.hpp"
-#include "IO/Timer.hpp"
 #include "IO/Sound.hpp"
+#include "IO/Timer.hpp"
 #include "PPU/BG.hpp"
 
 struct IOContainer {
@@ -91,7 +91,7 @@ struct IOContainer {
 
 	template<unsigned x>
 	constexpr DMAx<x>& dma_for_num() {
-		if constexpr (x == 0)
+		if constexpr(x == 0)
 			return dma0;
 		else if constexpr(x == 1)
 			return dma1;
@@ -100,5 +100,4 @@ struct IOContainer {
 		else
 			return dma3;
 	}
-
 };

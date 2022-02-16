@@ -1,16 +1,16 @@
 #pragma once
-#include <SDL.h>
+#include <array>
 #include <GL/glew.h>
-#include "Debugger/Debugger.hpp"
+#include <SDL.h>
 #include "CPU/ARM7TDMI.hpp"
+#include "Debugger/Debugger.hpp"
+#include "Headers/Config.hpp"
+#include "Headers/ShellFlags.hpp"
 #include "MMU/BusInterface.hpp"
 #include "MMU/MemoryLayout.hpp"
 #include "PPU/PPU.hpp"
-#include "Tests/Harness.hpp"
 #include "Sound/GBASound.hpp"
-#include "Headers/ShellFlags.hpp"
-#include "Headers/Config.hpp"
-
+#include "Tests/Harness.hpp"
 
 class GaBber {
 	std::string m_rom_filename;
@@ -21,21 +21,21 @@ class GaBber {
 	BusInterface m_mmu;
 	ARM7TDMI m_cpu;
 	PPU m_ppu;
-    TestHarness m_test_harness;
-    MemoryLayout m_mem;
+	TestHarness m_test_harness;
+	MemoryLayout m_mem;
 	GBASound m_sound;
 	bool m_test_mode;
-	bool m_running {true};
-	bool m_do_step {false};
+	bool m_running { true };
+	bool m_do_step { false };
 
 	bool m_closed;
 	SDL_Window* m_gabberWindow;
 	SDL_GLContext m_gabberGLContext;
-	float m_last_frame_time {0.001f};
-	unsigned m_window_scale {5};
+	float m_last_frame_time { 0.001f };
+	unsigned m_window_scale { 5 };
 	GLuint m_fb, m_gba_texture;
 	unsigned m_current_sample;
-	Array<unsigned, 10000> m_cycle_samples;
+	std::array<unsigned, 10000> m_cycle_samples;
 	ShellFlags m_shell_flags;
 
 	void _disp_create_gl_state();
@@ -56,7 +56,11 @@ class GaBber {
 	void emulator_close();
 
 	GaBber()
-	: m_debugger(*this), m_mmu(), m_cpu(m_mmu, m_debugger, m_mem.io), m_ppu(m_cpu, m_mem), m_test_harness(*this) {}
+	    : m_debugger(*this)
+	    , m_mmu()
+	    , m_cpu(m_mmu, m_debugger, m_mem.io)
+	    , m_ppu(m_cpu, m_mem)
+	    , m_test_harness(*this) {}
 public:
 	static GaBber& instance() {
 		static GaBber emu;
@@ -64,9 +68,9 @@ public:
 	}
 
 	void parse_args(int argc, char** argv);
-    int start();
+	int start();
 
-    BusInterface& mmu() { return m_mmu; }
+	BusInterface& mmu() { return m_mmu; }
 	ARM7TDMI& cpu() { return m_cpu; }
 	PPU& ppu() { return m_ppu; }
 	Debugger& debugger() { return m_debugger; }
@@ -83,8 +87,7 @@ public:
 	void single_step() { m_do_step = true; }
 	void resume() { m_running = true; }
 
-	Array<unsigned, 10000> const& cycle_samples() const {
+	std::array<unsigned, 10000> const& cycle_samples() const {
 		return m_cycle_samples;
 	}
-
 };

@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <deque>
 #include <SDL_audio.h>
 #include "Headers/StdTypes.hpp"
@@ -27,7 +28,7 @@ class GBASound {
 	friend class Sound1CtlH;
 	static constexpr const unsigned psg_sample_rate = 262144;
 	static constexpr const unsigned output_sample_rate = 48000;
-	static constexpr const double requested_latency = 0.02;     //  in seconds
+	static constexpr const double requested_latency = 0.02;//  in seconds
 
 	static constexpr const unsigned psg_sample_count = (unsigned)(psg_sample_rate * requested_latency) * 2;
 	static constexpr const unsigned output_sample_count = (unsigned)(output_sample_rate * requested_latency) * 2;
@@ -35,16 +36,16 @@ class GBASound {
 	static_assert(output_sample_count % 2 == 0, "Invalid output sample count. Should be a multiple of 2 (L+R).");
 
 	static constexpr const float duty_lookup[4] = {
-			0.125f, 0.25f, 0.5f, 0.75f
+		0.125f, 0.25f, 0.5f, 0.75f
 	};
 
 	SDL_AudioSpec m_device_spec;
 	SDL_AudioDeviceID m_device;
 	SDL_AudioCVT m_out_converter;
 
-	Array<float, psg_sample_count> m_internal_samples;
+	std::array<float, psg_sample_count> m_internal_samples;
 	unsigned m_current_sample;
-	int m_speed_scale {1};
+	int m_speed_scale { 1 };
 
 	uint64 m_cycles;
 	SoundData m_square1;
@@ -72,7 +73,7 @@ public:
 	void init();
 	void cycle();
 
-	Array<float, psg_sample_count> const& internal_samples() const {
+	std::array<float, psg_sample_count> const& internal_samples() const {
 		return m_internal_samples;
 	}
 

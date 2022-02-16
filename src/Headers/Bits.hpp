@@ -20,10 +20,10 @@ namespace Bits {
 	/*
 	 *  Rotates the specified 32-bit value right 'c' times
 	 */
-	inline uint32 rotr32 (uint32 n, unsigned int c) {
+	inline uint32 rotr32(uint32 n, unsigned int c) {
 		const unsigned int mask = (std::numeric_limits<uint32>::digits - 1);
 		c &= mask;
-		return (n>>c) | (n<<( (-c)&mask ));
+		return (n >> c) | (n << ((-c) & mask));
 	}
 
 	/*
@@ -41,7 +41,7 @@ namespace Bits {
 	template<unsigned n>
 	constexpr uint8 byte_le(uint32 val) {
 		static_assert(n < 4);
-		return (val >> (n*8)) & 0xFFu;
+		return (val >> (n * 8)) & 0xFFu;
 	}
 
 	/*

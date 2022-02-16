@@ -5,7 +5,7 @@
 void MemEditor::draw_window() {
 	static BusInterface& mmu = this->m_emu.mmu();
 	static uint32 start = 0;
-	static uint32 size  = 0x4000;
+	static uint32 size = 0x4000;
 
 	ImGui::SetWindowSize(ImVec2(720.0f, 600.0f));
 
@@ -66,4 +66,3 @@ void MemEditor::draw_window() {
 	};
 	m_editor.DrawContents((void*)start, size, start);
 }
-

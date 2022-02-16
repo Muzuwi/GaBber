@@ -1,12 +1,10 @@
-#include "Headers/GaBber.hpp"
 #include "IO/Sound.hpp"
+#include <array>
+#include "Headers/GaBber.hpp"
 
 uint32 SoundCtlX::on_read() {
 	auto& gbasound = GaBber::instance().sound();
-	return (m_register & readable_mask)
-		   | (gbasound.m_square1.running ? 0b0001 : 0)
-	       | (gbasound.m_square2.running ? 0b0010 : 0)
-	       | (0)    //  FIXME: Implement
+	return (m_register & readable_mask) | (gbasound.m_square1.running ? 0b0001 : 0) | (gbasound.m_square2.running ? 0b0010 : 0) | (0)//  FIXME: Implement
 	       | (gbasound.m_wave.running ? 0b1000 : 0);
 }
 
@@ -48,7 +46,7 @@ void Sound3CtlX::on_write(uint32 new_value) {
 	}
 }
 
-Array<uint8, 16>& Sound3Bank::current_bank() {
+std::array<uint8, 16>& Sound3Bank::current_bank() {
 	return GaBber::instance().mem().io.ch3ctlL->bank ? m_bank0 : m_bank1;
 }
 

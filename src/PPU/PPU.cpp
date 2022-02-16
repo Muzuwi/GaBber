@@ -1,9 +1,12 @@
+#include "PPU/PPU.hpp"
+#include <optional>
 #include "CPU/ARM7TDMI.hpp"
 #include "MMU/BusInterface.hpp"
-#include "PPU/PPU.hpp"
 
 PPU::PPU(ARM7TDMI& a, MemoryLayout& mem_)
-: cpu(a), mem(mem_), m_backgrounds(*this) {
+    : cpu(a)
+    , mem(mem_)
+    , m_backgrounds(*this) {
 }
 
 bool PPU::is_HBlank() const {
@@ -14,8 +17,8 @@ bool PPU::is_VBlank() const {
 	return vcount() >= 160 && vcount() <= 227;
 }
 
-static unsigned global_cycles {0};
-static unsigned current_scanline_position {0};
+static unsigned global_cycles { 0 };
+static unsigned current_scanline_position { 0 };
 
 void PPU::next_scanline() {
 	current_scanline_position = 0;
@@ -48,7 +51,7 @@ void PPU::next_scanline() {
 void PPU::cycle() {
 	global_cycles++;
 
-	static unsigned pixel_cycles {0};
+	static unsigned pixel_cycles { 0 };
 	if(++pixel_cycles != 4)
 		return;
 
@@ -122,7 +125,7 @@ void PPU::objects_draw_line(uint16 ly) {
 		return;
 
 	for(unsigned i = 0; i < 128; ++i) {
-		Optional<OBJAttr> obj = get_obj_attrs(i);
+		std::optional<OBJAttr> obj = get_obj_attrs(i);
 		if(!obj.has_value())
 			continue;
 		if(!obj->contains_line(ly))
@@ -135,7 +138,7 @@ void PPU::objects_draw_line(uint16 ly) {
 }
 
 void PPU::objects_draw_obj(uint16 ly, OBJAttr obj) {
- 	//  FIXME: Include other missed flags (mosaic...)
+	//  FIXME: Include other missed flags (mosaic...)
 	const bool yflip = !obj.attr0.rot_scale && (obj.attr1.flags & (1u << 4u));
 	const bool xflip = !obj.attr0.rot_scale && (obj.attr1.flags & (1u << 3u));
 
@@ -170,20 +173,21 @@ void PPU::objects_draw_obj(uint16 ly, OBJAttr obj) {
 		}
 
 		const uint16 tile = base_tile + (xflip ? (tile_width - 1 - (i / 8))
-											   : (i / 8)) * color_depth_mult;
+		                                       : (i / 8)) *
+		                                        color_depth_mult;
 		const unsigned x = xflip ? (7 - (i % 8))
-								 : (i % 8);
+		                         : (i % 8);
 
 		const uint8 dot = get_obj_tile_dot(tile, line_in_current_row, x, obj.attr0.color_mode);
 		const auto palette = obj.attr0.color_mode ? 0 : obj.attr2.palette_number;
-		const Optional<Color> color = get_obj_palette_color(palette, dot);
+		const std::optional<Color> color = get_obj_palette_color(palette, dot);
 		assert(color.has_value());
- 		colorbuffer_write_obj(obj.attr1.pos_x + i, dot, obj.attr2.priority, *color);
+		colorbuffer_write_obj(obj.attr1.pos_x + i, dot, obj.attr2.priority, *color);
 	}
 }
 
 void PPU::colorbuffer_blit() {
-	const Optional<Color> backdrop = get_palette_color(0, 0);
+	const std::optional<Color> backdrop = get_palette_color(0, 0);
 	assert(backdrop.has_value());
 
 	for(unsigned i = 0; i < 240; ++i) {
@@ -204,8 +208,7 @@ void PPU::colorbuffer_blit() {
 	}
 
 	std::memset(
-			&m_colorbuffer[0],
-			0x0,
-			8 * 240 * sizeof(Dot)
-			);
+	        &m_colorbuffer[0],
+	        0x0,
+	        8 * 240 * sizeof(Dot));
 }

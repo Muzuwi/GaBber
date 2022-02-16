@@ -19,7 +19,7 @@ void ARM7TDMI::enter_swi() {
 	cspr().set_mode(PRIV_MODE::SVC);
 	cspr().set(CSPR_REGISTERS::IRQn, true);
 	pc() = 0x08;
-	m_wait_cycles += 2/*S*/ + 1/*N*/;
+	m_wait_cycles += 2 /*S*/ + 1 /*N*/;
 }
 
 void ARM7TDMI::raise_irq(IRQType type) {
@@ -33,7 +33,7 @@ bool ARM7TDMI::handle_halt() {
 		return false;
 
 	if(io.haltcnt.m_halt) {
-		if ((*io.ie & *io.if_) != 0) {
+		if((*io.ie & *io.if_) != 0) {
 			io.haltcnt.m_halt = false;
 			return false;
 		} else {
@@ -45,7 +45,7 @@ bool ARM7TDMI::handle_halt() {
 }
 
 void ARM7TDMI::handle_interrupts() {
-	if (!irqs_enabled_globally())
+	if(!irqs_enabled_globally())
 		return;
 
 	const uint16 result = *io.if_ & *io.ie;

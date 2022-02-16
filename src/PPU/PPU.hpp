@@ -27,7 +27,7 @@ class PPU {
 	bool is_VBlank() const;
 
 	template<typename... Args>
-	void log(const char* format, const Args& ...args) const {
+	void log(const char* format, const Args&... args) const {
 		return;
 		fmt::print("\u001b[35mPPU/");
 		fmt::vprint(format, fmt::make_format_args(args...));
@@ -40,7 +40,7 @@ class PPU {
 	}
 
 	inline OBJAttr get_obj_attrs(uint8 obj) const {
-		return mem.oam.readT<OBJAttr>(obj*8);
+		return mem.oam.readT<OBJAttr>(obj * 8);
 	}
 
 	inline Color get_palette_color(uint8 palette_number, uint16 color) const {
@@ -52,13 +52,13 @@ class PPU {
 	}
 
 	inline TextScreenData get_bg_text_data(uint32 screen_base, uint16 ly, uint16 dot) const {
-		return mem.vram.readT<TextScreenData>(screen_base + (ly/8)*0x40 + (dot/8)*2);
+		return mem.vram.readT<TextScreenData>(screen_base + (ly / 8) * 0x40 + (dot / 8) * 2);
 	}
 
 	inline uint8 get_bg_tile_dot(uint32 base, uint16 tile, uint8 ly_in_tile, uint8 dot_in_tile, bool depth_flag) const {
 		const unsigned d = depth_flag ? 1 : 2;
-		const unsigned offset_to_tile = tile * (64/d);
-		const unsigned offset_to_dot = ly_in_tile * (8/d) + (dot_in_tile/d);
+		const unsigned offset_to_tile = tile * (64 / d);
+		const unsigned offset_to_dot = ly_in_tile * (8 / d) + (dot_in_tile / d);
 
 		uint8 byte = mem.vram.readT<uint8>(base + offset_to_tile + offset_to_dot);
 		if(!depth_flag) {
@@ -75,7 +75,7 @@ class PPU {
 
 		const unsigned d = depth_flag ? 1 : 2;
 		const unsigned offset_to_tile = tile * 32;
-		const unsigned offset_to_dot = ly_in_tile * (8/d) + (dot_in_tile/d);
+		const unsigned offset_to_dot = ly_in_tile * (8 / d) + (dot_in_tile / d);
 
 		uint8 byte = mem.vram.readT<uint8>(base + offset_to_tile + offset_to_dot);
 		if(!depth_flag) {
@@ -96,11 +96,11 @@ class PPU {
 			return;
 		}
 
-		if(m_colorbuffer[2*priority + 1][x].dirty) {
+		if(m_colorbuffer[2 * priority + 1][x].dirty) {
 			return;
 		}
 
-		m_colorbuffer[2*priority + 1][x] = {
+		m_colorbuffer[2 * priority + 1][x] = {
 			.dirty = true,
 			.color_number = color_number,
 			.color = color,
@@ -117,11 +117,11 @@ class PPU {
 			return;
 		}
 
-		if(m_colorbuffer[2*priority][x].dirty) {
+		if(m_colorbuffer[2 * priority][x].dirty) {
 			return;
 		}
 
-		m_colorbuffer[2*priority][x] = {
+		m_colorbuffer[2 * priority][x] = {
 			.dirty = true,
 			.color_number = color_number,
 			.color = color,
@@ -135,7 +135,6 @@ class PPU {
 	void colorbuffer_blit();
 	void objects_draw_line(uint16 ly);
 	void objects_draw_obj(uint16 ly, OBJAttr obj);
-
 public:
 	PPU(ARM7TDMI&, MemoryLayout&);
 	void cycle();

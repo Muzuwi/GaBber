@@ -1,8 +1,8 @@
 #pragma once
 #include <memory>
+#include "Bus/SRAM/BackupCart.hpp"
 #include "Headers/StdTypes.hpp"
 #include "MMU/BusDevice.hpp"
-#include "Bus/SRAM/BackupCart.hpp"
 
 class SRAM final : public BusDevice {
 	std::unique_ptr<BackupCart> m_cart;
@@ -11,7 +11,8 @@ class SRAM final : public BusDevice {
 		return offset & 0xFFFFu;
 	}
 public:
-	SRAM() : BusDevice(0x0e000000, 0x10000000) {}
+	SRAM()
+	    : BusDevice(0x0e000000, 0x10000000) {}
 
 	void set_cart(std::unique_ptr<BackupCart>&& cart) {
 		m_cart = std::move(cart);
@@ -55,18 +56,18 @@ public:
 
 	void write16(uint32 offset, uint16 value) override {
 		offset = mirror(offset);
-		const uint8 byte = (value >> ((offset % 2)*8)) & 0xFFu;
+		const uint8 byte = (value >> ((offset % 2) * 8)) & 0xFFu;
 		write8(offset, byte);
 		fmt::print("PakSRAM/ 16-bit write of value {:4x} to offset {:x} [written byte={:02x}]\n", value, offset, byte);
 	}
 	void write32(uint32 offset, uint32 value) override {
 		offset = mirror(offset);
-		const uint8 byte = (value >> ((offset % 4)*8)) & 0xFFu;
+		const uint8 byte = (value >> ((offset % 4) * 8)) & 0xFFu;
 		write8(offset, byte);
 		fmt::print("PakSRAM/ 32-bit write of value {:8x} to offset {:x} [written byte={:02x}]\n", value, offset, byte);
 	}
 
-	void reload() override { }
+	void reload() override {}
 
 	unsigned int waitcycles32() const override {
 		return 5;

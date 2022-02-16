@@ -1,6 +1,6 @@
 #pragma once
-#include <string>
 #include <imgui.h>
+#include <string>
 
 class GaBber;
 class ARM7TDMI;
@@ -14,10 +14,13 @@ protected:
 
 	ARM7TDMI& cpu();
 
-	virtual void draw_window() { }
+	virtual void draw_window() {}
 public:
-	DebuggerWindow(std::string  name, GaBber& emu)
-	: m_name(std::move(name)), m_is_open(true), m_flags(0), m_emu(emu) {}
+	DebuggerWindow(std::string name, GaBber& emu)
+	    : m_name(std::move(name))
+	    , m_is_open(true)
+	    , m_flags(0)
+	    , m_emu(emu) {}
 
 	void draw();
 };

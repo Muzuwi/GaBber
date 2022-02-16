@@ -1,12 +1,12 @@
 #pragma once
 #include "Headers/StdTypes.hpp"
 
-enum class INSTR_MODE{
+enum class INSTR_MODE {
 	ARM,
 	THUMB
 };
 
-enum class PRIV_MODE{
+enum class PRIV_MODE {
 	USR = 0b10000,
 	FIQ = 0b10001,
 	IRQ = 0b10010,
@@ -55,9 +55,7 @@ class CSPR {
 			default:
 				return false;
 		}
-
 	}
-
 public:
 	CSPR() = default;
 
@@ -123,8 +121,7 @@ public:
 	}
 
 	void set_state(INSTR_MODE state) {
-		data = (data & ~((uint32)CSPR_REGISTERS::State))
-		       | ((state == INSTR_MODE::THUMB) ? (uint32)CSPR_REGISTERS::State : 0u);
+		data = (data & ~((uint32)CSPR_REGISTERS::State)) | ((state == INSTR_MODE::THUMB) ? (uint32)CSPR_REGISTERS::State : 0u);
 	}
 
 	PRIV_MODE mode() const {
@@ -132,7 +129,7 @@ public:
 	}
 
 	const char* mode_str() const {
-		switch (mode()) {
+		switch(mode()) {
 			case PRIV_MODE::USR: return "USR";
 			case PRIV_MODE::FIQ: return "FIQ";
 			case PRIV_MODE::SVC: return "SVC";
@@ -149,7 +146,7 @@ public:
 	}
 
 	bool evaluate_condition(ARM::InstructionCondition condition) const {
-		switch (condition) {
+		switch(condition) {
 			case ARM::InstructionCondition::EQ:
 				return is_set(CSPR_REGISTERS::Zero);
 			case ARM::InstructionCondition::NE:

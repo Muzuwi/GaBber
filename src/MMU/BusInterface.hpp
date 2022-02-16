@@ -1,5 +1,6 @@
 #pragma once
 #include <fmt/format.h>
+#include <vector>
 #include "Headers/StdTypes.hpp"
 
 class BusDevice;
@@ -8,15 +9,14 @@ class BusInterface {
 	friend class BusDevice;
 	friend class TestHarness;
 
-	static Vector<BusDevice*> s_devices;
+	static std::vector<BusDevice*> s_devices;
 	static bool register_device(BusDevice&);
 
 	unsigned m_last_wait_cycles;
 	BusDevice* find_device(uint32 address, size_t size);
 public:
-
 	template<typename... Args>
-	static void log(const char* format, const Args& ...args) {
+	static void log(const char* format, const Args&... args) {
 		return;
 
 		fmt::print("\u001b[93mMMU/ ");

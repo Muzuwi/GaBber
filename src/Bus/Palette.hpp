@@ -10,7 +10,9 @@ class Palette final : public BusDevice {
 		return address & 0x3ff;
 	}
 public:
-	Palette() : BusDevice(0x05000000, 0x06000000), m_palette() {}
+	Palette()
+	    : BusDevice(0x05000000, 0x06000000)
+	    , m_palette() {}
 
 	uint8 read8(uint32 offset) override {
 		offset = mirror(offset);
@@ -33,7 +35,7 @@ public:
 		//  8-bit value is written to both the upper and lower 8-bits
 		//  of the nearest half-word
 		m_palette.write8(offset, value);
-		m_palette.write8(offset+1, value);
+		m_palette.write8(offset + 1, value);
 	}
 
 	void write16(uint32 offset, uint16 value) override {

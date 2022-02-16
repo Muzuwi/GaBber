@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include "Headers/StdTypes.hpp"
 #include "MMU/BusDevice.hpp"
 #include "MMU/ReaderArray.hpp"
@@ -10,7 +11,9 @@ class IWRAM final : public BusDevice {
 		return address & 0x7fffu;
 	}
 public:
-	IWRAM() : BusDevice(0x03000000, 0x04000000), m_iwram() {}
+	IWRAM()
+	    : BusDevice(0x03000000, 0x04000000)
+	    , m_iwram() {}
 
 	uint8 read8(uint32 offset) override {
 		offset = mirror(offset);
@@ -25,7 +28,7 @@ public:
 	uint16 read16(uint32 offset) override {
 		offset = mirror(offset);
 
-		if(offset >= m_iwram.size() || offset+1 >= m_iwram.size()) {
+		if(offset >= m_iwram.size() || offset + 1 >= m_iwram.size()) {
 			//  FIXME: unreadable I/O register
 			return 0xBABE;
 		}
@@ -35,13 +38,12 @@ public:
 	uint32 read32(uint32 offset) override {
 		offset = mirror(offset);
 
-		if(offset >= m_iwram.size() || offset+3 >= m_iwram.size()) {
+		if(offset >= m_iwram.size() || offset + 3 >= m_iwram.size()) {
 			//  FIXME: unreadable I/O register
 			return 0xBABEBABE;
 		}
 		return m_iwram.read32(offset);
 	}
-
 
 	void write8(uint32 offset, uint8 value) override {
 		offset = mirror(offset);
@@ -55,7 +57,7 @@ public:
 	void write16(uint32 offset, uint16 value) override {
 		offset = mirror(offset);
 
-		if(offset >= m_iwram.size() || offset+1 >= m_iwram.size()) {
+		if(offset >= m_iwram.size() || offset + 1 >= m_iwram.size()) {
 			return;
 		}
 		m_iwram.write16(offset, value);
@@ -64,7 +66,7 @@ public:
 	void write32(uint32 offset, uint32 value) override {
 		offset = mirror(offset);
 
-		if(offset >= m_iwram.size() || offset+3 >= m_iwram.size()) {
+		if(offset >= m_iwram.size() || offset + 3 >= m_iwram.size()) {
 			return;
 		}
 		m_iwram.write32(offset, value);
@@ -86,7 +88,7 @@ public:
 		return 1;
 	}
 
-	Array<uint8, 32 * kB>& buffer() {
+	std::array<uint8, 32 * kB>& buffer() {
 		return m_iwram.array();
 	}
 };

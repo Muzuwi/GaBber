@@ -1,6 +1,6 @@
 #include "CPU/ARM7TDMI.hpp"
-#include "MMU/BusInterface.hpp"
 #include "Headers/Bits.hpp"
+#include "MMU/BusInterface.hpp"
 
 void ARM7TDMI::B(ARM::BInstruction instr) {
 	const auto old_pc = const_pc();
@@ -9,9 +9,8 @@ void ARM7TDMI::B(ARM::BInstruction instr) {
 	if(instr.is_link())
 		r14() = old_pc - 4;
 
-	m_wait_cycles += 2/*S*/ + 1/*N*/;
+	m_wait_cycles += 2 /*S*/ + 1 /*N*/;
 }
-
 
 void ARM7TDMI::BX(ARM::BXInstruction instr) {
 	const auto& reg = creg(instr.reg());
@@ -24,39 +23,50 @@ void ARM7TDMI::BX(ARM::BXInstruction instr) {
 
 	cspr().set_state(!is_thumb ? INSTR_MODE::ARM : INSTR_MODE::THUMB);
 
-	m_wait_cycles += 2/*S*/ + 1/*N*/;
+	m_wait_cycles += 2 /*S*/ + 1 /*N*/;
 }
-
 
 void ARM7TDMI::DPI(ARM::DataProcessInstruction instr) {
 	/*
-     *  Lookup table for data processing instructions
-     */
-	typedef void (::ARM7TDMI::* DataProcessFunction)(::ARM::DataProcessInstruction);
+	 *  Lookup table for data processing instructions
+	 */
+	typedef void (::ARM7TDMI::*DataProcessFunction)(::ARM::DataProcessInstruction);
 	static const DataProcessFunction s_dp_instruction_lookup[16] {
-			&ARM7TDMI::AND, &ARM7TDMI::EOR, &ARM7TDMI::SUB, &ARM7TDMI::RSB,
-			&ARM7TDMI::ADD, &ARM7TDMI::ADC, &ARM7TDMI::SBC, &ARM7TDMI::RSC,
-			&ARM7TDMI::TST, &ARM7TDMI::TEQ, &ARM7TDMI::CMP, &ARM7TDMI::CMN,
-			&ARM7TDMI::ORR, &ARM7TDMI::MOV, &ARM7TDMI::BIC, &ARM7TDMI::MVN,
+		&ARM7TDMI::AND,
+		&ARM7TDMI::EOR,
+		&ARM7TDMI::SUB,
+		&ARM7TDMI::RSB,
+		&ARM7TDMI::ADD,
+		&ARM7TDMI::ADC,
+		&ARM7TDMI::SBC,
+		&ARM7TDMI::RSC,
+		&ARM7TDMI::TST,
+		&ARM7TDMI::TEQ,
+		&ARM7TDMI::CMP,
+		&ARM7TDMI::CMN,
+		&ARM7TDMI::ORR,
+		&ARM7TDMI::MOV,
+		&ARM7TDMI::BIC,
+		&ARM7TDMI::MVN,
 	};
 
 	auto func = s_dp_instruction_lookup[instr.opcode()];
 	(*this.*func)(instr);
 
-	if (instr.destination_reg() == 15 && instr.should_set_condition()) {
+	if(instr.destination_reg() == 15 && instr.should_set_condition()) {
 		auto v = spsr();
 		if(v.has_value()) {
 			cspr() = *spsr();
-//			log("Leaving exception, pc={:08x}, cspr={:08x}", const_pc(), cspr().raw());
+			//			log("Leaving exception, pc={:08x}, cspr={:08x}", const_pc(), cspr().raw());
 		}
 	}
 
-	m_wait_cycles += 1/*S*/;
+	m_wait_cycles += 1 /*S*/;
 	if(instr.destination_reg() == 15) {
-		m_wait_cycles += 1/*S*/ + 1/*N*/;
+		m_wait_cycles += 1 /*S*/ + 1 /*N*/;
 	}
 	if(instr.immediate_is_value() && instr.is_shift_reg()) {
-		m_wait_cycles += 1/*I*/;
+		m_wait_cycles += 1 /*I*/;
 	}
 }
 
@@ -75,19 +85,19 @@ void ARM7TDMI::SUB(ARM::DataProcessInstruction instr) {
 }
 
 void ARM7TDMI::RSB(ARM::DataProcessInstruction instr) {
-    auto& destination = reg(instr.destination_reg());
+	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
-    uint32 operand2 = evaluate_operand2(instr, false);
+	uint32 operand2 = evaluate_operand2(instr, false);
 	const bool S = instr.should_set_condition();
 
-    uint32 result = _alu_sub(operand2, operand1, S);
-    destination = result;
+	uint32 result = _alu_sub(operand2, operand1, S);
+	destination = result;
 }
 
 void ARM7TDMI::ADD(ARM::DataProcessInstruction instr) {
-    auto& destination = reg(instr.destination_reg());
+	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
-    uint32 operand2 = evaluate_operand2(instr, false);
+	uint32 operand2 = evaluate_operand2(instr, false);
 	const bool S = instr.should_set_condition();
 
 	uint32 result = _alu_add(operand1, operand2, S);
@@ -95,27 +105,27 @@ void ARM7TDMI::ADD(ARM::DataProcessInstruction instr) {
 }
 
 void ARM7TDMI::ADC(ARM::DataProcessInstruction instr) {
-    auto& destination = reg(instr.destination_reg());
+	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
-    uint32 operand2 = evaluate_operand2(instr, false);
+	uint32 operand2 = evaluate_operand2(instr, false);
 
 	destination = _alu_adc(operand1, operand2, instr.should_set_condition());
 }
 
 void ARM7TDMI::SBC(ARM::DataProcessInstruction instr) {
-    auto& destination = reg(instr.destination_reg());
+	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
-    uint32 operand2 = evaluate_operand2(instr, false);
+	uint32 operand2 = evaluate_operand2(instr, false);
 
-    destination = _alu_sbc(operand1, operand2, instr.should_set_condition());
+	destination = _alu_sbc(operand1, operand2, instr.should_set_condition());
 }
 
 void ARM7TDMI::RSC(ARM::DataProcessInstruction instr) {
-    auto& destination = reg(instr.destination_reg());
+	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
-    uint32 operand2 = evaluate_operand2(instr, false);
+	uint32 operand2 = evaluate_operand2(instr, false);
 
-    destination = _alu_sbc(operand2, operand1, instr.should_set_condition());
+	destination = _alu_sbc(operand2, operand1, instr.should_set_condition());
 }
 
 void ARM7TDMI::CMP(ARM::DataProcessInstruction instr) {
@@ -174,7 +184,6 @@ void ARM7TDMI::CMN(ARM::DataProcessInstruction instr) {
 	(void)_alu_add(operand1, operand2, true);
 }
 
-
 /*
  *  Logical operations
  */
@@ -201,13 +210,13 @@ void ARM7TDMI::TST(ARM::DataProcessInstruction instr) {
 	//  MRS - transfer PSR contents to reg
 	//  Source PSR = CPSR
 	if(!instr.should_set_condition()) {
-    	auto& destination = reg(instr.destination_reg());
-    	destination = cspr().raw();
+		auto& destination = reg(instr.destination_reg());
+		destination = cspr().raw();
 		return;
-    }
+	}
 
 	const uint32 operand1 = evaluate_operand1(instr);
-    uint32 operand2 = evaluate_operand2(instr, true);
+	uint32 operand2 = evaluate_operand2(instr, true);
 
 	(void)_alu_and(operand1, operand2, true);
 }
@@ -217,19 +226,19 @@ void ARM7TDMI::TEQ(ARM::DataProcessInstruction instr) {
 	//  Destination PSR = CPSR
 	if(!instr.should_set_condition()) {
 		const uint32 value = !instr.immediate_is_value() ? creg(instr.operand2_reg())
-														 : evaluate_operand2(instr, false);
+		                                                 : evaluate_operand2(instr, false);
 		auto mask = instr.operand1_reg();
 		bool f = (mask & 0b1000),
-			 s = (mask & 0b0100),
-			 x = (mask & 0b0010),
-			 c = (mask & 0b0001);
+		     s = (mask & 0b0100),
+		     x = (mask & 0b0010),
+		     c = (mask & 0b0001);
 		cspr().set_flags(value, f, s, x, c);
 
 		return;
-    }
+	}
 
 	const uint32 operand1 = evaluate_operand1(instr);
-    uint32 operand2 = evaluate_operand2(instr, true);
+	uint32 operand2 = evaluate_operand2(instr, true);
 
 	(void)_alu_eor(operand1, operand2, true);
 }
@@ -270,7 +279,6 @@ void ARM7TDMI::MVN(ARM::DataProcessInstruction instr) {
 	destination = _alu_not(operand2, S);
 }
 
-
 /*
  *  Data transfer operations
  */
@@ -289,13 +297,13 @@ void ARM7TDMI::HDT(ARM::HDTInstruction instr) {
 	//  For easier implementing of writeback with the same register
 	uint32 word_for_load {};
 
-	switch (instr.opcode()) {
+	switch(instr.opcode()) {
 		case 0: ASSERT_NOT_REACHED();
 		case 1: {//  Unsigned hword
 			if(instr.load_from_memory()) {
 				auto word = static_cast<uint32>(mem_read16(address & ~1u));
 
-				if(address&1)   //  Misaligned LDRH
+				if(address & 1)//  Misaligned LDRH
 					word = Bits::rotr32(word, 8);
 
 				word_for_load = word;
@@ -340,75 +348,75 @@ void ARM7TDMI::HDT(ARM::HDTInstruction instr) {
 		reg(instr.target_reg()) = word_for_load;
 
 	if(instr.load_from_memory()) {
-		m_wait_cycles += 1/*S*/ + 1/*N*/ + 1/*I*/;
+		m_wait_cycles += 1 /*S*/ + 1 /*N*/ + 1 /*I*/;
 		if(instr.target_reg() == 15) {
-			m_wait_cycles += 1/*S*/ + 1/*N*/;
+			m_wait_cycles += 1 /*S*/ + 1 /*N*/;
 		}
 	} else {
-		m_wait_cycles += 2/*N*/;
+		m_wait_cycles += 2 /*N*/;
 	}
 }
 
 void ARM7TDMI::SDT(ARM::SDTInstruction instr) {
-    uint32 offset;
-    if(instr.immediate_is_offset())
-        offset = instr.offset();
-    else {
+	uint32 offset;
+	if(instr.immediate_is_offset())
+		offset = instr.offset();
+	else {
 		const auto shift_instr = ARM::DataProcessInstruction(instr.offset());
-	    offset = evaluate_operand2(shift_instr); //  FIXME: Hacky hack z
-    }
+		offset = evaluate_operand2(shift_instr);//  FIXME: Hacky hack z
+	}
 
-    const auto& base = creg(instr.base_reg());
+	const auto& base = creg(instr.base_reg());
 
-    auto get_target_address = [&]() -> uint32 {
-         if(instr.add_offset_to_base())
-             return base + offset;
-         else
-             return base - offset;
-    };
+	auto get_target_address = [&]() -> uint32 {
+		if(instr.add_offset_to_base())
+			return base + offset;
+		else
+			return base - offset;
+	};
 
-    uint32 address = base;
-    if(instr.preindex())
-        address = get_target_address();
+	uint32 address = base;
+	if(instr.preindex())
+		address = get_target_address();
 
-    if(instr.load_from_memory()) {
-	    auto& target = reg(instr.target_reg());
+	if(instr.load_from_memory()) {
+		auto& target = reg(instr.target_reg());
 
-	    uint32 word;
-        if(instr.quantity_in_bytes()) {
+		uint32 word;
+		if(instr.quantity_in_bytes()) {
 			word = static_cast<uint32>(mem_read8(address));
-        } else {
-        	word = mem_read32(address & ~3u);  //  Force align
-        	//  Rotate
-        	if(address & 3u)
-				word = Bits::rotr32(word, (address&3u)*8);
-        }
-
-	    if(!instr.preindex())
-		    address = get_target_address();
-	    if((instr.writeback() || !instr.preindex()) && instr.base_reg() != 15)
-		    reg(instr.base_reg()) = address;
-
-	    target = word;
-		m_wait_cycles += 1/*S*/ + 1/*N*/ + 1/*I*/;
-		if(instr.target_reg() == 15) {
-			m_wait_cycles += 1/*S*/ + 1/*N*/;
+		} else {
+			word = mem_read32(address & ~3u);//  Force align
+			//  Rotate
+			if(address & 3u)
+				word = Bits::rotr32(word, (address & 3u) * 8);
 		}
-    } else {
-	    const auto& target = creg(instr.target_reg());
+
+		if(!instr.preindex())
+			address = get_target_address();
+		if((instr.writeback() || !instr.preindex()) && instr.base_reg() != 15)
+			reg(instr.base_reg()) = address;
+
+		target = word;
+		m_wait_cycles += 1 /*S*/ + 1 /*N*/ + 1 /*I*/;
+		if(instr.target_reg() == 15) {
+			m_wait_cycles += 1 /*S*/ + 1 /*N*/;
+		}
+	} else {
+		const auto& target = creg(instr.target_reg());
 
 		if(instr.quantity_in_bytes())
-	    	mem_write8(address, target + (instr.target_reg() == 15 ? 4 : 0));
+			mem_write8(address, target + (instr.target_reg() == 15 ? 4 : 0));
 		else
-        	mem_write32(address & ~3u, target + (instr.target_reg() == 15 ? 4 : 0));
+			mem_write32(address & ~3u, target + (instr.target_reg() == 15 ? 4 : 0));
 
-        if(!instr.preindex())
-		    address = get_target_address();
-	    if((instr.writeback() || !instr.preindex()) && instr.base_reg() != 15)
-		    reg(instr.base_reg()) = address;
+		if(!instr.preindex())
+			address = get_target_address();
+		if((instr.writeback() || !instr.preindex()) && instr.base_reg() != 15)
+			reg(instr.base_reg()) = address;
 
-	    m_wait_cycles += 2/*N*/;
-    }
+		m_wait_cycles += 2 /*N*/;
+	}
 }
 
 void ARM7TDMI::SWP(ARM::SWPInstruction instr) {
@@ -423,11 +431,11 @@ void ARM7TDMI::SWP(ARM::SWPInstruction instr) {
 	} else {
 		uint32 prev_contents = mem_read32(swap_address & ~3u);
 		if(swap_address & 3u)
-			prev_contents = _shift_ror(prev_contents, (swap_address&3u)*8);
+			prev_contents = _shift_ror(prev_contents, (swap_address & 3u) * 8);
 		mem_write32(swap_address & ~3u, source);
 		dest = prev_contents;
 	}
-	m_wait_cycles += 1/*S*/ + 2/*N*/ + 1/*I*/;
+	m_wait_cycles += 1 /*S*/ + 2 /*N*/ + 1 /*I*/;
 }
 
 void ARM7TDMI::SWI(ARM::SWIInstruction) {
@@ -456,12 +464,11 @@ void ARM7TDMI::MLL(ARM::MultLongInstruction instr) {
 	if(instr.should_set_condition()) {
 		cspr().set(CSPR_REGISTERS::Zero, result == 0);
 		cspr().set(CSPR_REGISTERS::Negative, result & (1ul << 63ul));
-		cspr().set(CSPR_REGISTERS::Carry, true);   //  FIXME: ???
+		cspr().set(CSPR_REGISTERS::Carry, true);//  FIXME: ???
 	}
 
-	m_wait_cycles += 1/*S*/
-					+ (instr.is_signed() ? ARM::mult_m_cycles(m) : ARM::unsigned_mult_m_cycles(m)) + 1
-	                + (instr.should_accumulate() ? 1 : 0);
+	m_wait_cycles += 1 /*S*/
+	                 + (instr.is_signed() ? ARM::mult_m_cycles(m) : ARM::unsigned_mult_m_cycles(m)) + 1 + (instr.should_accumulate() ? 1 : 0);
 }
 
 void ARM7TDMI::MUL(ARM::MultInstruction instr) {
@@ -470,16 +477,16 @@ void ARM7TDMI::MUL(ARM::MultInstruction instr) {
 	const uint32 s = creg(instr.source_reg());
 	const uint32 n = creg(instr.accumulate_reg());
 
-	uint32 result = m*s + ((instr.should_accumulate()) ? n : 0);
+	uint32 result = m * s + ((instr.should_accumulate()) ? n : 0);
 	destination = result;
 
 	if(instr.should_set_condition()) {
 		cspr().set(CSPR_REGISTERS::Zero, result == 0);
 		cspr().set(CSPR_REGISTERS::Negative, result & (1u << 31u));
-		cspr().set(CSPR_REGISTERS::Carry, false); //  "is set to a meaningless value"
+		cspr().set(CSPR_REGISTERS::Carry, false);//  "is set to a meaningless value"
 	}
 
-	m_wait_cycles += 1/*S*/ + ARM::mult_m_cycles(s) + (instr.should_accumulate() ? 1 : 0);
+	m_wait_cycles += 1 /*S*/ + ARM::mult_m_cycles(s) + (instr.should_accumulate() ? 1 : 0);
 }
 
 void ARM7TDMI::BDT(ARM::BDTInstruction instr) {
@@ -517,7 +524,7 @@ void ARM7TDMI::BDT(ARM::BDTInstruction instr) {
 		if(instr.preindex()) address += (instr.add_offset_to_base()) ? 4 : -4;
 
 		++n;
- 		if(instr.load_from_memory()) {
+		if(instr.load_from_memory()) {
 			uint32 word = mem_read32(address & ~3u);
 
 			uint32& gpr = (instr.PSR() ? m_registers.m_base[reg] : this->reg(reg));
@@ -550,11 +557,11 @@ void ARM7TDMI::BDT(ARM::BDTInstruction instr) {
 	}
 
 	if(instr.load_from_memory()) {
-		m_wait_cycles += n/*S*/ + 1/*N*/ + 1/*I*/;
+		m_wait_cycles += n /*S*/ + 1 /*N*/ + 1 /*I*/;
 		if(instr.is_register_in_list(15)) {
-			m_wait_cycles += 1/*S*/ + 1/*N*/;
+			m_wait_cycles += 1 /*S*/ + 1 /*N*/;
 		}
 	} else {
-		m_wait_cycles += (n-1)/*S*/ + 2/*N*/;
+		m_wait_cycles += (n - 1) /*S*/ + 2 /*N*/;
 	}
 }

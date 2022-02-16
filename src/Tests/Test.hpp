@@ -1,6 +1,7 @@
 #pragma once
-#include "Headers/StdTypes.hpp"
+#include <list>
 #include "CPU/ARM7TDMI.hpp"
+#include "Headers/StdTypes.hpp"
 
 struct MemState {
 	enum class OpSize {
@@ -20,13 +21,19 @@ struct MemState {
 	MemState() = default;
 
 	explicit MemState(uint32 address, uint32 val)
-	: m_size(OpSize::b32), m_address(address), m_word(val) {}
+	    : m_size(OpSize::b32)
+	    , m_address(address)
+	    , m_word(val) {}
 
 	explicit MemState(uint32 address, uint16 val)
-	: m_size(OpSize::b16), m_address(address), m_hword(val) {}
+	    : m_size(OpSize::b16)
+	    , m_address(address)
+	    , m_hword(val) {}
 
 	explicit MemState(uint32 address, uint8 val)
-	: m_size(OpSize::b8), m_address(address), m_byte(val) {}
+	    : m_size(OpSize::b8)
+	    , m_address(address)
+	    , m_byte(val) {}
 };
 
 struct RegState {
@@ -35,7 +42,8 @@ struct RegState {
 
 	RegState() = default;
 	RegState(uint8 reg, uint32 value)
-	: m_reg(reg & 0xfu), m_reg_value(value) {}
+	    : m_reg(reg & 0xfu)
+	    , m_reg_value(value) {}
 };
 
 struct FlagState {
@@ -43,10 +51,8 @@ struct FlagState {
 
 	FlagState() = default;
 	FlagState(CSPR const& v)
-	: m_flag_reg(v) {}
+	    : m_flag_reg(v) {}
 };
-
-
 
 enum class ExpectType {
 	Memory,
@@ -65,17 +71,17 @@ struct Expectation {
 	ExpectationData m_data;
 
 	Expectation(RegState reg_expect)
-	: m_type(ExpectType::Register) {
+	    : m_type(ExpectType::Register) {
 		m_data.m_reg_expect = reg_expect;
 	}
 
 	Expectation(MemState mem_expect)
-	: m_type(ExpectType::Memory) {
+	    : m_type(ExpectType::Memory) {
 		m_data.m_mem_expect = mem_expect;
 	}
 
 	Expectation(FlagState flag_expect)
-	: m_type(ExpectType::Flag) {
+	    : m_type(ExpectType::Flag) {
 		m_data.m_flag_expect = flag_expect;
 	}
 };
@@ -85,21 +91,20 @@ struct InitialState {
 	ExpectationData m_data;
 
 	InitialState(RegState reg)
-	: m_type(ExpectType::Register) {
+	    : m_type(ExpectType::Register) {
 		m_data.m_reg_expect = reg;
 	}
 
 	InitialState(MemState mem)
-	: m_type(ExpectType::Memory) {
+	    : m_type(ExpectType::Memory) {
 		m_data.m_mem_expect = mem;
 	}
 
 	InitialState(FlagState state)
-	: m_type(ExpectType::Flag) {
+	    : m_type(ExpectType::Flag) {
 		m_data.m_flag_expect = state;
 	}
 };
-
 
 enum class TestType {
 	InstructionARM,
@@ -109,15 +114,15 @@ enum class TestType {
 class Test {
 	TestType m_test_type;
 	uint32 m_opcode;
-	List<Expectation> m_expects;
-	List<InitialState> m_state;
+	std::list<Expectation> m_expects;
+	std::list<InitialState> m_state;
 	std::string m_test_case;
 
 	void expect_add(Expectation const& expectation) {
-		switch (expectation.m_type) {
+		switch(expectation.m_type) {
 			case ExpectType::Register: {
 				auto it = std::find_if(m_expects.begin(), m_expects.end(), [&expectation](Expectation const& v) -> bool {
-                    return v.m_type == ExpectType::Register && v.m_data.m_reg_expect.m_reg == expectation.m_data.m_reg_expect.m_reg;
+					return v.m_type == ExpectType::Register && v.m_data.m_reg_expect.m_reg == expectation.m_data.m_reg_expect.m_reg;
 				});
 
 				if(it != m_expects.end()) return;
@@ -129,9 +134,10 @@ class Test {
 		m_expects.push_back(expectation);
 	}
 public:
-
 	Test(TestType type, uint32 opcode, std::string test_case)
-	: m_test_type(type), m_opcode(opcode), m_test_case(test_case) {}
+	    : m_test_type(type)
+	    , m_opcode(opcode)
+	    , m_test_case(test_case) {}
 
 	Test& expect(Expectation const& exp) {
 		expect_add(exp);
@@ -145,7 +151,7 @@ public:
 
 	uint32 opcode() const { return m_opcode; }
 	TestType type() const { return m_test_type; }
-	List<Expectation> const& expectations() const { return m_expects; }
-	List<InitialState> const& initial_states() const { return m_state; }
+	std::list<Expectation> const& expectations() const { return m_expects; }
+	std::list<InitialState> const& initial_states() const { return m_state; }
 	std::string test_case() const { return m_test_case; }
 };

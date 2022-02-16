@@ -1,6 +1,6 @@
 #pragma once
-#include "Headers/StdTypes.hpp"
 #include "Headers/Bits.hpp"
+#include "Headers/StdTypes.hpp"
 #include "MMU/IOReg.hpp"
 
 enum class KeypadKey {
@@ -16,36 +16,33 @@ enum class KeypadKey {
 	L = 9
 };
 
-
 struct DISPCNTReg {
-	uint8 video_mode    : 3;
-	bool cgb_mode       : 1;
-	uint8 frame_select  : 1;
-	bool oam_in_HBlank  : 1;
-	bool obj_one_dim    : 1;
-	bool forced_blank   : 1;
-	bool BG0            : 1;
-	bool BG1            : 1;
-	bool BG2            : 1;
-	bool BG3            : 1;
-	bool OBJ            : 1;
-	bool window0        : 1;
-	bool window1        : 1;
-	bool objWindow      : 1;
+	uint8 video_mode   : 3;
+	bool cgb_mode      : 1;
+	uint8 frame_select : 1;
+	bool oam_in_HBlank : 1;
+	bool obj_one_dim   : 1;
+	bool forced_blank  : 1;
+	bool BG0           : 1;
+	bool BG1           : 1;
+	bool BG2           : 1;
+	bool BG3           : 1;
+	bool OBJ           : 1;
+	bool window0       : 1;
+	bool window1       : 1;
+	bool objWindow     : 1;
 } __attribute__((packed));
-
 
 struct DISPSTATReg {
-	bool VBlank         : 1;
-	bool HBlank         : 1;
-	bool VCounter       : 1;
-	bool VBlank_IRQ     : 1;
-	bool HBlank_IRQ     : 1;
-	bool VCounter_IRQ   : 1;
-	uint8 _unused       : 2;
-	uint8 LYC           : 8;
+	bool VBlank       : 1;
+	bool HBlank       : 1;
+	bool VCounter     : 1;
+	bool VBlank_IRQ   : 1;
+	bool HBlank_IRQ   : 1;
+	bool VCounter_IRQ : 1;
+	uint8 _unused     : 2;
+	uint8 LYC         : 8;
 } __attribute__((packed));
-
 
 struct BGxCNTReg {
 	uint8 priority          : 2;
@@ -58,7 +55,6 @@ struct BGxCNTReg {
 	uint8 screen_size       : 2;
 } __attribute__((packed));
 
-
 union TextScreenData {
 	struct {
 		uint16 tile_number   : 10;
@@ -69,29 +65,27 @@ union TextScreenData {
 	uint16 _raw;
 
 	TextScreenData(uint16 v)
-	: _raw(v) {}
+	    : _raw(v) {}
 };
-
 
 union Color {
 	struct {
-		uint8 red   : 5;
-		uint8 green : 5;
-		uint8 blue  : 5;
+		uint8 red     : 5;
+		uint8 green   : 5;
+		uint8 blue    : 5;
 		uint8 _unused : 1;
 	} __attribute__((packed));
 	uint16 _raw;
 
 	Color(Color const& c)
-	: _raw(c._raw) {}
+	    : _raw(c._raw) {}
 
 	Color(uint16 v)
-	: _raw(v) {}
+	    : _raw(v) {}
 
 	Color()
-	: _raw(0) {}
+	    : _raw(0) {}
 };
-
 
 enum class OBJMode : uint8 {
 	Normal = 0,
@@ -100,12 +94,10 @@ enum class OBJMode : uint8 {
 	Prohibited = 3
 };
 
-
 enum class ColorMode : uint8 {
 	p16x16 = 0,
 	p256x1 = 1,
 };
-
 
 enum class OBJShape : uint8 {
 	Square = 0,
@@ -114,31 +106,27 @@ enum class OBJShape : uint8 {
 	Prohibited = 3
 };
 
-
 struct OBJAttr0 {
-	uint8 pos_y : 8;
-	bool rot_scale : 1;
+	uint8 pos_y                 : 8;
+	bool rot_scale              : 1;
 	bool double_size_or_disable : 1;
-	OBJMode obj_mode : 2;
-	bool obj_mosaic : 1;
-	bool color_mode : 1;
-	OBJShape obj_shape : 2;
+	OBJMode obj_mode            : 2;
+	bool obj_mosaic             : 1;
+	bool color_mode             : 1;
+	OBJShape obj_shape          : 2;
 } __attribute__((packed));
-
 
 struct OBJAttr1 {
 	uint16 pos_x : 9;
-	uint8 flags : 5;
-	uint8 size : 2;
+	uint8 flags  : 5;
+	uint8 size   : 2;
 } __attribute__((packed));
-
 
 struct OBJAttr2 {
-	uint16 tile_number : 10;
-	uint8 priority : 2;
+	uint16 tile_number   : 10;
+	uint8 priority       : 2;
 	uint8 palette_number : 4;
 } __attribute__((packed));
-
 
 struct OBJAttr {
 	OBJAttr0 attr0;
@@ -146,10 +134,10 @@ struct OBJAttr {
 	OBJAttr2 attr2;
 
 	static constexpr const inline uint8 size_lookup[4][3][2] {
-		{ {8,8},    {16,8},     {8,16}  },
-		{ {16,16},  {32,8},     {8,32}  },
-		{ {32,32},  {32,16},    {16,32} },
-		{ {64,64},  {64,32},    {32,64} },
+		{  { 8, 8 },  { 16, 8 },  { 8, 16 }},
+		{{ 16, 16 },  { 32, 8 },  { 8, 32 }},
+		{{ 32, 32 }, { 32, 16 }, { 16, 32 }},
+		{{ 64, 64 }, { 64, 32 }, { 32, 64 }},
 	};
 
 	inline uint8 width() const {
@@ -186,11 +174,10 @@ struct OBJAttr {
 	}
 
 	inline bool is_enabled() const {
-		return attr0.rot_scale || !attr0.double_size_or_disable;    //  FIXME: Might be wrong (does rot_scale imply enabled?)
+		return attr0.rot_scale || !attr0.double_size_or_disable;//  FIXME: Might be wrong (does rot_scale imply enabled?)
 	}
 
 } __attribute__((packed));
-
 
 class DISPCNT : public IOReg16<0x04000000> {
 	void on_write(uint16 new_value) override {
@@ -214,7 +201,6 @@ public:
 };
 
 class GreenSwap : public IOReg16<0x04000002> {
-
 };
 
 class DISPSTAT : public IOReg16<0x04000004> {
@@ -246,7 +232,7 @@ public:
 class BLDCNT : public IOReg16<0x04000050> {
 protected:
 	static constexpr const uint16 writeable_mask = 0x3FFF;
-	static constexpr const uint16 readable_mask  = 0x3FFF;
+	static constexpr const uint16 readable_mask = 0x3FFF;
 
 	void on_write(uint16 new_value) override {
 		m_register = new_value & writeable_mask;
@@ -259,7 +245,7 @@ protected:
 class BLDALPHA : public IOReg16<0x04000052> {
 protected:
 	static constexpr const uint16 writeable_mask = 0x1F1F;
-	static constexpr const uint16 readable_mask  = 0x1F1F;
+	static constexpr const uint16 readable_mask = 0x1F1F;
 
 	void on_write(uint16 new_value) override {
 		m_register = new_value & writeable_mask;
@@ -283,7 +269,7 @@ protected:
 };
 
 template<unsigned n>
-class WindowH : public IOReg16<0x04000040 + n*2> {
+class WindowH : public IOReg16<0x04000040 + n * 2> {
 protected:
 	void on_write(uint16 new_value) override {
 		this->m_register = new_value;
@@ -295,7 +281,7 @@ protected:
 };
 
 template<unsigned n>
-class WindowV : public IOReg16<0x04000044 + n*2> {
+class WindowV : public IOReg16<0x04000044 + n * 2> {
 protected:
 	void on_write(uint16 new_value) override {
 		this->m_register = new_value;
@@ -309,7 +295,7 @@ protected:
 class WindowInside : public IOReg16<0x04000048> {
 protected:
 	static constexpr const uint16 writeable_mask = 0x3F3F;
-	static constexpr const uint16 readable_mask  = 0x3F3F;
+	static constexpr const uint16 readable_mask = 0x3F3F;
 
 	void on_write(uint16 new_value) override {
 		m_register = new_value & writeable_mask;
@@ -322,7 +308,7 @@ protected:
 class WindowOutside : public IOReg16<0x0400004A> {
 protected:
 	static constexpr const uint16 writeable_mask = 0x3F3F;
-	static constexpr const uint16 readable_mask  = 0x3F3F;
+	static constexpr const uint16 readable_mask = 0x3F3F;
 
 	void on_write(uint16 new_value) override {
 		m_register = new_value & writeable_mask;

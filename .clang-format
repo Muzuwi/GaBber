@@ -57,6 +57,11 @@ EmptyLineBeforeAccessModifier: Never  # ??
 EmptyLineAfterAccessModifier: Never   # ??
 FixNamespaceComments: false
 IncludeBlocks: Merge
+IncludeCategories: #  Put global headers before local ones
+  - Regex: '<.+>'
+    Priority: 1
+  - Regex: '".+"'
+    Priority: 2
 IndentCaseLabels: true
 IndentExternBlock: Indent
 IndentPPDirectives: AfterHash
