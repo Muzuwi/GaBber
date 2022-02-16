@@ -15,7 +15,7 @@ target_compile_options(ImGui PRIVATE ${DEPEND_CXX_FLAGS})
 target_compile_definitions(ImGui PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLEW)
 target_include_directories(ImGui
     PRIVATE ${SDL2_INCLUDE_DIRS}
-    PUBLIC ${CMAKE_SOURCE_DIR}/extern/imgui/ ${CMAKE_SOURCE_DIR}/extern/imgui/backends/ ${CMAKE_SOURCE_DIR}/extern/imgui-addons/
+    PUBLIC ${CMAKE_SOURCE_DIR}/extern/imgui/ ${CMAKE_SOURCE_DIR}/extern/imgui/backends/ ${CMAKE_SOURCE_DIR}/extern/imgui_club/imgui_memory_editor/
     )
 
 if (UNIX)

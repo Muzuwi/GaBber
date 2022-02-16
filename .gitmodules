@@ -1,0 +1,6 @@
+[submodule "extern/imgui"]
+	path = extern/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "extern/imgui_club"]
+	path = extern/imgui_club
+	url = https://github.com/ocornut/imgui_club.git
