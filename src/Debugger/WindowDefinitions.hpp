@@ -1,6 +1,6 @@
 #pragma once
-#include "imgui/imgui.h"
-#include "imgui/imgui_memory_editor.h"
+#include <imgui.h>
+#include <imgui_memory_editor.h>
 #include "Headers/StdTypes.hpp"
 #include "Debugger/DebuggerWindow.hpp"
 #include "MMU/BusDevice.hpp"

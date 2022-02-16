@@ -2,7 +2,7 @@
 #include <string>
 #include <functional>
 #include <Headers/StdTypes.hpp>
-#include "imgui/imgui.h"
+#include <imgui.h>
 #include "Debugger/WindowDefinitions.hpp"
 #include "Debugger/Breakpoint.hpp"
 

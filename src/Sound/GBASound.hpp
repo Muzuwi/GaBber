@@ -1,6 +1,6 @@
 #pragma once
 #include <deque>
-#include <SDL2/SDL_audio.h>
+#include <SDL_audio.h>
 #include "Headers/StdTypes.hpp"
 
 struct SoundData {

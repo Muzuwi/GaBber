@@ -1,14 +1,25 @@
 cmake_minimum_required(VERSION 3.14)
 
-add_library(ImGui
+add_library(ImGui STATIC
     imgui/imgui.cpp
     imgui/imgui_demo.cpp
     imgui/imgui_widgets.cpp
     imgui/imgui_draw.cpp
     imgui/imgui_tables.cpp
-    imgui/imgui_impl_sdl.cpp
-    imgui/imgui_impl_opengl3.cpp
-)
+    imgui/backends/imgui_impl_sdl.cpp
+    imgui/backends/imgui_impl_opengl3.cpp
+    )
+
 set(DEPEND_CXX_FLAGS -g -O2)
 target_compile_options(ImGui PRIVATE ${DEPEND_CXX_FLAGS})
 target_compile_definitions(ImGui PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLEW)
+target_include_directories(ImGui
+    PRIVATE ${SDL2_INCLUDE_DIRS}
+    PUBLIC ${CMAKE_SOURCE_DIR}/extern/imgui/ ${CMAKE_SOURCE_DIR}/extern/imgui/backends/ ${CMAKE_SOURCE_DIR}/extern/imgui-addons/
+    )
+
+if (UNIX)
+    target_link_libraries(ImGui
+        PUBLIC dl
+        )
+endif ()

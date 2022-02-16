@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "imgui/imgui.h"
+#include <imgui.h>
 
 class GaBber;
 class ARM7TDMI;

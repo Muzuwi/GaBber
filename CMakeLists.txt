@@ -6,9 +6,8 @@ find_package(GLEW REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(fmt REQUIRED)
 
-include_directories(src/)
-include_directories(extern/)
 add_subdirectory(extern/)
+include_directories(src/)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../)
 set(CMAKE_CXX_STANDARD 20)
@@ -57,9 +56,9 @@ add_executable(GaBber
 target_compile_options(GaBber PRIVATE ${GABBER_CXX_FLAGS})
 
 target_link_libraries(GaBber
-    OpenGL
-    GLEW
-    SDL2
+    OpenGL::OpenGL
+    GLEW::GLEW
+    SDL2::SDL2
     ImGui
-    fmt
+    fmt::fmt
     )

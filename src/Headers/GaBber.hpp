@@ -1,5 +1,5 @@
 #pragma once
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <GL/glew.h>
 #include "Debugger/Debugger.hpp"
 #include "CPU/ARM7TDMI.hpp"
