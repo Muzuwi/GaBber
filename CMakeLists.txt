@@ -1,31 +1,32 @@
 cmake_minimum_required(VERSION 3.14)
 project(GaBber)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../)
-set(CMAKE_CXX_STANDARD 20)
-
-set(GABBER_CXX_FLAGS -fno-exceptions -fstrict-aliasing -Wstrict-aliasing=1 -Wall -Wextra -Wdisabled-optimization -Werror=reorder -Werror=return-type -Werror=strict-aliasing -Wno-packed-bitfield-compat)
-set(GABBER_CXX_FLAGS ${GABBER_CXX_FLAGS} -O2 -ggdb -g)
-#set(GABBER_CXX_FLAGS ${GABBER_CXX_FLAGS} -O2 -ggdb -g --coverage)
-#set(GABBER_CXX_FLAGS ${GABBER_CXX_FLAGS} -O2 -ggdb -g -fsanitize=address -fsanitize=undefined)
-#set(GABBER_CXX_FLAGS ${GABBER_CXX_FLAGS} -ggdb -g --sanitize=address -fsanitize=undefined)
+find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(SDL2 REQUIRED)
+find_package(fmt REQUIRED)
 
 include_directories(src/)
 include_directories(extern/)
 add_subdirectory(extern/)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../)
+set(CMAKE_CXX_STANDARD 20)
+
+set(GABBER_CXX_FLAGS -fno-exceptions
+    -fstrict-aliasing -Wstrict-aliasing=1
+    -Wall -Wextra
+    -Wdisabled-optimization -Werror=reorder -Werror=return-type -Werror=strict-aliasing
+    -Wno-packed-bitfield-compat)
+set(GABBER_CXX_FLAGS ${GABBER_CXX_FLAGS} -O2 -ggdb -g)
+#set(GABBER_CXX_FLAGS ${GABBER_CXX_FLAGS} -O2 -ggdb -g --coverage)
+#set(GABBER_CXX_FLAGS ${GABBER_CXX_FLAGS} -O2 -ggdb -g -fsanitize=address -fsanitize=undefined)
+#set(GABBER_CXX_FLAGS ${GABBER_CXX_FLAGS} -ggdb -g --sanitize=address -fsanitize=undefined)
+
 add_executable(GaBber
     src/CPU/ARM7TDMI.cpp
     src/main.cpp
     src/GaBber.cpp
-    src/CPU/Instructions/ARM.hpp
-    src/MMU/BusInterface.hpp
-    src/MMU/BusDevice.hpp
-    src/PPU/PPU.hpp
-    src/IO/Interrupt.hpp
-    src/MMU/IOReg.hpp
-    src/CPU/Instructions/THUMB.hpp
-    src/Bus/GamePak.hpp
     src/MMU/BusInterface.cpp
     src/CPU/Instructions/ARM.cpp
     src/PPU/PPU.cpp
@@ -36,47 +37,29 @@ add_executable(GaBber
     src/GaBberDisplay.cpp
     src/Tests/Harness.cpp
     src/CPU/DMA.cpp
-    src/IO/DebugBackdoor.hpp
     src/CPU/Timer.cpp
-    src/PPU/BG.hpp
     src/PPU/BG.cpp
     src/Debugger/Screen.cpp
     src/Debugger/MemoryEditor.cpp
     src/Debugger/Registers.cpp
     src/Debugger/DebuggerWindow.cpp
     src/Debugger/IORegisters.cpp
-    src/IO/IOContainer.hpp
-    src/MMU/MemoryLayout.hpp
     src/CPU/Bus.cpp
     src/Sound/GBASound.cpp
-    src/Sound/GBASound.hpp
     src/IO/Sound.cpp
-    src/Headers/Bits.hpp src/MMU/ReaderArray.hpp
-    src/Bus/BIOS.hpp
-    src/Bus/IWRAM.hpp
-    src/Bus/OAM.hpp
-    src/Bus/Palette.hpp
-    src/Bus/ROM.hpp
-    src/Bus/SRAM.hpp
-    src/Bus/VRAM.hpp
-    src/Bus/WRAM.hpp
     src/IO/DMA.cpp
     src/Bus/SRAM/Flash.cpp
     src/Debugger/BreakpointControl.cpp
     src/Debugger/Stacktrace.cpp
-    src/Debugger/Breakpoint.hpp
     src/GaBberShell.cpp
-    src/Headers/ShellFlags.hpp
-    src/Headers/Config.hpp)
+    )
 
 target_compile_options(GaBber PRIVATE ${GABBER_CXX_FLAGS})
 
 target_link_libraries(GaBber
-    fmt
-    GL
-    gl3w
-    ImGui
+    OpenGL
+    GLEW
     SDL2
-    dl
-    gcov
-)
+    ImGui
+    fmt
+    )

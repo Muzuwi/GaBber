@@ -4,3 +4,4 @@
 !/extern
 !/CMakeLists.txt
 !/.gitignore
+!.clang-format

@@ -1,6 +1,6 @@
 #pragma once
 #include <SDL2/SDL.h>
-#include "GL/gl3w.h"
+#include <GL/glew.h>
 #include "Debugger/Debugger.hpp"
 #include "CPU/ARM7TDMI.hpp"
 #include "MMU/BusInterface.hpp"

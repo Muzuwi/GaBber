@@ -47,7 +47,7 @@ struct GamePak {
 			fmt::print("GamePak/ Backup cart type autodetection failed! Assuming FLASH 64K\n");
 		} else {
 			type = *result;
-			fmt::print("GamePak/ Backup cart type: {}\n", type);
+			fmt::print("GamePak/ Backup cart type: {}\n", static_cast<unsigned>(type));
 		}
 
 		std::unique_ptr<BackupCart> cart;
@@ -63,7 +63,7 @@ struct GamePak {
 				break;
 			}
 			default: {
-				fmt::print("GamePak/ Unimplemented cart type: {}\n", type);
+				fmt::print("GamePak/ Unimplemented cart type: {}\n", static_cast<unsigned>(type));
 				break;
 			}
 		}

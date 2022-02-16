@@ -1,8 +1,8 @@
 #include <thread>
 #include <chrono>
 #include <fmt/format.h>
+#include <GL/glew.h>
 #include "Headers/GaBber.hpp"
-#include "GL/gl3w.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -27,8 +27,10 @@ bool GaBber::display_initialize() {
 	m_gabberGLContext = SDL_GL_CreateContext(m_gabberWindow);
 	SDL_GL_MakeCurrent(m_gabberWindow, m_gabberGLContext);
 
-	if(gl3wInit() != 0) {
-		fmt::print("Gl3w initialization failed!\n");
+	auto status = glewInit();
+	if(status != GLEW_OK) {
+		fmt::print("GLEW initialization failed!\n");
+		fmt::print("Error: {}\n", glewGetErrorString(status));
 		return false;
 	}
 
