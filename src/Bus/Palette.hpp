@@ -8,8 +8,8 @@ class Palette final : public BusDevice {
 
 	static constexpr inline uint32 mirror(uint32 address) { return address & 0x3ff; }
 public:
-	Palette()
-	    : BusDevice(0x05000000, 0x06000000)
+	Palette(GaBber& emu)
+	    : BusDevice(emu, 0x05000000, 0x06000000)
 	    , m_palette() {}
 
 	uint8 read8(uint32 offset) override;

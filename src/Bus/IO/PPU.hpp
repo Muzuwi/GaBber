@@ -165,17 +165,27 @@ class DISPCNT : public IOReg16<0x04000000> {
 	}
 	uint16 on_read() override { return m_register; }
 public:
+	DISPCNT(GaBber& emu)
+	    : IOReg16<67108864>(emu) {}
+
 	DISPCNTReg* operator->() { return this->template as<DISPCNTReg>(); }
 
 	DISPCNTReg const* operator->() const { return this->template as<DISPCNTReg>(); }
 };
 
-class GreenSwap : public IOReg16<0x04000002> {};
+class GreenSwap : public IOReg16<0x04000002> {
+public:
+	GreenSwap(GaBber& emu)
+	    : IOReg16<67108866>(emu) {}
+};
 
 class DISPSTAT : public IOReg16<0x04000004> {
 	void on_write(uint16 new_value) override { m_register = Bits::masked_copy<0xFF38u>(m_register, new_value); }
 	uint16 on_read() override { return m_register; }
 public:
+	DISPSTAT(GaBber& emu)
+	    : IOReg16<67108868>(emu) {}
+
 	DISPSTATReg* operator->() { return this->template as<DISPSTATReg>(); }
 
 	DISPSTATReg const* operator->() const { return this->template as<DISPSTATReg>(); }
@@ -185,6 +195,8 @@ class VCOUNT : public IOReg16<0x04000006> {
 	void on_write(uint16) override {}
 	uint16 on_read() override { return m_register & 0x00FFu; }
 public:
+	VCOUNT(GaBber& emu)
+	    : IOReg16<67108870>(emu) {}
 };
 
 class BLDCNT : public IOReg16<0x04000050> {
@@ -194,6 +206,9 @@ protected:
 
 	void on_write(uint16 new_value) override { m_register = new_value & writeable_mask; }
 	uint16 on_read() override { return m_register & readable_mask; }
+public:
+	BLDCNT(GaBber& emu)
+	    : IOReg16<67108944>(emu) {}
 };
 
 class BLDALPHA : public IOReg16<0x04000052> {
@@ -203,6 +218,9 @@ protected:
 
 	void on_write(uint16 new_value) override { m_register = new_value & writeable_mask; }
 	uint16 on_read() override { return m_register & readable_mask; }
+public:
+	BLDALPHA(GaBber& emu)
+	    : IOReg16<67108946>(emu) {}
 };
 
 class BLDY : public IOReg32<0x04000054> {
@@ -214,6 +232,9 @@ protected:
 		//  FIXME: unreadable I/O register
 		return 0xBABEBABE;
 	}
+public:
+	BLDY(GaBber& emu)
+	    : IOReg32<67108948>(emu) {}
 };
 
 template<unsigned n>
@@ -224,6 +245,9 @@ protected:
 		//  FIXME: unreadable I/O register
 		return 0xBABE;
 	}
+public:
+	WindowH(GaBber& emu)
+	    : IOReg16<67108928 + n * 2>(emu) {}
 };
 
 template<unsigned n>
@@ -234,6 +258,9 @@ protected:
 		//  FIXME: unreadable I/O register
 		return 0xBABE;
 	}
+public:
+	WindowV(GaBber& emu)
+	    : IOReg16<67108932 + n * 2>(emu) {}
 };
 
 class WindowInside : public IOReg16<0x04000048> {
@@ -243,6 +270,9 @@ protected:
 
 	void on_write(uint16 new_value) override { m_register = new_value & writeable_mask; }
 	uint16 on_read() override { return m_register & readable_mask; }
+public:
+	WindowInside(GaBber& emu)
+	    : IOReg16<67108936>(emu) {}
 };
 
 class WindowOutside : public IOReg16<0x0400004A> {
@@ -252,6 +282,9 @@ protected:
 
 	void on_write(uint16 new_value) override { m_register = new_value & writeable_mask; }
 	uint16 on_read() override { return m_register & readable_mask; }
+public:
+	WindowOutside(GaBber& emu)
+	    : IOReg16<67108938>(emu) {}
 };
 
 class Mosaic : public IOReg32<0x0400004C> {
@@ -263,4 +296,7 @@ protected:
 		//  FIXME: unreadable I/O register
 		return 0xBABEBABE;
 	}
+public:
+	Mosaic(GaBber& emu)
+	    : IOReg32<67108940>(emu) {}
 };

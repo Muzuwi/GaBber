@@ -37,13 +37,8 @@ class GaBber {
 	void emulator_loop();
 	void emulator_next_state();
 	void emulator_close();
-
-	GaBber();
 public:
-	static GaBber& instance() {
-		static GaBber emu;
-		return emu;
-	}
+	GaBber();
 
 	void parse_args(int argc, char** argv);
 	int start();

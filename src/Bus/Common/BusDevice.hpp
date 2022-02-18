@@ -1,11 +1,12 @@
 #pragma once
+#include "Emulator/Module.hpp"
 #include "Emulator/StdTypes.hpp"
 
-class BusDevice {
+class BusDevice : public Module {
 	uint32 m_start;
 	uint32 m_end;
 public:
-	BusDevice(uint32 start, uint32 end) noexcept;
+	BusDevice(GaBber& emu, uint32 start, uint32 end) noexcept;
 
 	virtual ~BusDevice() = default;
 

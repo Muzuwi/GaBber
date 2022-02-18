@@ -9,6 +9,8 @@
 #include "Timer.hpp"
 
 struct IOContainer {
+	IOContainer(GaBber&);
+
 	DISPCNT dispcnt;
 	GreenSwap green_swap;
 	DISPSTAT dispstat;

@@ -8,8 +8,8 @@ class IWRAM final : public BusDevice {
 
 	static constexpr inline uint32 mirror(uint32 address) { return address & 0x7fffu; }
 public:
-	IWRAM()
-	    : BusDevice(0x03000000, 0x04000000)
+	IWRAM(GaBber& emu)
+	    : BusDevice(emu, 0x03000000, 0x04000000)
 	    , m_iwram() {}
 
 	uint8 read8(uint32 offset) override;

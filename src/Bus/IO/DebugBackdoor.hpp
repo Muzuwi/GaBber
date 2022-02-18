@@ -7,8 +7,8 @@ class DebugBackdoor final : public BusDevice {
 	static constexpr const unsigned bufsize = 0x60;
 	ReaderArray<bufsize> m_buffer;
 public:
-	DebugBackdoor()
-	    : BusDevice(0x04fff600, 0x04fff600 + bufsize)
+	DebugBackdoor(GaBber& emu)
+	    : BusDevice(emu, 0x04fff600, 0x04fff600 + bufsize)
 	    , m_buffer() {}
 
 	uint8 read8(uint32 offset) override;
@@ -27,5 +27,9 @@ public:
 class Backdoor final : public IOReg16<0x04fff700> {
 	DebugBackdoor m_backdoor;
 public:
+	Backdoor(GaBber& emu)
+	    : IOReg16<83883776>(emu)
+	    , m_backdoor(emu) {}
+
 	void on_write(uint16) override;
 };

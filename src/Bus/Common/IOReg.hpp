@@ -41,8 +41,8 @@ protected:
 
 	virtual T on_read() { return m_register; }
 public:
-	__IORegister() noexcept
-	    : BusDevice(base_address, base_address + reg_size)
+	__IORegister(GaBber& emu) noexcept
+	    : BusDevice(emu, base_address, base_address + reg_size)
 	    , m_register() {
 		this->reload();
 	}

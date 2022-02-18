@@ -8,8 +8,8 @@ class WRAM final : public BusDevice {
 
 	static constexpr inline uint32 mirror(uint32 address) { return address & 0x3ffffu; }
 public:
-	WRAM()
-	    : BusDevice(0x02000000, 0x03000000)
+	WRAM(GaBber& emu)
+	    : BusDevice(emu, 0x02000000, 0x03000000)
 	    , m_wram() {}
 
 	uint8 read8(uint32 offset) override;

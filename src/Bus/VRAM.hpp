@@ -17,8 +17,8 @@ class VRAM final : public BusDevice {
 		return mirrored;
 	}
 public:
-	VRAM()
-	    : BusDevice(0x06000000, 0x07000000)
+	VRAM(GaBber& emu)
+	    : BusDevice(emu, 0x06000000, 0x07000000)
 	    , m_vram() {}
 
 	uint8 read8(uint32 offset) override;

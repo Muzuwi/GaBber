@@ -89,6 +89,9 @@ class DMASrc final : public IOReg32<DMA::reg_base<x>()> {
 protected:
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
+public:
+	DMASrc(GaBber& emu)
+	    : IOReg32<DMA::reg_base<x>()>(emu) {}
 };
 
 template<unsigned x>
@@ -96,6 +99,9 @@ class DMADest final : public IOReg32<DMA::reg_base<x>() + 4> {
 protected:
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
+public:
+	DMADest(GaBber& emu)
+	    : IOReg32<DMA::reg_base<x>() + 4>(emu) {}
 };
 
 template<unsigned x>
@@ -109,6 +115,9 @@ protected:
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
 public:
+	DMACtrl(GaBber& emu)
+	    : IOReg32<DMA::reg_base<x>() + 8>(emu) {}
+
 	DMACtrlReg* operator->() { return this->template as<DMACtrlReg>(); }
 
 	DMACtrlReg const* operator->() const { return this->template as<DMACtrlReg>(); }
@@ -119,6 +128,11 @@ struct DMAx final {
 	DMASrc<x> m_source;
 	DMADest<x> m_destination;
 	DMACtrl<x> m_ctrl;
+
+	DMAx(GaBber& emu)
+	    : m_source(emu)
+	    , m_destination(emu)
+	    , m_ctrl(emu) {}
 
 	bool m_is_running { false };
 	uint32 m_destination_ptr {};

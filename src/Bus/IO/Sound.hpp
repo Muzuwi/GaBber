@@ -122,6 +122,9 @@ class SoundCtlL final : public IOReg16<0x04000080> {
 	uint16 on_read() override;
 	void on_write(T new_value) override;
 public:
+	SoundCtlL(GaBber& emu)
+	    : IOReg16<67108992>(emu) {}
+
 	SNDCNT_L* operator->() { return this->template as<SNDCNT_L>(); }
 
 	SNDCNT_L const* operator->() const { return this->template as<SNDCNT_L>(); }
@@ -135,6 +138,9 @@ protected:
 	uint16 on_read() override;
 	void on_write(uint16 new_value) override;
 public:
+	SoundCtlH(GaBber& emu)
+	    : IOReg16<67108994>(emu) {}
+
 	SNDCNTH* operator->() { return this->template as<SNDCNTH>(); }
 
 	SNDCNTH const* operator->() const { return this->template as<SNDCNTH>(); }
@@ -147,6 +153,9 @@ protected:
 
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
+public:
+	SoundCtlX(GaBber& emu)
+	    : IOReg32<67108996>(emu) {}
 };
 
 class SoundBias final : public IOReg32<0x04000088> {
@@ -156,12 +165,18 @@ protected:
 
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
+public:
+	SoundBias(GaBber& emu)
+	    : IOReg32<67109000>(emu) {}
 };
 
 class Sound1CtlL final : public IOReg16<0x04000060> {
 	uint16 on_read() override;
 	void on_write(uint16 new_value) override;
 public:
+	Sound1CtlL(GaBber& emu)
+	    : IOReg16<67108960>(emu) {}
+
 	SND1CNTL* operator->() { return this->template as<SND1CNTL>(); }
 
 	SND1CNTL const* operator->() const { return this->template as<SND1CNTL>(); }
@@ -171,6 +186,9 @@ class Sound1CtlH final : public IOReg16<0x04000062> {
 	uint16 on_read() override;
 	void on_write(uint16 new_value) override;
 public:
+	Sound1CtlH(GaBber& emu)
+	    : IOReg16<67108962>(emu) {}
+
 	SND1CNTH* operator->() { return this->template as<SND1CNTH>(); }
 
 	SND1CNTH const* operator->() const { return this->template as<SND1CNTH>(); }
@@ -180,6 +198,9 @@ class Sound1CtlX final : public IOReg32<0x04000064> {
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
 public:
+	Sound1CtlX(GaBber& emu)
+	    : IOReg32<67108964>(emu) {}
+
 	SND1CNTX* operator->() { return this->template as<SND1CNTX>(); }
 
 	SND1CNTX const* operator->() const { return this->template as<SND1CNTX>(); }
@@ -190,6 +211,9 @@ protected:
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
 public:
+	Sound2CtlL(GaBber& emu)
+	    : IOReg32<67108968>(emu) {}
+
 	SND2CNTL* operator->() { return this->template as<SND2CNTL>(); }
 
 	SND2CNTL const* operator->() const { return this->template as<SND2CNTL>(); }
@@ -199,6 +223,9 @@ class Sound2CtlH final : public IOReg32<0x0400006c> {
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
 public:
+	Sound2CtlH(GaBber& emu)
+	    : IOReg32<67108972>(emu) {}
+
 	SND2CNTH* operator->() { return this->template as<SND2CNTH>(); }
 
 	SND2CNTH const* operator->() const { return this->template as<SND2CNTH>(); }
@@ -212,6 +239,9 @@ protected:
 	uint16 on_read() override;
 	void on_write(uint16 new_value) override;
 public:
+	Sound3CtlL(GaBber& emu)
+	    : IOReg16<67108976>(emu) {}
+
 	SND3CNTL* operator->() { return this->template as<SND3CNTL>(); }
 
 	SND3CNTL const* operator->() const { return this->template as<SND3CNTL>(); }
@@ -225,6 +255,9 @@ protected:
 	uint16 on_read() override;
 	void on_write(uint16 new_value) override;
 public:
+	Sound3CtlH(GaBber& emu)
+	    : IOReg16<67108978>(emu) {}
+
 	SND3CNTH* operator->() { return this->template as<SND3CNTH>(); }
 
 	SND3CNTH const* operator->() const { return this->template as<SND3CNTH>(); }
@@ -238,6 +271,9 @@ protected:
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
 public:
+	Sound3CtlX(GaBber& emu)
+	    : IOReg32<67108980>(emu) {}
+
 	SND3CNTX* operator->() { return this->template as<SND3CNTX>(); }
 
 	SND3CNTX const* operator->() const { return this->template as<SND3CNTX>(); }
@@ -249,8 +285,8 @@ class Sound3Bank final : public BusDevice {
 
 	ReaderArray<16>& current_bank();
 public:
-	Sound3Bank()
-	    : BusDevice(0x04000090, 0x040000A0) {}
+	Sound3Bank(GaBber& emu)
+	    : BusDevice(emu, 0x04000090, 0x040000A0) {}
 
 	uint8 read8(uint32 offset) override;
 	uint16 read16(uint32 offset) override;
@@ -272,6 +308,9 @@ protected:
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
 public:
+	Sound4CtlL(GaBber& emu)
+	    : IOReg32<67108984>(emu) {}
+
 	SND4CNTL* operator->() { return this->template as<SND4CNTL>(); }
 
 	SND4CNTL const* operator->() const { return this->template as<SND4CNTL>(); }
@@ -285,6 +324,9 @@ protected:
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
 public:
+	Sound4CtlH(GaBber& emu)
+	    : IOReg32<67108988>(emu) {}
+
 	SND4CNTH* operator->() { return this->template as<SND4CNTH>(); }
 
 	SND4CNTH const* operator->() const { return this->template as<SND4CNTH>(); }
@@ -296,6 +338,9 @@ protected:
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
 public:
+	SoundFifoA(GaBber& emu)
+	    : IOReg32<67109024>(emu) {}
+
 	std::deque<uint8>& fifo() { return m_fifo; }
 };
 
@@ -305,5 +350,8 @@ protected:
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
 public:
+	SoundFifoB(GaBber& emu)
+	    : IOReg32<67109028>(emu) {}
+
 	std::deque<uint8>& fifo() { return m_fifo; }
 };

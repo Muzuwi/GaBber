@@ -16,7 +16,7 @@ void DMACtrl<x>::on_write(uint32 new_value) {
 	//  When enable bit is toggled (0 -> 1), refresh the internal registers
 	//  The enable bit is bit 31, as the control reg is merged with the word count reg
 	if(!Bits::bit<31>(old_value) && Bits::bit<31>(this->m_register)) {
-		GaBber::instance().cpu().dma_on_enable<x>();
+		this->cpu().template dma_on_enable<x>();
 	}
 }
 

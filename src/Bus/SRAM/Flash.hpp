@@ -20,8 +20,9 @@ class Flash final : public BackupCart {
 	uint8 m_reg2aaa;
 	std::vector<uint8> m_buffer;
 public:
-	explicit Flash(unsigned size)
-	    : m_size(size) {}
+	explicit Flash(GaBber& emu, unsigned size)
+	    : BackupCart(emu)
+	    , m_size(size) {}
 
 	uint8 read(uint32 offset) override;
 	void write(uint32 offset, uint8 value) override;

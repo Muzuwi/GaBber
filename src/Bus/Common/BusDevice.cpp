@@ -1,8 +1,9 @@
 #include "BusDevice.hpp"
 #include "BusInterface.hpp"
 
-BusDevice::BusDevice(uint32 start, uint32 end) noexcept
-    : m_start(start)
+BusDevice::BusDevice(GaBber& emu, uint32 start, uint32 end) noexcept
+    : Module(emu)
+    , m_start(start)
     , m_end(end) {
-	BusInterface::register_device(*this);
+	bus().register_device(*this);
 }

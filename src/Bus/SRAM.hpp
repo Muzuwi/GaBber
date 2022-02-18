@@ -9,8 +9,8 @@ class SRAM final : public BusDevice {
 
 	static constexpr inline uint32 mirror(uint32 offset) { return offset & 0xFFFFu; }
 public:
-	SRAM()
-	    : BusDevice(0x0e000000, 0x10000000) {}
+	SRAM(GaBber& emu)
+	    : BusDevice(emu, 0x0e000000, 0x10000000) {}
 
 	void set_cart(std::unique_ptr<BackupCart>&& cart);
 

@@ -17,6 +17,9 @@ class TimerReload final : public IOReg16<0x04000100 + x * 4> {
 
 	void on_write(uint16 val) override { m_reload = val; }
 public:
+	TimerReload(GaBber& emu)
+	    : IOReg16<67109120 + x * 4>(emu) {}
+
 	uint16 reload_value() const { return m_reload; }
 };
 
@@ -30,6 +33,9 @@ protected:
 	void on_write(uint16 val) override { this->m_register = val & writeable_mask; }
 	uint16 on_read() override { return this->m_register & readable_mask; }
 public:
+	TimerCtl(GaBber& emu)
+	    : IOReg16<67109122 + x * 4>(emu) {}
+
 	TimerReg* operator->() { return this->template as<TimerReg>(); }
 
 	TimerReg const* operator->() const { return this->template as<TimerReg>(); }
@@ -42,7 +48,11 @@ struct Timer {
 	unsigned m_timer_cycles { 0 };
 	TimerReload<x> m_reload_and_current;
 	TimerCtl<x> m_ctl;
-	bool m_previous_cycle_was_running;
+	bool m_previous_cycle_was_running { false };
+
+	Timer(GaBber& emu)
+	    : m_reload_and_current(emu)
+	    , m_ctl(emu) {}
 
 	static unsigned cycle_count_from_prescaler(uint8 prescaler) {
 		const unsigned val[4] { 1, 64, 256, 1024 };

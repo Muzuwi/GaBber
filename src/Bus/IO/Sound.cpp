@@ -18,18 +18,17 @@ uint16 SoundCtlH::on_read() {
 void SoundCtlH::on_write(uint16 new_value) {
 	m_register = new_value & writeable_mask;
 	if((*this)->_resetA) {
-		GaBber::instance().mem().io.fifoA.fifo().clear();
+		io().fifoA.fifo().clear();
 	}
 	if((*this)->_resetB) {
-		GaBber::instance().mem().io.fifoB.fifo().clear();
+		io().fifoB.fifo().clear();
 	}
 }
 
 uint32 SoundCtlX::on_read() {
-	auto& gbasound = GaBber::instance().sound();
-	return (m_register & readable_mask) | (gbasound.m_square1.running ? 0b0001 : 0) |
-	       (gbasound.m_square2.running ? 0b0010 : 0) | (0)//  FIXME: Implement
-	       | (gbasound.m_wave.running ? 0b1000 : 0);
+	return (m_register & readable_mask) | (apu().m_square1.running ? 0b0001 : 0) |
+	       (apu().m_square2.running ? 0b0010 : 0) | (0)//  FIXME: Implement
+	       | (apu().m_wave.running ? 0b1000 : 0);
 }
 
 void SoundCtlX::on_write(uint32 new_value) {
@@ -61,7 +60,7 @@ uint16 Sound1CtlH::on_read() {
 
 void Sound1CtlH::on_write(uint16 new_value) {
 	this->m_register = new_value;
-	GaBber::instance().sound().m_square1.length_counter = 64 - (m_register & 0b1111u);
+	apu().m_square1.length_counter = 64 - (m_register & 0b1111u);
 }
 
 uint32 Sound1CtlX::on_read() {
@@ -72,7 +71,7 @@ uint32 Sound1CtlX::on_read() {
 void Sound1CtlX::on_write(uint32 new_value) {
 	this->m_register = new_value & 0xC7FFu;
 	if(new_value & (1u << 15u)) {
-		GaBber::instance().sound().reload_square1();
+		apu().reload_square1();
 	}
 }
 
@@ -82,7 +81,7 @@ uint32 Sound2CtlL::on_read() {
 
 void Sound2CtlL::on_write(uint32 new_value) {
 	this->m_register = new_value & 0x0000FFFF;
-	GaBber::instance().sound().m_square2.length_counter = 64 - (m_register & 0b1111u);
+	apu().m_square2.length_counter = 64 - (m_register & 0b1111u);
 }
 
 uint32 Sound2CtlH::on_read() {
@@ -93,7 +92,7 @@ uint32 Sound2CtlH::on_read() {
 void Sound2CtlH::on_write(uint32 new_value) {
 	this->m_register = new_value & 0xC7FFu;
 	if(new_value & (1u << 15u)) {
-		GaBber::instance().sound().reload_square2();
+		apu().reload_square2();
 	}
 }
 
@@ -106,9 +105,9 @@ void Sound3CtlL::on_write(uint16 new_value) {
 
 	//  Start or stop playback
 	if(new_value & (1u << 7u)) {
-		GaBber::instance().sound().set_wave_running(true);
+		apu().set_wave_running(true);
 	} else {
-		GaBber::instance().sound().set_wave_running(false);
+		apu().set_wave_running(false);
 	}
 }
 
@@ -127,12 +126,12 @@ uint32 Sound3CtlX::on_read() {
 void Sound3CtlX::on_write(uint32 new_value) {
 	m_register = new_value & writeable_mask;
 	if(new_value & (1u << 15u)) {
-		GaBber::instance().sound().reload_wave();
+		apu().reload_wave();
 	}
 }
 
 ReaderArray<16>& Sound3Bank::current_bank() {
-	return GaBber::instance().mem().io.ch3ctlL->bank ? m_bank0 : m_bank1;
+	return io().ch3ctlL->bank ? m_bank0 : m_bank1;
 }
 
 uint8 Sound3Bank::read8(uint32 offset) {

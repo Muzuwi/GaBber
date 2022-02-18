@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "Emulator/Module.hpp"
 #include "Emulator/StdTypes.hpp"
 
 enum class BackupCartType {
@@ -9,9 +10,10 @@ enum class BackupCartType {
 	FLASH128K,
 };
 
-class BackupCart {
+class BackupCart : public Module {
 public:
-	explicit BackupCart() = default;
+	BackupCart(GaBber& emu)
+	    : Module(emu) {}
 
 	virtual ~BackupCart() = default;
 

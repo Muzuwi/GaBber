@@ -8,8 +8,8 @@ class ROM final : public BusDevice {
 
 	static constexpr inline uint32 mirror(uint32 offset) { return offset % 0x02000000; }
 public:
-	ROM()
-	    : BusDevice(0x08000000, 0x0e000000)
+	ROM(GaBber& emu)
+	    : BusDevice(emu, 0x08000000, 0x0e000000)
 	    , m_rom() {}
 
 	void from_vec(std::vector<uint8>&& vec);

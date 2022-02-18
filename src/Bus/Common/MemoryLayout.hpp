@@ -12,6 +12,8 @@
 #include "Bus/WRAM.hpp"
 
 struct MemoryLayout {
+	MemoryLayout(GaBber&);
+
 	BIOS bios;
 	WRAM wram;
 	IWRAM iwram;

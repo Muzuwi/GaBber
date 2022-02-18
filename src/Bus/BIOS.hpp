@@ -7,8 +7,8 @@
 class BIOS final : public BusDevice {
 	ReaderArray<0x4000> m_bios;
 public:
-	BIOS()
-	    : BusDevice(0x00000000, 0x00004000)
+	BIOS(GaBber& emu)
+	    : BusDevice(emu, 0x00000000, 0x00004000)
 	    , m_bios() {}
 
 	void from_vec(std::vector<uint8> const& vec);

@@ -8,8 +8,8 @@ class OAM final : public BusDevice {
 
 	static constexpr inline uint32 mirror(uint32 address) { return address & 0x3ff; }
 public:
-	OAM()
-	    : BusDevice(0x07000000, 0x08000000)
+	OAM(GaBber& emu)
+	    : BusDevice(emu, 0x07000000, 0x08000000)
 	    , m_oam() {}
 
 	uint8 read8(uint32 offset) override;
