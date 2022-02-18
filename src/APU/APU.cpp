@@ -427,7 +427,21 @@ void APU::on_timer_overflow(unsigned timer_num) {
 		return;
 	}
 
-	const unsigned target_sample_rate = 131072 >> (3 - ((*io().soundbias >> 14u) & 0b11u));
+	constexpr const auto clock_frequency = 16777216;
+	constexpr const unsigned prescaler_divisors[4] { 1, 64, 256, 1024 };
+
+	if(timer_num == 1) {
+		//  Do not support count-up timing for now
+		assert(!io().timer1.m_ctl->count_up);
+	}
+	const uint16 reload = (timer_num == 0) ? io().timer0.m_reload_and_current.reload_value()
+	                                       : io().timer1.m_reload_and_current.reload_value();
+	const auto ticks = 0x10000 - reload;
+	const auto divisor =
+	        prescaler_divisors[(timer_num == 0) ? io().timer0.m_ctl->prescaler : io().timer1.m_ctl->prescaler];
+	const auto prescaler_frequency = clock_frequency / divisor;
+	const auto sample_rate = prescaler_frequency / ticks;
+	const unsigned target_sample_rate = sample_rate;
 
 	if((io().soundctlH->enable_left_A || io().soundctlH->enable_right_A) && io().soundctlH->timer_sel_A == timer_num) {
 		std::deque<uint8>& fifo = io().fifoA.fifo();
@@ -459,12 +473,20 @@ void APU::on_timer_overflow(unsigned timer_num) {
 }
 
 void APU::push_sample_fifoA(uint8 value, unsigned sample_rate) {
+	if(sample_rate == 0) {
+		m_soundA.samples.push_back(value);
+		return;
+	}
 	for(unsigned i = 0; i < 262144 / sample_rate; ++i) {
 		m_soundA.samples.push_back(value);
 	}
 }
 
 void APU::push_sample_fifoB(uint8 value, unsigned sample_rate) {
+	if(sample_rate == 0) {
+		m_soundB.samples.push_back(value);
+		return;
+	}
 	for(unsigned i = 0; i < 262144 / sample_rate; ++i) {
 		m_soundB.samples.push_back(value);
 	}
