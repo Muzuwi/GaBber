@@ -2,14 +2,14 @@
 #include <chrono>
 #include <fmt/format.h>
 #include <GL/glew.h>
-#include "imgui.h"
-#include "backends/imgui_impl_opengl3.h"
-#include "backends/imgui_impl_sdl.h"
 #include <optional>
 #include <thread>
+#include "backends/imgui_impl_opengl3.h"
+#include "backends/imgui_impl_sdl.h"
+#include "Bus/IO/Keypad.hpp"
 #include "Debugger/Debugger.hpp"
 #include "GaBber.hpp"
-#include "Bus/IO/Keypad.hpp"
+#include "imgui.h"
 #include "PPU/PPU.hpp"
 
 Renderer::Renderer(GaBber& emu)
@@ -121,10 +121,16 @@ void Renderer::render_debugger() {
 
 void Renderer::render_ui_common() {
 	if(ImGui::BeginMainMenuBar()) {
-		if(ImGui::BeginMenu("File")) { ImGui::EndMenu(); }
-		if(ImGui::BeginMenu("Debugger")) { ImGui::EndMenu(); }
+		if(ImGui::BeginMenu("File")) {
+			ImGui::EndMenu();
+		}
+		if(ImGui::BeginMenu("Debugger")) {
+			ImGui::EndMenu();
+		}
 		if(ImGui::BeginMenu("Options")) {
-			if(ImGui::MenuItem("Audio")) { m_shell_flags.audio_options_open = true; }
+			if(ImGui::MenuItem("Audio")) {
+				m_shell_flags.audio_options_open = true;
+			}
 			ImGui::EndMenu();
 		}
 
@@ -220,8 +226,12 @@ void Renderer::poll_events() {
 					default: break;
 				}
 
-				if(event.key.keysym.sym == SDLK_F3) { m_emu.single_step(); }
-				if(event.key.keysym.sym == SDLK_F5) { m_emu.resume(); }
+				if(event.key.keysym.sym == SDLK_F3) {
+					m_emu.single_step();
+				}
+				if(event.key.keysym.sym == SDLK_F5) {
+					m_emu.resume();
+				}
 				if(event.key.keysym.sym == SDLK_TAB && event.key.keysym.mod & KMOD_LSHIFT) {
 					m_emu.toggle_debug_mode();
 				}

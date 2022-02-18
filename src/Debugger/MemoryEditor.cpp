@@ -1,6 +1,6 @@
+#include "Bus/Common/BusInterface.hpp"
 #include "Debugger/WindowDefinitions.hpp"
 #include "Emulator/GaBber.hpp"
-#include "Bus/Common/BusInterface.hpp"
 
 void MemEditor::draw_window() {
 	static BusInterface& mmu = this->m_emu.mmu();
@@ -58,11 +58,7 @@ void MemEditor::draw_window() {
 		ImGui::EndTabBar();
 	}
 
-	m_editor.ReadFn = [](const ImU8* addr, size_t off) -> ImU8 {
-		return mmu.peek((uint64)addr + off);
-	};
-	m_editor.WriteFn = [](ImU8* addr, size_t off, ImU8 val) {
-		mmu.poke((uint64)addr + off, val);
-	};
+	m_editor.ReadFn = [](const ImU8* addr, size_t off) -> ImU8 { return mmu.peek((uint64)addr + off); };
+	m_editor.WriteFn = [](ImU8* addr, size_t off, ImU8 val) { mmu.poke((uint64)addr + off, val); };
 	m_editor.DrawContents((void*)start, size, start);
 }

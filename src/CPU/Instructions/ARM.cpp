@@ -1,6 +1,6 @@
+#include "Bus/Common/BusInterface.hpp"
 #include "CPU/ARM7TDMI.hpp"
 #include "Emulator/Bits.hpp"
-#include "Bus/Common/BusInterface.hpp"
 
 void ARM7TDMI::B(ARM::BInstruction instr) {
 	const auto old_pc = const_pc();
@@ -32,22 +32,9 @@ void ARM7TDMI::DPI(ARM::DataProcessInstruction instr) {
 	 */
 	typedef void (::ARM7TDMI::*DataProcessFunction)(::ARM::DataProcessInstruction);
 	static const DataProcessFunction s_dp_instruction_lookup[16] {
-		&ARM7TDMI::AND,
-		&ARM7TDMI::EOR,
-		&ARM7TDMI::SUB,
-		&ARM7TDMI::RSB,
-		&ARM7TDMI::ADD,
-		&ARM7TDMI::ADC,
-		&ARM7TDMI::SBC,
-		&ARM7TDMI::RSC,
-		&ARM7TDMI::TST,
-		&ARM7TDMI::TEQ,
-		&ARM7TDMI::CMP,
-		&ARM7TDMI::CMN,
-		&ARM7TDMI::ORR,
-		&ARM7TDMI::MOV,
-		&ARM7TDMI::BIC,
-		&ARM7TDMI::MVN,
+		&ARM7TDMI::AND, &ARM7TDMI::EOR, &ARM7TDMI::SUB, &ARM7TDMI::RSB, &ARM7TDMI::ADD, &ARM7TDMI::ADC,
+		&ARM7TDMI::SBC, &ARM7TDMI::RSC, &ARM7TDMI::TST, &ARM7TDMI::TEQ, &ARM7TDMI::CMP, &ARM7TDMI::CMN,
+		&ARM7TDMI::ORR, &ARM7TDMI::MOV, &ARM7TDMI::BIC, &ARM7TDMI::MVN,
 	};
 
 	auto func = s_dp_instruction_lookup[instr.opcode()];
@@ -225,13 +212,9 @@ void ARM7TDMI::TEQ(ARM::DataProcessInstruction instr) {
 	//  MSR - transfer register contents to PSR
 	//  Destination PSR = CPSR
 	if(!instr.should_set_condition()) {
-		const uint32 value = !instr.immediate_is_value() ? creg(instr.operand2_reg())
-		                                                 : evaluate_operand2(instr, false);
+		const uint32 value = !instr.immediate_is_value() ? creg(instr.operand2_reg()) : evaluate_operand2(instr, false);
 		auto mask = instr.operand1_reg();
-		bool f = (mask & 0b1000),
-		     s = (mask & 0b0100),
-		     x = (mask & 0b0010),
-		     c = (mask & 0b0001);
+		bool f = (mask & 0b1000), s = (mask & 0b0100), x = (mask & 0b0010), c = (mask & 0b0001);
 		cspr().set_flags(value, f, s, x, c);
 
 		return;
@@ -286,13 +269,11 @@ void ARM7TDMI::MVN(ARM::DataProcessInstruction instr) {
 void ARM7TDMI::HDT(ARM::HDTInstruction instr) {
 	const auto& base = creg(instr.base_reg());
 	const auto& target = creg(instr.target_reg());
-	auto offset = instr.is_offset_immediate() ? instr.immediate()
-	                                          : creg(instr.offset_reg_or_immediate_low());
+	auto offset = instr.is_offset_immediate() ? instr.immediate() : creg(instr.offset_reg_or_immediate_low());
 
 	auto address = base;
 	if(instr.preindex())
-		address = instr.add_offset_to_base() ? base + offset
-		                                     : base - offset;
+		address = instr.add_offset_to_base() ? base + offset : base - offset;
 
 	//  For easier implementing of writeback with the same register
 	uint32 word_for_load {};
@@ -339,8 +320,7 @@ void ARM7TDMI::HDT(ARM::HDTInstruction instr) {
 	}
 
 	if(!instr.preindex())
-		address = instr.add_offset_to_base() ? base + offset
-		                                     : base - offset;
+		address = instr.add_offset_to_base() ? base + offset : base - offset;
 	if(instr.writeback() || !instr.preindex())
 		reg(instr.base_reg()) = address;
 
@@ -468,7 +448,8 @@ void ARM7TDMI::MLL(ARM::MultLongInstruction instr) {
 	}
 
 	m_wait_cycles += 1 /*S*/
-	                 + (instr.is_signed() ? ARM::mult_m_cycles(m) : ARM::unsigned_mult_m_cycles(m)) + 1 + (instr.should_accumulate() ? 1 : 0);
+	                 + (instr.is_signed() ? ARM::mult_m_cycles(m) : ARM::unsigned_mult_m_cycles(m)) + 1 +
+	                 (instr.should_accumulate() ? 1 : 0);
 }
 
 void ARM7TDMI::MUL(ARM::MultInstruction instr) {
@@ -500,8 +481,7 @@ void ARM7TDMI::BDT(ARM::BDTInstruction instr) {
 		else
 			mem_write32(base & ~3u, const_pc() + 4);
 
-		reg(instr.base_reg()) = (instr.add_offset_to_base()) ? base + 0x40
-		                                                     : base - 0x40;
+		reg(instr.base_reg()) = (instr.add_offset_to_base()) ? base + 0x40 : base - 0x40;
 		//  STMDA -60 from base, writeback at -4
 		//  STMDB -64 from base, writeback at written
 		//  STMIB  +4 after base, writeback +64
@@ -519,9 +499,11 @@ void ARM7TDMI::BDT(ARM::BDTInstruction instr) {
 	unsigned n = 0;
 	for(unsigned r = 0; r < 16; ++r) {
 		const uint8 reg = instr.add_offset_to_base() ? r : (15 - r);
-		if(!instr.is_register_in_list(reg)) continue;
+		if(!instr.is_register_in_list(reg))
+			continue;
 
-		if(instr.preindex()) address += (instr.add_offset_to_base()) ? 4 : -4;
+		if(instr.preindex())
+			address += (instr.add_offset_to_base()) ? 4 : -4;
 
 		++n;
 		if(instr.load_from_memory()) {
@@ -549,7 +531,8 @@ void ARM7TDMI::BDT(ARM::BDTInstruction instr) {
 			mem_write32(address & ~3u, word + offset_for_r15);
 		}
 
-		if(!instr.preindex()) address += (instr.add_offset_to_base()) ? 4 : -4;
+		if(!instr.preindex())
+			address += (instr.add_offset_to_base()) ? 4 : -4;
 	}
 
 	if(instr.writeback() && !(instr.load_from_memory() && instr.is_register_in_list(instr.base_reg()))) {

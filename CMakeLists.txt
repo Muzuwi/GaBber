@@ -58,7 +58,16 @@ add_executable(GaBber
     src/Bus/SRAM.cpp
     src/Bus/VRAM.cpp
     src/Bus/WRAM.cpp
-    src/Bus/IO/DebugBackdoor.cpp src/Bus/IO/Interrupt.cpp src/Bus/Common/BusDevice.cpp src/Bus/IO/BG.cpp src/Emulator/Renderer.hpp src/Emulator/Renderer.cpp src/Emulator/Module.hpp src/Emulator/Module.cpp src/Bus/IO/IOContainer.cpp src/Bus/Common/MemoryLayout.cpp)
+    src/Bus/IO/DebugBackdoor.cpp
+    src/Bus/IO/Interrupt.cpp
+    src/Bus/Common/BusDevice.cpp
+    src/Bus/IO/BG.cpp
+    src/Emulator/Renderer.hpp
+    src/Emulator/Renderer.cpp
+    src/Emulator/Module.hpp
+    src/Emulator/Module.cpp
+    src/Bus/IO/IOContainer.cpp
+    src/Bus/Common/MemoryLayout.cpp)
 
 target_compile_options(GaBber PRIVATE ${GABBER_CXX_FLAGS})
 

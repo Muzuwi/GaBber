@@ -1,8 +1,8 @@
 #include "Tests/Harness.hpp"
+#include "Bus/Common/BusInterface.hpp"
 #include "CPU/Instructions/ARM.hpp"
 #include "CPU/Instructions/THUMB.hpp"
 #include "Emulator/GaBber.hpp"
-#include "Bus/Common/BusInterface.hpp"
 #include "Test.hpp"
 
 void TestHarness::run_emulator_tests() {
@@ -188,7 +188,9 @@ void TestHarness::test_run(Test& test) {
 	fmt::print("Running testcase: \u001b[96m{}\u001b[0m - ", test.test_case());
 
 	auto const& states = test.initial_states();
-	for(auto& state : states) { test_set(state); }
+	for(auto& state : states) {
+		test_set(state);
+	}
 
 	if(test.type() == TestType::InstructionARM)
 		cpu().execute_ARM(test.opcode());
@@ -209,9 +211,12 @@ void TestHarness::test_run(Test& test) {
 	}
 
 	m_tests_run++;
-	if(has_failed) m_tests_failed++;
+	if(has_failed)
+		m_tests_failed++;
 
-	if(!has_failed) { fmt::print("\u001b[92mPASSED\u001b[0m\n"); }
+	if(!has_failed) {
+		fmt::print("\u001b[92mPASSED\u001b[0m\n");
+	}
 }
 
 void TestHarness::test_set_mem(MemState const& state) {

@@ -33,7 +33,9 @@ void Debugger::on_memory_access(uint32 address, uint32 val, bool write) {
 	auto it = std::find_if(m_breakpoints.begin(), m_breakpoints.end(), [address, val, write](auto& v) {
 		return match_breakpoint(v, { address, val, 4, write ? BreakWrite : BreakRead });
 	});
-	if(it == m_breakpoints.end()) { return; }
+	if(it == m_breakpoints.end()) {
+		return;
+	}
 
 	fmt::print("Debugger/ Reached breakpoint at {:08x}\n", address);
 	m_emu.enter_debug_mode();
@@ -43,7 +45,9 @@ void Debugger::on_memory_access(uint32 address, uint16 val, bool write) {
 	auto it = std::find_if(m_breakpoints.begin(), m_breakpoints.end(), [address, val, write](auto& v) {
 		return match_breakpoint(v, { address, val, 2, write ? BreakWrite : BreakRead });
 	});
-	if(it == m_breakpoints.end()) { return; }
+	if(it == m_breakpoints.end()) {
+		return;
+	}
 
 	fmt::print("Debugger/ Reached breakpoint at {:08x}\n", address);
 	m_emu.enter_debug_mode();
@@ -53,7 +57,9 @@ void Debugger::on_memory_access(uint32 address, uint8 val, bool write) {
 	auto it = std::find_if(m_breakpoints.begin(), m_breakpoints.end(), [address, val, write](auto& v) {
 		return match_breakpoint(v, { address, val, 1, write ? BreakWrite : BreakRead });
 	});
-	if(it == m_breakpoints.end()) { return; }
+	if(it == m_breakpoints.end()) {
+		return;
+	}
 
 	fmt::print("Debugger/ Reached breakpoint at {:08x}\n", address);
 	m_emu.enter_debug_mode();
@@ -63,14 +69,18 @@ void Debugger::on_execute_opcode(uint32 address) {
 	auto it = std::find_if(m_breakpoints.begin(), m_breakpoints.end(), [address](auto& v) {
 		return match_breakpoint(v, { address, 0, 1, BreakExec });
 	});
-	if(it == m_breakpoints.end()) { return; }
+	if(it == m_breakpoints.end()) {
+		return;
+	}
 
 	fmt::print("Debugger/ Reached execution breakpoint at {:08x}\n", address);
 	m_emu.enter_debug_mode();
 }
 
 void Debugger::on_undefined_access(uint32 address) {
-	if(!m_break_on_undefined) { return; }
+	if(!m_break_on_undefined) {
+		return;
+	}
 
 	m_emu.enter_debug_mode();
 }

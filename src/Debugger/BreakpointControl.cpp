@@ -6,22 +6,25 @@
 void BreakpointControl::draw_window() {
 	auto& flag = m_emu.debugger().m_break_on_undefined;
 	ImGui::Checkbox("Break on undefined access", &flag);
-	ImGui::InputScalar("Address",
-	                   ImGuiDataType_U32, &m_break.start, nullptr, nullptr, "%08x", ImGuiInputTextFlags_CharsHexadecimal);
+	ImGui::InputScalar("Address", ImGuiDataType_U32, &m_break.start, nullptr, nullptr, "%08x",
+	                   ImGuiInputTextFlags_CharsHexadecimal);
 
 	bool R = m_break.type & BreakRead;
 	bool W = m_break.type & BreakWrite;
 	bool X = m_break.type & BreakExec;
 	if(ImGui::Checkbox("R", &R)) {
-		m_break.type = static_cast<BreakpointType>((m_break.type & ~BreakRead) | ((m_break.type & BreakRead) ? 0x0 : BreakRead));
+		m_break.type = static_cast<BreakpointType>((m_break.type & ~BreakRead) |
+		                                           ((m_break.type & BreakRead) ? 0x0 : BreakRead));
 	}
 	ImGui::SameLine();
 	if(ImGui::Checkbox("W", &W)) {
-		m_break.type = static_cast<BreakpointType>((m_break.type & ~BreakWrite) | ((m_break.type & BreakWrite) ? 0x0 : BreakWrite));
+		m_break.type = static_cast<BreakpointType>((m_break.type & ~BreakWrite) |
+		                                           ((m_break.type & BreakWrite) ? 0x0 : BreakWrite));
 	}
 	ImGui::SameLine();
 	if(ImGui::Checkbox("X", &X)) {
-		m_break.type = static_cast<BreakpointType>((m_break.type & ~BreakExec) | ((m_break.type & BreakExec) ? 0x0 : BreakExec));
+		m_break.type = static_cast<BreakpointType>((m_break.type & ~BreakExec) |
+		                                           ((m_break.type & BreakExec) ? 0x0 : BreakExec));
 	}
 	ImGui::SameLine();
 
@@ -48,8 +51,7 @@ void BreakpointControl::draw_window() {
 		unsigned n = 0;
 		for(auto& breakpoint : m_emu.debugger().m_breakpoints) {
 			ImGui::Text("0x%08x - 0x%08x [%c%c%c]", breakpoint.start, breakpoint.start + breakpoint.size - 1,
-			            (breakpoint.type & BreakRead) ? 'R' : '-',
-			            (breakpoint.type & BreakWrite) ? 'W' : '-',
+			            (breakpoint.type & BreakRead) ? 'R' : '-', (breakpoint.type & BreakWrite) ? 'W' : '-',
 			            (breakpoint.type & BreakExec) ? 'X' : '-');
 			ImGui::SameLine();
 

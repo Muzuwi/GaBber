@@ -1,8 +1,8 @@
 #include "Bus/IO/Timer.hpp"
+#include "APU/APU.hpp"
 #include "Bus/IO/IOContainer.hpp"
 #include "CPU/ARM7TDMI.hpp"
 #include "Emulator/GaBber.hpp"
-#include "APU/APU.hpp"
 
 void ARM7TDMI::timers_cycle_all(size_t n) {
 	timers_cycle_n(io().timer0, n);

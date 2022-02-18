@@ -1,6 +1,6 @@
+#include "Bus/Common/BusInterface.hpp"
 #include "CPU/ARM7TDMI.hpp"
 #include "Emulator/Bits.hpp"
-#include "Bus/Common/BusInterface.hpp"
 
 void ARM7TDMI::THUMB_ALU(THUMB::InstructionFormat4 instr) {
 	/*
@@ -8,22 +8,10 @@ void ARM7TDMI::THUMB_ALU(THUMB::InstructionFormat4 instr) {
 	 */
 	typedef void (::ARM7TDMI::*ThumbAluOperation)(::THUMB::InstructionFormat4);
 	static const ThumbAluOperation s_thumb_alu_lookup[16] {
-		&ARM7TDMI::THUMB_AND,
-		&ARM7TDMI::THUMB_EOR,
-		&ARM7TDMI::THUMB_LSL,
-		&ARM7TDMI::THUMB_LSR,
-		&ARM7TDMI::THUMB_ASR,
-		&ARM7TDMI::THUMB_ADC,
-		&ARM7TDMI::THUMB_SBC,
-		&ARM7TDMI::THUMB_ROR,
-		&ARM7TDMI::THUMB_TST,
-		&ARM7TDMI::THUMB_NEG,
-		&ARM7TDMI::THUMB_CMP,
-		&ARM7TDMI::THUMB_CMN,
-		&ARM7TDMI::THUMB_ORR,
-		&ARM7TDMI::THUMB_MUL,
-		&ARM7TDMI::THUMB_BIC,
-		&ARM7TDMI::THUMB_MVN,
+		&ARM7TDMI::THUMB_AND, &ARM7TDMI::THUMB_EOR, &ARM7TDMI::THUMB_LSL, &ARM7TDMI::THUMB_LSR,
+		&ARM7TDMI::THUMB_ASR, &ARM7TDMI::THUMB_ADC, &ARM7TDMI::THUMB_SBC, &ARM7TDMI::THUMB_ROR,
+		&ARM7TDMI::THUMB_TST, &ARM7TDMI::THUMB_NEG, &ARM7TDMI::THUMB_CMP, &ARM7TDMI::THUMB_CMN,
+		&ARM7TDMI::THUMB_ORR, &ARM7TDMI::THUMB_MUL, &ARM7TDMI::THUMB_BIC, &ARM7TDMI::THUMB_MVN,
 	};
 
 	m_wait_cycles += 1 /*S*/;
@@ -51,8 +39,8 @@ void ARM7TDMI::THUMB_FMT1(THUMB::InstructionFormat1 instr) {
 			break;
 		}
 		default: {
-			log("ARM7TDMI/ Invalid opcode {:04x} for THUMB mov shifted at pc {:08x}, instr {:04x}",
-			    opcode, pc() - 4, instr.raw());
+			log("ARM7TDMI/ Invalid opcode {:04x} for THUMB mov shifted at pc {:08x}, instr {:04x}", opcode, pc() - 4,
+			    instr.raw());
 			break;
 		}
 	}
@@ -66,8 +54,7 @@ void ARM7TDMI::THUMB_FMT2(THUMB::InstructionFormat2 instr) {
 
 	uint32 operand2 = (instr.immediate_is_value()) ? (instr.immediate()) : (creg(instr.immediate()));
 
-	uint32 result = (instr.subtract()) ? _alu_sub(source, operand2, true)
-	                                   : _alu_add(source, operand2, true);
+	uint32 result = (instr.subtract()) ? _alu_sub(source, operand2, true) : _alu_add(source, operand2, true);
 
 	destination = result;
 
@@ -340,8 +327,7 @@ void ARM7TDMI::THUMB_FMT12(THUMB::InstructionFormat12 instr) {
 	auto& destination = reg(instr.destination_reg());
 
 	const auto offset = static_cast<uint16>(instr.immediate()) << 2u;
-	auto address = (instr.source_is_sp()) ? creg(13) + offset
-	                                      : (const_pc() & ~0b10u) + offset;
+	auto address = (instr.source_is_sp()) ? creg(13) + offset : (const_pc() & ~0b10u) + offset;
 
 	destination = address;
 
@@ -351,8 +337,7 @@ void ARM7TDMI::THUMB_FMT12(THUMB::InstructionFormat12 instr) {
 void ARM7TDMI::THUMB_FMT13(THUMB::InstructionFormat13 instr) {
 	const auto offset = static_cast<uint16>(instr.offset()) << 2u;
 
-	sp() = (instr.offset_is_negative()) ? sp() - offset
-	                                    : sp() + offset;
+	sp() = (instr.offset_is_negative()) ? sp() - offset : sp() + offset;
 
 	m_wait_cycles += 1 /*S*/;
 }
@@ -416,7 +401,8 @@ void ARM7TDMI::THUMB_FMT15(THUMB::InstructionFormat15 instr) {
 
 	unsigned n = 0;
 	for(uint8 reg = 0; reg < 8; ++reg) {
-		if(!instr.is_register_in_list(reg)) continue;
+		if(!instr.is_register_in_list(reg))
+			continue;
 		++n;
 
 		if(instr.load_from_memory()) {

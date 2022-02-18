@@ -46,17 +46,28 @@ namespace ARM {
 
 #define PATTERN(mask, pattern) ((arm_opcode & mask) == pattern)
 	static inline InstructionType opcode_decode(uint32 arm_opcode) {
-		if(PATTERN(0x0f000000, 0x0f000000)) return InstructionType::SWI;
-		if(PATTERN(0x0e000000, 0x0a000000)) return InstructionType::BBL;
-		if(PATTERN(0x0e000000, 0x08000000)) return InstructionType::BDT;
-		if(PATTERN(0x0c000000, 0x04000000)) return InstructionType::SDT;
-		if(PATTERN(0x0ffffff0, 0x12fff10)) return InstructionType::BX;
-		if(PATTERN(0xfb00ff0, 0x01000090)) return InstructionType::SWP;
-		if(PATTERN(0x0fc000f0, 0x90)) return InstructionType::MUL;
-		if(PATTERN(0x0f8000f0, 0x00800090)) return InstructionType::MLL;
-		if(PATTERN(0x0e400f90, 0x90)) return InstructionType::HDT;
-		if(PATTERN(0x0e400090, 0x400090)) return InstructionType::HDT;
-		if(PATTERN(0x0c000000, 0)) return InstructionType::ALU;
+		if(PATTERN(0x0f000000, 0x0f000000))
+			return InstructionType::SWI;
+		if(PATTERN(0x0e000000, 0x0a000000))
+			return InstructionType::BBL;
+		if(PATTERN(0x0e000000, 0x08000000))
+			return InstructionType::BDT;
+		if(PATTERN(0x0c000000, 0x04000000))
+			return InstructionType::SDT;
+		if(PATTERN(0x0ffffff0, 0x12fff10))
+			return InstructionType::BX;
+		if(PATTERN(0xfb00ff0, 0x01000090))
+			return InstructionType::SWP;
+		if(PATTERN(0x0fc000f0, 0x90))
+			return InstructionType::MUL;
+		if(PATTERN(0x0f8000f0, 0x00800090))
+			return InstructionType::MLL;
+		if(PATTERN(0x0e400f90, 0x90))
+			return InstructionType::HDT;
+		if(PATTERN(0x0e400090, 0x400090))
+			return InstructionType::HDT;
+		if(PATTERN(0x0c000000, 0))
+			return InstructionType::ALU;
 
 		return InstructionType::UD;
 	}
@@ -118,9 +129,7 @@ namespace ARM {
 		BXInstruction(Reg reg)
 		    : Instruction(reg._opcode) {}
 
-		uint8 reg() const {
-			return m_data & 0b1111;
-		}
+		uint8 reg() const { return m_data & 0b1111; }
 	};
 
 	class MultInstruction : public Instruction {
@@ -146,29 +155,17 @@ namespace ARM {
 		MultInstruction(Reg reg)
 		    : Instruction(reg._opcode) {}
 
-		uint8 multiplicand_reg() const {
-			return m_data & 0b1111;
-		}
+		uint8 multiplicand_reg() const { return m_data & 0b1111; }
 
-		uint8 source_reg() const {
-			return (m_data >> 8u) & 0b1111;
-		}
+		uint8 source_reg() const { return (m_data >> 8u) & 0b1111; }
 
-		uint8 accumulate_reg() const {
-			return (m_data >> 12u) & 0b1111;
-		}
+		uint8 accumulate_reg() const { return (m_data >> 12u) & 0b1111; }
 
-		uint8 destination_reg() const {
-			return (m_data >> 16u) & 0b1111;
-		}
+		uint8 destination_reg() const { return (m_data >> 16u) & 0b1111; }
 
-		bool should_set_condition() const {
-			return (m_data) & (1u << 20u);
-		}
+		bool should_set_condition() const { return (m_data) & (1u << 20u); }
 
-		bool should_accumulate() const {
-			return (m_data) & (1u << 21u);
-		}
+		bool should_accumulate() const { return (m_data) & (1u << 21u); }
 	};
 
 	class BInstruction : public Instruction {
@@ -189,9 +186,7 @@ namespace ARM {
 		BInstruction(Reg reg)
 		    : Instruction(reg._opcode) {}
 
-		bool is_link() const {
-			return m_data & (1u << 24u);
-		}
+		bool is_link() const { return m_data & (1u << 24u); }
 
 		int32 offset() const {
 			auto u = ((m_data & (0x00FFFFFF)) << 2);
@@ -222,21 +217,13 @@ namespace ARM {
 		SWPInstruction(Reg data)
 		    : Instruction(data._opcode) {}
 
-		bool swap_byte() const {
-			return m_data & (1u << 22u);
-		}
+		bool swap_byte() const { return m_data & (1u << 22u); }
 
-		uint8 source_reg() const {
-			return m_data & 0b1111;
-		}
+		uint8 source_reg() const { return m_data & 0b1111; }
 
-		uint8 destination_reg() const {
-			return (m_data >> 12u) & 0b1111;
-		}
+		uint8 destination_reg() const { return (m_data >> 12u) & 0b1111; }
 
-		uint8 base_reg() const {
-			return (m_data >> 16u) & 0b1111;
-		}
+		uint8 base_reg() const { return (m_data >> 16u) & 0b1111; }
 	};
 
 	class DataProcessInstruction : public Instruction {
@@ -261,36 +248,22 @@ namespace ARM {
 		DataProcessInstruction(Reg data)
 		    : Instruction(data._opcode) {}
 
-		bool immediate_is_value() const {
-			return m_data & (1u << 25u);
-		}
+		bool immediate_is_value() const { return m_data & (1u << 25u); }
 
-		bool should_set_condition() const {
-			return (m_data & (1u << 20u));
-		}
+		bool should_set_condition() const { return (m_data & (1u << 20u)); }
 
-		uint8 opcode() const {
-			return (m_data >> 21u) & 0b1111u;
-		}
+		uint8 opcode() const { return (m_data >> 21u) & 0b1111u; }
 
-		uint8 operand1_reg() const {
-			return (m_data >> 16u) & 0b1111u;
-		}
+		uint8 operand1_reg() const { return (m_data >> 16u) & 0b1111u; }
 
-		uint8 destination_reg() const {
-			return (m_data >> 12u) & 0b1111u;
-		}
+		uint8 destination_reg() const { return (m_data >> 12u) & 0b1111u; }
 
 		/*
 		 *  When I = 1
 		 */
-		bool is_shift_reg() const {
-			return (m_data & (1u << 4u));
-		}
+		bool is_shift_reg() const { return (m_data & (1u << 4u)); }
 
-		ShiftType shift_type() const {
-			return static_cast<ShiftType>(((m_data >> 5u) & 0b11));
-		}
+		ShiftType shift_type() const { return static_cast<ShiftType>(((m_data >> 5u) & 0b11)); }
 
 		uint8 shift_amount_or_reg() const {
 			if(is_shift_reg())
@@ -299,20 +272,14 @@ namespace ARM {
 				return (m_data >> 7u) & 0b11111;//  Immediate encoded in instruction
 		}
 
-		uint8 operand2_reg() const {
-			return (m_data & 0b1111);
-		}
+		uint8 operand2_reg() const { return (m_data & 0b1111); }
 
 		/*
 		 *  When I = 0
 		 */
-		uint8 rotate() const {
-			return (m_data >> 8u) & 0b1111;
-		}
+		uint8 rotate() const { return (m_data >> 8u) & 0b1111; }
 
-		uint8 immediate() const {
-			return (m_data & 0xFF);
-		}
+		uint8 immediate() const { return (m_data & 0xFF); }
 	};
 
 	class SDTInstruction : public Instruction {
@@ -320,41 +287,23 @@ namespace ARM {
 		SDTInstruction(uint32 data)
 		    : Instruction(data) {}
 
-		bool immediate_is_offset() const {
-			return !(m_data & (1u << 25u));
-		}
+		bool immediate_is_offset() const { return !(m_data & (1u << 25u)); }
 
-		bool preindex() const {
-			return (m_data & (1u << 24u));
-		}
+		bool preindex() const { return (m_data & (1u << 24u)); }
 
-		bool add_offset_to_base() const {
-			return (m_data & (1u << 23u));
-		}
+		bool add_offset_to_base() const { return (m_data & (1u << 23u)); }
 
-		bool quantity_in_bytes() const {
-			return (m_data & (1u << 22u));
-		}
+		bool quantity_in_bytes() const { return (m_data & (1u << 22u)); }
 
-		bool writeback() const {
-			return (m_data & (1u << 21u));
-		}
+		bool writeback() const { return (m_data & (1u << 21u)); }
 
-		bool load_from_memory() const {
-			return (m_data & (1u << 20u));
-		}
+		bool load_from_memory() const { return (m_data & (1u << 20u)); }
 
-		uint8 base_reg() const {
-			return (m_data >> 16u) & 0b1111;
-		}
+		uint8 base_reg() const { return (m_data >> 16u) & 0b1111; }
 
-		uint8 target_reg() const {
-			return (m_data >> 12u) & 0b1111;
-		}
+		uint8 target_reg() const { return (m_data >> 12u) & 0b1111; }
 
-		uint16 offset() const {
-			return m_data & 0xFFF;
-		}
+		uint16 offset() const { return m_data & 0xFFF; }
 	};
 
 	class BDTInstruction : public Instruction {
@@ -362,29 +311,17 @@ namespace ARM {
 		BDTInstruction(uint32 data)
 		    : Instruction(data) {}
 
-		bool preindex() const {
-			return (m_data & (1u << 24u));
-		}
+		bool preindex() const { return (m_data & (1u << 24u)); }
 
-		bool add_offset_to_base() const {
-			return (m_data & (1u << 23u));
-		}
+		bool add_offset_to_base() const { return (m_data & (1u << 23u)); }
 
-		bool PSR() const {
-			return (m_data & (1u << 22u));
-		}
+		bool PSR() const { return (m_data & (1u << 22u)); }
 
-		bool writeback() const {
-			return (m_data & (1u << 21u));
-		}
+		bool writeback() const { return (m_data & (1u << 21u)); }
 
-		bool load_from_memory() const {
-			return (m_data & (1u << 20u));
-		}
+		bool load_from_memory() const { return (m_data & (1u << 20u)); }
 
-		uint8 base_reg() const {
-			return (m_data >> 16u) & 0b1111u;
-		}
+		uint8 base_reg() const { return (m_data >> 16u) & 0b1111u; }
 
 		bool is_register_in_list(uint8 reg) const {
 			if(reg > 15)
@@ -393,18 +330,15 @@ namespace ARM {
 				return m_data & (1u << reg);
 		}
 
-		bool is_rlist_empty() const {
-			return (m_data & 0xFFFF) == 0;
-		}
+		bool is_rlist_empty() const { return (m_data & 0xFFFF) == 0; }
 
-		bool is_register_first_in_rlist(uint8 reg) const {
-			return std::countr_zero(m_data & 0xFFFFu) == reg;
-		}
+		bool is_register_first_in_rlist(uint8 reg) const { return std::countr_zero(m_data & 0xFFFFu) == reg; }
 
 		int32 total_offset() const {
 			int32 offset = 0;
 			for(unsigned i = 0; i < 16; ++i) {
-				if(!is_register_in_list(i)) continue;
+				if(!is_register_in_list(i))
+					continue;
 				offset += add_offset_to_base() ? 4 : -4;
 			}
 			return offset;
@@ -416,9 +350,7 @@ namespace ARM {
 		SWIInstruction(uint32 data)
 		    : Instruction(data) {}
 
-		uint32 comment() const {
-			return m_data & 0x00ffffffu;
-		}
+		uint32 comment() const { return m_data & 0x00ffffffu; }
 	};
 
 	class MultLongInstruction : public Instruction {
@@ -426,33 +358,19 @@ namespace ARM {
 		MultLongInstruction(uint32 data)
 		    : Instruction(data) {}
 
-		bool is_signed() const {
-			return m_data & (1u << 22u);
-		}
+		bool is_signed() const { return m_data & (1u << 22u); }
 
-		bool should_accumulate() const {
-			return m_data & (1u << 21u);
-		}
+		bool should_accumulate() const { return m_data & (1u << 21u); }
 
-		bool should_set_condition() const {
-			return m_data & (1u << 20u);
-		}
+		bool should_set_condition() const { return m_data & (1u << 20u); }
 
-		uint8 destHi_reg() const {
-			return (m_data >> 16u) & 0b1111u;
-		}
+		uint8 destHi_reg() const { return (m_data >> 16u) & 0b1111u; }
 
-		uint8 destLo_reg() const {
-			return (m_data >> 12u) & 0b1111u;
-		}
+		uint8 destLo_reg() const { return (m_data >> 12u) & 0b1111u; }
 
-		uint8 operand1_reg() const {
-			return (m_data >> 8u) & 0b1111u;
-		}
+		uint8 operand1_reg() const { return (m_data >> 8u) & 0b1111u; }
 
-		uint8 operand2_reg() const {
-			return m_data & 0b1111u;
-		}
+		uint8 operand2_reg() const { return m_data & 0b1111u; }
 	};
 
 	class HDTInstruction : public Instruction {
@@ -460,48 +378,26 @@ namespace ARM {
 		HDTInstruction(uint32 data)
 		    : Instruction(data) {}
 
-		bool preindex() const {
-			return m_data & (1u << 24u);
-		}
+		bool preindex() const { return m_data & (1u << 24u); }
 
-		bool add_offset_to_base() const {
-			return m_data & (1u << 23u);
-		}
+		bool add_offset_to_base() const { return m_data & (1u << 23u); }
 
-		bool is_offset_immediate() const {
-			return m_data & (1u << 22u);
-		}
+		bool is_offset_immediate() const { return m_data & (1u << 22u); }
 
-		bool writeback() const {
-			return m_data & (1u << 21u);
-		}
+		bool writeback() const { return m_data & (1u << 21u); }
 
-		bool load_from_memory() const {
-			return m_data & (1u << 20u);
-		}
+		bool load_from_memory() const { return m_data & (1u << 20u); }
 
-		uint8 base_reg() const {
-			return (m_data >> 16u) & 0xF;
-		}
+		uint8 base_reg() const { return (m_data >> 16u) & 0xF; }
 
-		uint8 target_reg() const {
-			return (m_data >> 12u) & 0xF;
-		}
+		uint8 target_reg() const { return (m_data >> 12u) & 0xF; }
 
-		uint8 offset_reg_or_immediate_low() const {
-			return m_data & 0xF;
-		}
+		uint8 offset_reg_or_immediate_low() const { return m_data & 0xF; }
 
-		uint8 immediate_high() const {
-			return (m_data >> 8u) & 0xF;
-		}
+		uint8 immediate_high() const { return (m_data >> 8u) & 0xF; }
 
-		uint8 immediate() const {
-			return (offset_reg_or_immediate_low() & 0xF) | (immediate_high() << 4u);
-		}
+		uint8 immediate() const { return (offset_reg_or_immediate_low() & 0xF) | (immediate_high() << 4u); }
 
-		uint8 opcode() const {
-			return (m_data >> 5u) & 0b11;
-		}
+		uint8 opcode() const { return (m_data >> 5u) & 0b11; }
 	};
 }

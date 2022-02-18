@@ -121,11 +121,14 @@ class Test {
 	void expect_add(Expectation const& expectation) {
 		switch(expectation.m_type) {
 			case ExpectType::Register: {
-				auto it = std::find_if(m_expects.begin(), m_expects.end(), [&expectation](Expectation const& v) -> bool {
-					return v.m_type == ExpectType::Register && v.m_data.m_reg_expect.m_reg == expectation.m_data.m_reg_expect.m_reg;
-				});
+				auto it =
+				        std::find_if(m_expects.begin(), m_expects.end(), [&expectation](Expectation const& v) -> bool {
+					        return v.m_type == ExpectType::Register &&
+					               v.m_data.m_reg_expect.m_reg == expectation.m_data.m_reg_expect.m_reg;
+				        });
 
-				if(it != m_expects.end()) return;
+				if(it != m_expects.end())
+					return;
 				break;
 			}
 			default: break;

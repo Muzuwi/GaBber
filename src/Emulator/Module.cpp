@@ -1,6 +1,6 @@
 #include "Module.hpp"
-#include "GaBber.hpp"
 #include "Bus/Common/MemoryLayout.hpp"
+#include "GaBber.hpp"
 
 Module::Module(GaBber& emu)
     : m_emu(emu) {}

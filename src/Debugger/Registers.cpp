@@ -6,7 +6,8 @@ void GPRs::draw_window() {
 	auto& cpu = m_emu.cpu();
 
 	for(size_t i = 0; i < 16; ++i) {
-		if(((i % 4) != 0)) ImGui::SameLine();
+		if(((i % 4) != 0))
+			ImGui::SameLine();
 
 		uint32 reg = cpu.creg(i);
 		if(i == 15)
@@ -15,10 +16,8 @@ void GPRs::draw_window() {
 	}
 
 	ImGui::Separator();
-	bool Z = cpu.cspr().is_set(CSPR_REGISTERS::Zero),
-	     N = cpu.cspr().is_set(CSPR_REGISTERS::Negative),
-	     C = cpu.cspr().is_set(CSPR_REGISTERS::Carry),
-	     V = cpu.cspr().is_set(CSPR_REGISTERS::Overflow);
+	bool Z = cpu.cspr().is_set(CSPR_REGISTERS::Zero), N = cpu.cspr().is_set(CSPR_REGISTERS::Negative),
+	     C = cpu.cspr().is_set(CSPR_REGISTERS::Carry), V = cpu.cspr().is_set(CSPR_REGISTERS::Overflow);
 	{
 		ImGui::Text("Flags: ");
 		ImGui::SameLine();
@@ -33,8 +32,7 @@ void GPRs::draw_window() {
 		ImGui::Checkbox("V", &V);
 	}
 
-	bool I = cpu.cspr().is_set(CSPR_REGISTERS::IRQn),
-	     T = cpu.cspr().is_set(CSPR_REGISTERS::State);
+	bool I = cpu.cspr().is_set(CSPR_REGISTERS::IRQn), T = cpu.cspr().is_set(CSPR_REGISTERS::State);
 	{
 		ImGui::Text("Control: ");
 		ImGui::SameLine();

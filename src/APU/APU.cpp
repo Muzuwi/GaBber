@@ -2,9 +2,9 @@
 #include <cassert>
 #include <fmt/format.h>
 #include <vector>
+#include "Bus/Common/MemoryLayout.hpp"
 #include "CPU/ARM7TDMI.hpp"
 #include "Emulator/GaBber.hpp"
-#include "Bus/Common/MemoryLayout.hpp"
 
 APU::APU(GaBber& emu)
     : Module(emu) {}
@@ -52,7 +52,9 @@ void APU::push_samples(float left, float right) {
 	}
 
 	auto rc = SDL_QueueAudio(m_device, &output[0], m_out_converter.len_cvt);
-	if(rc != 0) { fmt::print("Sound/ Queue failed: {}\n", SDL_GetError()); }
+	if(rc != 0) {
+		fmt::print("Sound/ Queue failed: {}\n", SDL_GetError());
+	}
 }
 
 void APU::init() {
@@ -81,12 +83,19 @@ void APU::cycle() {
 	//  One internal sample generated every 64 CPU cycles (main clock 16MHz)
 	m_cycles++;
 
-	if(m_cycles % 65536 == 0) { timer_tick_length(); }
-	if(m_cycles % 131072 == 0) { timer_tick_sweep(); }
-	if(m_cycles % 262144 == 0) { timer_tick_envelope(); }
+	if(m_cycles % 65536 == 0) {
+		timer_tick_length();
+	}
+	if(m_cycles % 131072 == 0) {
+		timer_tick_sweep();
+	}
+	if(m_cycles % 262144 == 0) {
+		timer_tick_envelope();
+	}
 	timer_tick_wave();
 
-	if((m_cycles % 64) != 0) return;
+	if((m_cycles % 64) != 0)
+		return;
 
 	const int16 ch1 = generate_sample_square1();
 	const int16 ch2 = generate_sample_square2();
@@ -100,14 +109,30 @@ void APU::cycle() {
 	int16 left_sample = 0;
 	int16 right_sample = 0;
 
-	if(io().soundctlL->channel_enable_l & 0b0001) { left_sample += ch1 * vol_l; }
-	if(io().soundctlL->channel_enable_r & 0b0001) { right_sample += ch1 * vol_r; }
-	if(io().soundctlL->channel_enable_l & 0b0010) { left_sample += ch2 * vol_l; }
-	if(io().soundctlL->channel_enable_r & 0b0010) { right_sample += ch2 * vol_r; }
-	if(io().soundctlL->channel_enable_l & 0b0100) { left_sample += ch3 * vol_l; }
-	if(io().soundctlL->channel_enable_r & 0b0100) { right_sample += ch3 * vol_r; }
-	if(io().soundctlL->channel_enable_l & 0b1000) { left_sample += ch4 * vol_l; }
-	if(io().soundctlL->channel_enable_r & 0b1000) { right_sample += ch4 * vol_r; }
+	if(io().soundctlL->channel_enable_l & 0b0001) {
+		left_sample += ch1 * vol_l;
+	}
+	if(io().soundctlL->channel_enable_r & 0b0001) {
+		right_sample += ch1 * vol_r;
+	}
+	if(io().soundctlL->channel_enable_l & 0b0010) {
+		left_sample += ch2 * vol_l;
+	}
+	if(io().soundctlL->channel_enable_r & 0b0010) {
+		right_sample += ch2 * vol_r;
+	}
+	if(io().soundctlL->channel_enable_l & 0b0100) {
+		left_sample += ch3 * vol_l;
+	}
+	if(io().soundctlL->channel_enable_r & 0b0100) {
+		right_sample += ch3 * vol_r;
+	}
+	if(io().soundctlL->channel_enable_l & 0b1000) {
+		left_sample += ch4 * vol_l;
+	}
+	if(io().soundctlL->channel_enable_r & 0b1000) {
+		right_sample += ch4 * vol_r;
+	}
 
 	//  DMA mixing
 	if(io().soundctlH->psg_volume != 3) {
@@ -115,10 +140,18 @@ void APU::cycle() {
 		right_sample = right_sample / (1u << (2 - io().soundctlH->psg_volume));
 	}
 
-	if(io().soundctlH->enable_left_A) { left_sample += fifoA; }
-	if(io().soundctlH->enable_right_A) { right_sample += fifoA; }
-	if(io().soundctlH->enable_left_B) { left_sample += fifoB; }
-	if(io().soundctlH->enable_right_B) { right_sample += fifoB; }
+	if(io().soundctlH->enable_left_A) {
+		left_sample += fifoA;
+	}
+	if(io().soundctlH->enable_right_A) {
+		right_sample += fifoA;
+	}
+	if(io().soundctlH->enable_left_B) {
+		left_sample += fifoB;
+	}
+	if(io().soundctlH->enable_right_B) {
+		right_sample += fifoB;
+	}
 
 	const uint16 bias = (*io().soundbias >> 1u) & 0x1FF;
 	const uint8 resolution = (*io().soundbias >> 14u) & 0b11u;
@@ -161,17 +194,23 @@ void APU::cycle() {
 void APU::timer_tick_length() {
 	if(m_square1.running && m_square1.length_counter != 0) {
 		m_square1.length_counter--;
-		if(m_square1.length_counter == 0) { m_square1.running = false; }
+		if(m_square1.length_counter == 0) {
+			m_square1.running = false;
+		}
 	}
 
 	if(m_square2.running && m_square2.length_counter != 0) {
 		m_square2.length_counter--;
-		if(m_square2.length_counter == 0) { m_square2.running = false; }
+		if(m_square2.length_counter == 0) {
+			m_square2.running = false;
+		}
 	}
 
 	if(m_wave.running && m_wave.length_counter != 0) {
 		m_wave.length_counter--;
-		if(m_wave.length_counter == 0) { m_wave.running = false; }
+		if(m_wave.length_counter == 0) {
+			m_wave.running = false;
+		}
 	}
 }
 
@@ -221,7 +260,9 @@ void APU::timer_tick_envelope() {
  *  of the output digital data.
  */
 void APU::timer_tick_wave() {
-	if(!m_wave.running) { return; }
+	if(!m_wave.running) {
+		return;
+	}
 
 	if(m_wave.cycles != 0) {
 		m_wave.cycles--;
@@ -243,7 +284,9 @@ void APU::timer_tick_wave() {
 int16 APU::generate_sample_square1() {
 	auto& ch1h = io().ch1ctlH;
 
-	if(!m_square1.running) { return 0; }
+	if(!m_square1.running) {
+		return 0;
+	}
 
 	const unsigned sample_rate = 262144;//  in Hz
 	const unsigned sample_number = m_cycles / 64;
@@ -261,7 +304,9 @@ int16 APU::generate_sample_square1() {
 int16 APU::generate_sample_square2() {
 	auto& ch2l = io().ch2ctlL;
 
-	if(!m_square2.running) { return 0; }
+	if(!m_square2.running) {
+		return 0;
+	}
 
 	const unsigned sample_rate = 262144;//  in Hz
 	const unsigned sample_number = m_cycles / 64;
@@ -277,7 +322,9 @@ int16 APU::generate_sample_square2() {
 }
 
 int16 APU::generate_sample_noise() {
-	if(!m_wave.running) { return 0; }
+	if(!m_wave.running) {
+		return 0;
+	}
 
 	const unsigned which_bank = ((unsigned)io().ch3ctlL->bank + (m_wave.current_digit / 32)) % 2;
 	const unsigned which_digit = m_wave.current_digit % 32;
@@ -292,7 +339,9 @@ int16 APU::generate_sample_noise() {
 		digit = bank.read8(byte) & 0x0Fu;
 	}
 
-	if(io().ch3ctlH->force_volume) { return (int16)((digit * 3) / 4); }
+	if(io().ch3ctlH->force_volume) {
+		return (int16)((digit * 3) / 4);
+	}
 
 	const unsigned shift = (io().ch3ctlH->volume == 0) ? 4 : (io().ch3ctlH->volume - 1);
 	return (int16)(digit >> shift);
@@ -303,7 +352,9 @@ int16 APU::generate_sample_wave() {
 }
 
 int16 APU::generate_sample_fifoA() {
-	if(m_soundA.samples.empty()) { return 0; }
+	if(m_soundA.samples.empty()) {
+		return 0;
+	}
 
 	const int16 sample =
 	        static_cast<int16>(static_cast<int8>(m_soundA.samples.front())) / (2 - io().soundctlH->volumeA);
@@ -313,7 +364,9 @@ int16 APU::generate_sample_fifoA() {
 }
 
 int16 APU::generate_sample_fifoB() {
-	if(m_soundB.samples.empty()) { return 0; }
+	if(m_soundB.samples.empty()) {
+		return 0;
+	}
 
 	const int16 sample =
 	        static_cast<int16>(static_cast<int8>(m_soundB.samples.front())) / (2 - io().soundctlH->volumeB);
@@ -370,7 +423,9 @@ void APU::set_wave_running(bool running) {
 
 void APU::on_timer_overflow(unsigned timer_num) {
 	//  Only Timers 0/1 can be used for DMA sound
-	if(timer_num >= 2) { return; }
+	if(timer_num >= 2) {
+		return;
+	}
 
 	const unsigned target_sample_rate = 131072 >> (3 - ((*io().soundbias >> 14u) & 0b11u));
 
@@ -383,7 +438,9 @@ void APU::on_timer_overflow(unsigned timer_num) {
 		}
 
 		//  Check if FIFOs contain enough data
-		if(fifo.size() == 16 || fifo.empty()) { cpu().dma_request_fifoA(); }
+		if(fifo.size() == 16 || fifo.empty()) {
+			cpu().dma_request_fifoA();
+		}
 	}
 
 	if((io().soundctlH->enable_left_B || io().soundctlH->enable_right_B) && io().soundctlH->timer_sel_B == timer_num) {
@@ -395,14 +452,20 @@ void APU::on_timer_overflow(unsigned timer_num) {
 		}
 
 		//  Check if FIFOs contain enough data
-		if(fifo.size() == 16 || fifo.empty()) { cpu().dma_request_fifoB(); }
+		if(fifo.size() == 16 || fifo.empty()) {
+			cpu().dma_request_fifoB();
+		}
 	}
 }
 
 void APU::push_sample_fifoA(uint8 value, unsigned sample_rate) {
-	for(unsigned i = 0; i < 262144 / sample_rate; ++i) { m_soundA.samples.push_back(value); }
+	for(unsigned i = 0; i < 262144 / sample_rate; ++i) {
+		m_soundA.samples.push_back(value);
+	}
 }
 
 void APU::push_sample_fifoB(uint8 value, unsigned sample_rate) {
-	for(unsigned i = 0; i < 262144 / sample_rate; ++i) { m_soundB.samples.push_back(value); }
+	for(unsigned i = 0; i < 262144 / sample_rate; ++i) {
+		m_soundB.samples.push_back(value);
+	}
 }

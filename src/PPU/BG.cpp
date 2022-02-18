@@ -18,7 +18,8 @@ constexpr BG<n>& Backgrounds::current_bg() {
 template<unsigned int n>
 void Backgrounds::draw_textmode() {
 	BG<n> const& bg = current_bg<n>();
-	if(!bg_enabled<n>()) return;
+	if(!bg_enabled<n>())
+		return;
 
 	const auto get_bg_tile_dot = [this](uint32 base, uint16 tile, uint8 ly_in_tile, uint8 dot_in_tile,
 	                                    bool depth_flag) -> uint8 {
@@ -29,7 +30,8 @@ void Backgrounds::draw_textmode() {
 		uint8 byte = m_ppu.mem().vram.readT<uint8>(base + offset_to_tile + offset_to_dot);
 		if(!depth_flag) {
 			const bool is_right_pixel = (dot_in_tile % 2) != 0;
-			if(is_right_pixel) byte >>= 4u;
+			if(is_right_pixel)
+				byte >>= 4u;
 			byte &= 0x0Fu;
 		}
 
