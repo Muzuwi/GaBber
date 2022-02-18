@@ -1,7 +1,8 @@
 #include "Tests/Harness.hpp"
 #include "CPU/Instructions/ARM.hpp"
 #include "CPU/Instructions/THUMB.hpp"
-#include "Headers/GaBber.hpp"
+#include "Emulator/GaBber.hpp"
+#include "Bus/Common/BusInterface.hpp"
 #include "Test.hpp"
 
 void TestHarness::run_emulator_tests() {
@@ -54,16 +55,13 @@ void TestHarness::run_emulator_tests() {
 	r._bitseq1 = 0b00;
 	r.immediate_operand = true;
 	Test movT { TestType::InstructionARM, r._opcode, "MOV/Simple Immediate" };
-	movT.prepare(RegState { 2, 0xDEADBABE })
-	        .expect(RegState { 2, 0xff });
+	movT.prepare(RegState { 2, 0xDEADBABE }).expect(RegState { 2, 0xff });
 	test_run(movT);
 
 	r.immediate_operand = false;
 	r.operand2 = 0b0011;
 	Test movTR { TestType::InstructionARM, r._opcode, "MOV/Simple Reg" };
-	movT.prepare(RegState { 2, 0xDEADBABE })
-	        .prepare(RegState { 3, 0xFEEDFACE })
-	        .expect(RegState { 2, 0xFEEDFACE });
+	movT.prepare(RegState { 2, 0xDEADBABE }).prepare(RegState { 3, 0xFEEDFACE }).expect(RegState { 2, 0xFEEDFACE });
 	test_run(movTR);
 
 	Test adcs { TestType::InstructionARM, 0xe0b00271, "ADCS/Shift Carry In" };
@@ -167,13 +165,11 @@ void TestHarness::run_emulator_tests() {
 	test_run(stmibbase1);
 
 	Test stmdbemptyrlist { TestType::InstructionARM, 0xE8200000, "BDT/STMDB empty rlist" };
-	stmdbemptyrlist.prepare(RegState { 0, 0x777 })
-	        .expect(RegState { 0, 0x737 });
+	stmdbemptyrlist.prepare(RegState { 0, 0x777 }).expect(RegState { 0, 0x737 });
 	test_run(stmdbemptyrlist);
 
 	Test abc { TestType::InstructionARM, 0xe2688000, "RSB shift count 0" };
-	abc.prepare(RegState { 8, 1 })
-	        .expect(RegState { 8, 0xffffffff });
+	abc.prepare(RegState { 8, 1 }).expect(RegState { 8, 0xffffffff });
 	test_run(abc);
 
 	//	r.operand2 = 0b1111;
@@ -192,14 +188,12 @@ void TestHarness::test_run(Test& test) {
 	fmt::print("Running testcase: \u001b[96m{}\u001b[0m - ", test.test_case());
 
 	auto const& states = test.initial_states();
-	for(auto& state : states) {
-		test_set(state);
-	}
+	for(auto& state : states) { test_set(state); }
 
 	if(test.type() == TestType::InstructionARM)
-		m_gba.cpu().execute_ARM(test.opcode());
+		cpu().execute_ARM(test.opcode());
 	else
-		m_gba.cpu().execute_THUMB(test.opcode());
+		cpu().execute_THUMB(test.opcode());
 
 	auto const& expectations = test.expectations();
 	for(auto& expect : expectations) {
@@ -217,23 +211,21 @@ void TestHarness::test_run(Test& test) {
 	m_tests_run++;
 	if(has_failed) m_tests_failed++;
 
-	if(!has_failed) {
-		fmt::print("\u001b[92mPASSED\u001b[0m\n");
-	}
+	if(!has_failed) { fmt::print("\u001b[92mPASSED\u001b[0m\n"); }
 }
 
 void TestHarness::test_set_mem(MemState const& state) {
 	switch(state.m_size) {
 		case MemState::OpSize::b32: {
-			m_gba.mmu().write32(state.m_address, state.m_word);
+			bus().write32(state.m_address, state.m_word);
 			break;
 		}
 		case MemState::OpSize::b16: {
-			m_gba.mmu().write16(state.m_address, state.m_hword);
+			bus().write16(state.m_address, state.m_hword);
 			break;
 		}
 		case MemState::OpSize::b8: {
-			m_gba.mmu().write8(state.m_address, state.m_byte);
+			bus().write8(state.m_address, state.m_byte);
 			break;
 		}
 		default: break;
@@ -241,37 +233,43 @@ void TestHarness::test_set_mem(MemState const& state) {
 }
 
 void TestHarness::test_set_reg(RegState const& state) {
-	m_gba.cpu().reg(state.m_reg) = state.m_reg_value;
-	m_gba.cpu().m_pc_dirty = false;
+	cpu().reg(state.m_reg) = state.m_reg_value;
+	cpu().m_pc_dirty = false;
 }
 
 bool TestHarness::test_validate_mem(MemState const& state) {
 	switch(state.m_size) {
-		case MemState::OpSize::b32: return m_gba.mmu().read32(state.m_address) == state.m_word;
-		case MemState::OpSize::b16: return m_gba.mmu().read16(state.m_address) == state.m_hword;
-		case MemState::OpSize::b8: return m_gba.mmu().read8(state.m_address) == state.m_byte;
+		case MemState::OpSize::b32: return bus().read32(state.m_address) == state.m_word;
+		case MemState::OpSize::b16: return bus().read16(state.m_address) == state.m_hword;
+		case MemState::OpSize::b8: return bus().read8(state.m_address) == state.m_byte;
 		default: return false;
 	}
 }
 
 bool TestHarness::test_validate_reg(RegState const& state) {
-	uint32 current = m_gba.cpu().creg(state.m_reg);
+	uint32 current = cpu().creg(state.m_reg);
 	return current == state.m_reg_value;
 }
 
 std::string TestHarness::expectation_format_fail(Expectation const& expectation) {
 	switch(expectation.m_type) {
 		case ExpectType::Register: {
-			return fmt::format("r{} = {:08x}, actual value = {:08x}",
-			                   expectation.m_data.m_reg_expect.m_reg, expectation.m_data.m_reg_expect.m_reg_value,
-			                   m_gba.cpu().creg(expectation.m_data.m_reg_expect.m_reg));
+			return fmt::format("r{} = {:08x}, actual value = {:08x}", expectation.m_data.m_reg_expect.m_reg,
+			                   expectation.m_data.m_reg_expect.m_reg_value,
+			                   cpu().creg(expectation.m_data.m_reg_expect.m_reg));
 		}
 		case ExpectType::Memory: {
 			auto const& expect = expectation.m_data.m_mem_expect;
 			switch(expect.m_size) {
-				case MemState::OpSize::b32: return fmt::format("word[{:08x}] = {:08x}, actual value = {:08x}", expect.m_address, expect.m_word, m_gba.mmu().read32(expect.m_address));
-				case MemState::OpSize::b16: return fmt::format("hword[{:08x}] = {:04x}, actual value = {:04x}", expect.m_address, expect.m_hword, m_gba.mmu().read16(expect.m_address));
-				case MemState::OpSize::b8: return fmt::format("byte[{:08x}] = {:02x}, actual value = {:02x}", expect.m_address, expect.m_byte, m_gba.mmu().read8(expect.m_address));
+				case MemState::OpSize::b32:
+					return fmt::format("word[{:08x}] = {:08x}, actual value = {:08x}", expect.m_address, expect.m_word,
+					                   bus().read32(expect.m_address));
+				case MemState::OpSize::b16:
+					return fmt::format("hword[{:08x}] = {:04x}, actual value = {:04x}", expect.m_address,
+					                   expect.m_hword, bus().read16(expect.m_address));
+				case MemState::OpSize::b8:
+					return fmt::format("byte[{:08x}] = {:02x}, actual value = {:02x}", expect.m_address, expect.m_byte,
+					                   bus().read8(expect.m_address));
 				default: return "";
 			}
 		}
@@ -280,9 +278,9 @@ std::string TestHarness::expectation_format_fail(Expectation const& expectation)
 }
 
 void TestHarness::test_set_flag(FlagState const& v) {
-	m_gba.cpu().cspr() = v.m_flag_reg;
+	cpu().cspr() = v.m_flag_reg;
 }
 
 bool TestHarness::test_validate_flag(FlagState const& v) {
-	return m_gba.cpu().cspr().raw() == v.m_flag_reg.raw();
+	return cpu().cspr().raw() == v.m_flag_reg.raw();
 }

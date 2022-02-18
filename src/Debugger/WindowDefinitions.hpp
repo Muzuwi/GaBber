@@ -1,10 +1,10 @@
 #pragma once
 #include <imgui.h>
 #include <imgui_memory_editor.h>
+#include "Bus/Common/BusDevice.hpp"
 #include "Debugger/Breakpoint.hpp"
 #include "Debugger/DebuggerWindow.hpp"
-#include "Headers/StdTypes.hpp"
-#include "MMU/BusDevice.hpp"
+#include "Emulator/StdTypes.hpp"
 
 class MemEditor : public DebuggerWindow {
 	MemoryEditor m_editor;

@@ -1,25 +1,40 @@
 #include "PPU/BG.hpp"
-#include <optional>
+#include "Bus/Common/MemoryLayout.hpp"
 #include "PPU/PPU.hpp"
 
 template<unsigned n>
 constexpr BG<n>& Backgrounds::current_bg() {
 	static_assert(n < 4, "Invalid BG number");
 	if constexpr(n == 0)
-		return m_ppu.mem.io.bg0;
+		return m_ppu.io().bg0;
 	else if constexpr(n == 1)
-		return m_ppu.mem.io.bg1;
+		return m_ppu.io().bg1;
 	else if constexpr(n == 2)
-		return m_ppu.mem.io.bg2;
+		return m_ppu.io().bg2;
 	else
-		return m_ppu.mem.io.bg3;
+		return m_ppu.io().bg3;
 }
 
 template<unsigned int n>
 void Backgrounds::draw_textmode() {
 	BG<n> const& bg = current_bg<n>();
-	if(!bg_enabled<n>())
-		return;
+	if(!bg_enabled<n>()) return;
+
+	const auto get_bg_tile_dot = [this](uint32 base, uint16 tile, uint8 ly_in_tile, uint8 dot_in_tile,
+	                                    bool depth_flag) -> uint8 {
+		const unsigned d = depth_flag ? 1 : 2;
+		const unsigned offset_to_tile = tile * (64 / d);
+		const unsigned offset_to_dot = ly_in_tile * (8 / d) + (dot_in_tile / d);
+
+		uint8 byte = m_ppu.mem().vram.readT<uint8>(base + offset_to_tile + offset_to_dot);
+		if(!depth_flag) {
+			const bool is_right_pixel = (dot_in_tile % 2) != 0;
+			if(is_right_pixel) byte >>= 4u;
+			byte &= 0x0Fu;
+		}
+
+		return byte;
+	};
 
 	//	assert(bg.m_control->screen_size == 0);
 	//	assert(bg.m_control->mosaic == 0);
@@ -45,25 +60,19 @@ void Backgrounds::draw_textmode() {
 		const unsigned which_vscreen = vscreen_screensx * vscreen_y + vscreen_x;
 		const uint32 vscreen_base = screen_base + which_vscreen * 0x800;
 
-		const std::optional<TextScreenData> v = m_ppu.get_bg_text_data(vscreen_base, ly % 256u, x % 256u);
-		assert(v.has_value());
-
-		const TextScreenData text_data = *v;
+		const TextScreenData text_data =
+		        m_ppu.mem().vram.readT<TextScreenData>(PPU::bg_text_data_offset(vscreen_base, ly % 256u, x % 256u));
 		const bool xflip = text_data.m_struct.horizontal_flip;
 		const bool yflip = text_data.m_struct.vertical_flip;
 		const uint16 tile = text_data.m_struct.tile_number;
 		const uint16 palette = text_data.m_struct.palette_number;
 
-		const uint8 tile_dot = xflip ? (7 - (x % 8))
-		                             : (x % 8);
-		const uint8 tile_line = yflip ? (7 - (ly % 8))
-		                              : (ly % 8);
-		const uint8 dot_color = m_ppu.get_bg_tile_dot(tile_base, tile, tile_line, tile_dot, depth);
+		const uint8 tile_dot = xflip ? (7 - (x % 8)) : (x % 8);
+		const uint8 tile_line = yflip ? (7 - (ly % 8)) : (ly % 8);
+		const uint8 dot_color = get_bg_tile_dot(tile_base, tile, tile_line, tile_dot, depth);
 
-		const std::optional<Color> color = m_ppu.get_palette_color(depth ? 0 : palette, dot_color);
-		assert(color.has_value());
-
-		m_ppu.colorbuffer_write_bg(i - scx, dot_color, priority, *color);
+		const auto color = m_ppu.mem().palette.readT<Color>(PPU::palette_color_offset(depth ? 0 : palette, dot_color));
+		m_ppu.colorbuffer_write_bg(i - scx, dot_color, priority, color);
 	}
 }
 
@@ -83,57 +92,55 @@ void Backgrounds::draw_mode2() {
 }
 
 void Backgrounds::draw_mode3() {
-	const auto& ctl = m_ppu.mem.io.dispcnt;
+	const auto& ctl = m_ppu.io().dispcnt;
 
 	if(ctl->BG2) {
-		const auto ly = *m_ppu.mem.io.vcount;
+		const auto ly = *m_ppu.io().vcount;
 		const auto line_offset = ly * 480;//  480 bytes per line
 
 		for(unsigned x = 0; x < 240; ++x) {
-			const auto& color = (Color)m_ppu.mem.vram.read16(line_offset + x * 2);
+			const auto& color = (Color)m_ppu.mem().vram.read16(line_offset + x * 2);
 			m_ppu.colorbuffer_write_bg(x, 1, 0, color);
 		}
 	}
 }
 
 void Backgrounds::draw_mode4() {
-	const auto& ctl = m_ppu.mem.io.dispcnt;
+	const auto& ctl = m_ppu.io().dispcnt;
 
 	if(ctl->BG2) {
-		const auto ly = *m_ppu.mem.io.vcount;
+		const auto ly = *m_ppu.io().vcount;
 		const auto frame_offset = (ctl->frame_select ? 0xA000 : 0);
 
 		for(unsigned i = 0; i < 240; ++i) {
 			const auto line_offset = ly * 240;
-			const auto pixel = m_ppu.mem.vram.read8(frame_offset + line_offset + i);
-			const std::optional<Color> color = m_ppu.get_palette_color(0, pixel);
-			assert(color.has_value());
+			const auto pixel = m_ppu.mem().vram.read8(frame_offset + line_offset + i);
+			const auto color = m_ppu.mem().palette.readT<Color>(PPU::palette_color_offset(0, pixel));
 
-			m_ppu.colorbuffer_write_bg(i, 1, 0, *color);
+			m_ppu.colorbuffer_write_bg(i, 1, 0, color);
 		}
 	}
 }
 
 void Backgrounds::draw_mode5() {
-	const auto& ctl = m_ppu.mem.io.dispcnt;
+	const auto& ctl = m_ppu.io().dispcnt;
 
 	if(ctl->BG2) {
-		const auto ly = *m_ppu.mem.io.vcount;
+		const auto ly = *m_ppu.io().vcount;
 		const auto frame_offset = (ctl->frame_select ? 0xA000 : 0);
 
 		for(unsigned i = 0; i < 240; ++i) {
 			const auto line_offset = ly * 240;
-			const auto pixel = m_ppu.mem.vram.read8(frame_offset + line_offset + i);
-			const std::optional<Color> color = m_ppu.get_palette_color(0, pixel);
+			const auto pixel = m_ppu.mem().vram.read8(frame_offset + line_offset + i);
+			const auto color = m_ppu.mem().palette.readT<Color>(PPU::palette_color_offset(0, pixel));
 
-			assert(color.has_value());
-			m_ppu.colorbuffer_write_bg(i, 1, 0, *color);
+			m_ppu.colorbuffer_write_bg(i, 1, 0, color);
 		}
 	}
 }
 
 void Backgrounds::draw_scanline() {
-	const auto& ctl = m_ppu.mem.io.dispcnt;
+	const auto& ctl = m_ppu.io().dispcnt;
 
 	switch(ctl->video_mode) {
 		case 0: draw_mode0(); break;
@@ -152,11 +159,11 @@ void Backgrounds::draw_scanline() {
 template<unsigned int n>
 constexpr bool Backgrounds::bg_enabled() {
 	if constexpr(n == 0)
-		return m_ppu.mem.io.dispcnt->BG0;
+		return m_ppu.io().dispcnt->BG0;
 	else if constexpr(n == 1)
-		return m_ppu.mem.io.dispcnt->BG1;
+		return m_ppu.io().dispcnt->BG1;
 	else if constexpr(n == 2)
-		return m_ppu.mem.io.dispcnt->BG2;
+		return m_ppu.io().dispcnt->BG2;
 	else
-		return m_ppu.mem.io.dispcnt->BG3;
+		return m_ppu.io().dispcnt->BG3;
 }

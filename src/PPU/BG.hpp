@@ -1,5 +1,5 @@
 #pragma once
-#include "IO/BG.hpp"
+#include "Bus/IO/BG.hpp"
 
 class PPU;
 class Backgrounds {

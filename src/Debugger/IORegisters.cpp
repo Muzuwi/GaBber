@@ -1,6 +1,8 @@
+#include "APU/APU.hpp"
+#include "Bus/Common/MemoryLayout.hpp"
 #include "CPU/ARM7TDMI.hpp"
 #include "Debugger/WindowDefinitions.hpp"
-#include "Headers/GaBber.hpp"
+#include "Emulator/GaBber.hpp"
 
 void IORegisters::draw_window() {
 	if(ImGui::BeginTabBar("ioreg_tabs")) {
@@ -34,18 +36,15 @@ void IORegisters::draw_window() {
 void IORegisters::draw_interrupts() {
 	auto& cpu = m_emu.cpu();
 
-	static constexpr char const* labels[14] = {
-		"VBlank", "HBlank", "VCounter", "Timer 0",
-		"Timer 1", "Timer 2", "Timer 3", "Serial",
-		"DMA0", "DMA1", "DMA2", "DMA3",
-		"Keypad", "Game Pak"
-	};
+	static constexpr char const* labels[14] = { "VBlank",  "HBlank",  "VCounter", "Timer 0", "Timer 1",
+		                                        "Timer 2", "Timer 3", "Serial",   "DMA0",    "DMA1",
+		                                        "DMA2",    "DMA3",    "Keypad",   "Game Pak" };
 
 	bool if_values[14] = {};
 	bool ie_values[14] = {};
 	for(unsigned i = 0; i < 14; ++i) {
-		if_values[i] = (*cpu.io.if_) & (1u << i);
-		ie_values[i] = (*cpu.io.ie) & (1u << i);
+		if_values[i] = (*cpu.io().if_) & (1u << i);
+		ie_values[i] = (*cpu.io().ie) & (1u << i);
 	}
 
 	ImGui::NewLine();
@@ -65,7 +64,7 @@ void IORegisters::draw_interrupts() {
 		ImGui::Checkbox(str_if.c_str(), &if_values[i]);
 	}
 
-	bool ime = *cpu.io.ime & 1u;
+	bool ime = *cpu.io().ime & 1u;
 	ImGui::Text("IME");
 	ImGui::SameLine(100.0f);
 	ImGui::Checkbox("##ime", &ime);
@@ -73,16 +72,8 @@ void IORegisters::draw_interrupts() {
 
 	ImGui::PlotLines(
 	        "Cycle count per state update",
-	        [](void* data, int index) -> float {
-		        return static_cast<float>(reinterpret_cast<unsigned*>(data)[index]);
-	        },
-	        (void*)&GaBber::instance().cycle_samples()[0],
-	        GaBber::instance().cycle_samples().size(),
-	        0,
-	        nullptr,
-	        0,
-	        100,
-	        ImVec2(800.0, 200.0));
+	        [](void* data, int index) -> float { return static_cast<float>(reinterpret_cast<unsigned*>(data)[index]); },
+	        (void*)&m_emu.cycle_samples()[0], m_emu.cycle_samples().size(), 0, nullptr, 0, 100, ImVec2(800.0, 200.0));
 }
 
 void IORegisters::draw_ppu() {
@@ -96,13 +87,7 @@ void IORegisters::draw_ppu() {
 		ImGui::Text("OAM Access: %d\n", ctl->oam_in_HBlank);
 		ImGui::Text("OBJ Mapping: %s", ctl->obj_one_dim ? "One-dimensional" : "Two-dimensional");
 		ImGui::Text("Forced blank: %d", ctl->forced_blank);
-		bool values[5] = {
-			ctl->BG0,
-			ctl->BG1,
-			ctl->BG2,
-			ctl->BG3,
-			ctl->OBJ
-		};
+		bool values[5] = { ctl->BG0, ctl->BG1, ctl->BG2, ctl->BG3, ctl->OBJ };
 		ImGui::Checkbox("BG0", &values[0]);
 		ImGui::SameLine();
 		ImGui::Checkbox("BG1", &values[1]);
@@ -113,11 +98,7 @@ void IORegisters::draw_ppu() {
 		ImGui::SameLine();
 		ImGui::Checkbox("OBJ", &values[4]);
 
-		bool windowValues[3] = {
-			ctl->window0,
-			ctl->window1,
-			ctl->objWindow
-		};
+		bool windowValues[3] = { ctl->window0, ctl->window1, ctl->objWindow };
 		ImGui::Checkbox("Window 0", &windowValues[0]);
 		ImGui::SameLine();
 		ImGui::Checkbox("Window 1", &windowValues[1]);
@@ -126,14 +107,8 @@ void IORegisters::draw_ppu() {
 	};
 	auto draw_dispstat = [this] {
 		auto& stat = m_emu.mem().io.dispstat;
-		bool values[] = {
-			stat->VBlank,
-			stat->HBlank,
-			stat->VCounter,
-			stat->VBlank_IRQ,
-			stat->HBlank_IRQ,
-			stat->VCounter_IRQ
-		};
+		bool values[] = { stat->VBlank,     stat->HBlank,     stat->VCounter,
+			              stat->VBlank_IRQ, stat->HBlank_IRQ, stat->VCounter_IRQ };
 
 		ImGui::Checkbox("VBlank", &values[0]);
 		ImGui::SameLine();
@@ -152,8 +127,7 @@ void IORegisters::draw_ppu() {
 		ImGui::Text("Priority: %d", bg.m_control->priority);
 		ImGui::Text("Tile base: %08x", 0x06000000 + bg.m_control->base_tile_block * 2 * kB);
 		ImGui::Text("Screen base: %08x", 0x06000000 + bg.m_control->base_screen_block * 16 * kB);
-		ImGui::Text("Screen size: %dx%d",
-		            bg.m_control->screen_size & 1u ? 512u : 256u,
+		ImGui::Text("Screen size: %dx%d", bg.m_control->screen_size & 1u ? 512u : 256u,
 		            bg.m_control->screen_size & 2u ? 512u : 256u);
 		bool color = bg.m_control->palette_flag;
 		bool mosaic = bg.m_control->palette_flag;
@@ -166,8 +140,7 @@ void IORegisters::draw_ppu() {
 		ImGui::Text("Priority: %d", bg.m_control->priority);
 		ImGui::Text("Tile base: %08x", 0x06000000 + bg.m_control->base_tile_block * 2 * kB);
 		ImGui::Text("Screen base: %08x", 0x06000000 + bg.m_control->base_screen_block * 16 * kB);
-		ImGui::Text("Screen size: %dx%d",
-		            bg.m_control->screen_size & 1u ? 512u : 256u,
+		ImGui::Text("Screen size: %dx%d", bg.m_control->screen_size & 1u ? 512u : 256u,
 		            bg.m_control->screen_size & 2u ? 512u : 256u);
 		bool color = bg.m_control->palette_flag;
 		bool mosaic = bg.m_control->palette_flag;
@@ -180,8 +153,7 @@ void IORegisters::draw_ppu() {
 		ImGui::Text("Priority: %d", bg.m_control->priority);
 		ImGui::Text("Tile base: %08x", 0x06000000 + bg.m_control->base_tile_block * 2 * kB);
 		ImGui::Text("Screen base: %08x", 0x06000000 + bg.m_control->base_screen_block * 16 * kB);
-		ImGui::Text("Screen size: %dx%d",
-		            bg.m_control->screen_size & 1u ? 512u : 256u,
+		ImGui::Text("Screen size: %dx%d", bg.m_control->screen_size & 1u ? 512u : 256u,
 		            bg.m_control->screen_size & 2u ? 512u : 256u);
 		bool color = bg.m_control->palette_flag;
 		bool mosaic = bg.m_control->palette_flag;
@@ -194,8 +166,7 @@ void IORegisters::draw_ppu() {
 		ImGui::Text("Priority: %d", bg.m_control->priority);
 		ImGui::Text("Tile base: %08x", 0x06000000 + bg.m_control->base_tile_block * 2 * kB);
 		ImGui::Text("Screen base: %08x", 0x06000000 + bg.m_control->base_screen_block * 16 * kB);
-		ImGui::Text("Screen size: %dx%d",
-		            bg.m_control->screen_size & 1u ? 512u : 256u,
+		ImGui::Text("Screen size: %dx%d", bg.m_control->screen_size & 1u ? 512u : 256u,
 		            bg.m_control->screen_size & 2u ? 512u : 256u);
 		bool color = bg.m_control->palette_flag;
 		bool mosaic = bg.m_control->palette_flag;
@@ -214,13 +185,9 @@ void IORegisters::draw_ppu() {
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
-		{
-			draw_dispcnt();
-		}
+		{ draw_dispcnt(); }
 		ImGui::TableNextColumn();
-		{
-			draw_dispstat();
-		}
+		{ draw_dispstat(); }
 		ImGui::EndTable();
 	}
 	ImGui::PopStyleVar(1);
@@ -235,13 +202,9 @@ void IORegisters::draw_ppu() {
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
-		{
-			draw_bg0();
-		}
+		{ draw_bg0(); }
 		ImGui::TableNextColumn();
-		{
-			draw_bg1();
-		}
+		{ draw_bg1(); }
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
@@ -251,13 +214,9 @@ void IORegisters::draw_ppu() {
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
-		{
-			draw_bg2();
-		}
+		{ draw_bg2(); }
 		ImGui::TableNextColumn();
-		{
-			draw_bg3();
-		}
+		{ draw_bg3(); }
 
 		ImGui::EndTable();
 	}
@@ -312,22 +271,22 @@ void IORegisters::draw_sound() {
 	}
 	ImGui::PopStyleVar(1);
 
-	const char* strings[] = {
-		"1", "2", "3", "4"
-	};
+	const char* strings[] = { "1", "2", "3", "4" };
 	ImGui::Text("Channels [L]: ");
 	ImGui::SameLine();
 	for(unsigned i = 0; i < 4; ++i) {
 		bool v = io.soundctlL->channel_enable_l & (1 << i);
 		ImGui::Checkbox(strings[i], &v);
-		if(i != 3) ImGui::SameLine();
+		if(i != 3)
+			ImGui::SameLine();
 	}
 	ImGui::Text("Channels [R]: ");
 	ImGui::SameLine();
 	for(unsigned i = 0; i < 4; ++i) {
 		bool v = io.soundctlL->channel_enable_r & (1 << i);
 		ImGui::Checkbox(strings[i], &v);
-		if(i != 3) ImGui::SameLine();
+		if(i != 3)
+			ImGui::SameLine();
 	}
 
 	int vol_l = io.soundctlL->volume_l;
@@ -344,21 +303,16 @@ void IORegisters::draw_sound() {
 	ImGui::SliderInt("", &vol_r, 0, 7);
 	ImGui::PopID();
 
-	ImGui::PlotLines("Internal samples @ 262.144kHz",
-	                 &GaBber::instance().sound().internal_samples()[0],
-	                 GaBber::instance().sound().internal_samples().size(),
-	                 0,
-	                 nullptr,
-	                 -1.0,
-	                 1.0, ImVec2(800.0, 100.0));
+	ImGui::PlotLines("Internal samples @ 262.144kHz", &apu().internal_samples()[0], apu().internal_samples().size(), 0,
+	                 nullptr, -1.0, 1.0, ImVec2(800.0, 100.0));
 }
 
 void IORegisters::draw_dma() {
 	auto& cpu = m_emu.cpu();
-	DMAx<0> const& dma0 = cpu.io.dma0;
-	DMAx<1> const& dma1 = cpu.io.dma1;
-	DMAx<2> const& dma2 = cpu.io.dma2;
-	DMAx<3> const& dma3 = cpu.io.dma3;
+	DMAx<0> const& dma0 = cpu.io().dma0;
+	DMAx<1> const& dma1 = cpu.io().dma1;
+	DMAx<2> const& dma2 = cpu.io().dma2;
+	DMAx<3> const& dma3 = cpu.io().dma3;
 
 	auto draw_dma_stats = []<const unsigned n>(DMAx<n> const& dma) {
 		bool active = dma.m_is_running;
@@ -376,15 +330,11 @@ void IORegisters::draw_dma() {
 		auto timing = dma.m_ctrl->start_timing;
 		auto timing_str = [](DMAStartTiming timing) -> const char* {
 			switch(timing) {
-				case DMAStartTiming::HBlank:
-					return "HBlank";
-				case DMAStartTiming::VBlank:
-					return "VBlank";
-				case DMAStartTiming::Immediate:
-					return "Immediate";
+				case DMAStartTiming::HBlank: return "HBlank";
+				case DMAStartTiming::VBlank: return "VBlank";
+				case DMAStartTiming::Immediate: return "Immediate";
 				case DMAStartTiming::Special:
-				default:
-					return "Special";
+				default: return "Special";
 			}
 		};
 

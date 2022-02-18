@@ -5,13 +5,12 @@
 #include <vector>
 #include "Debugger/Breakpoint.hpp"
 #include "Debugger/WindowDefinitions.hpp"
-#include "Headers/StdTypes.hpp"
+#include "Emulator/Module.hpp"
+#include "Emulator/StdTypes.hpp"
 
 class GaBber;
-class Debugger {
+class Debugger : Module {
 	friend class BreakpointControl;
-	GaBber& emu;
-
 	MemEditor m_mem_editor;
 	Screen m_screen;
 	GPRs m_registers;
@@ -24,7 +23,7 @@ class Debugger {
 	bool m_break_on_undefined { false };
 	bool m_debug_mode { false };
 public:
-	Debugger(GaBber& v);
+	Debugger(GaBber& emu);
 
 	void draw_debugger_contents();
 

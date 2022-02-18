@@ -1,4 +1,5 @@
-#include "IO/DMA.hpp"
+#include "Bus/IO/DMA.hpp"
+#include "Bus/IO/IOContainer.hpp"
 #include "CPU/ARM7TDMI.hpp"
 
 void ARM7TDMI::dma_run_all() {
@@ -22,7 +23,7 @@ void ARM7TDMI::dma_run_all() {
 
 template<unsigned int x>
 void ARM7TDMI::dma_run() {
-	DMAx<x>& s = io.template dma_for_num<x>();
+	DMAx<x>& s = io().template dma_for_num<x>();
 
 	if(!s.m_is_running) {
 		return;
@@ -31,13 +32,11 @@ void ARM7TDMI::dma_run() {
 	const unsigned n = s.m_count;
 	while(s.m_count--) {
 		//  In FIFO mode, a 32-bit transfer is forced
-		const bool size_flag =
-		        (s.m_ctrl->start_timing == DMAStartTiming::Special && (x == 1 || x == 2))
-		                ? true
-		                : s.m_ctrl->transfer_size;
+		const bool size_flag = (s.m_ctrl->start_timing == DMAStartTiming::Special && (x == 1 || x == 2))
+		                               ? true
+		                               : s.m_ctrl->transfer_size;
 
-		const uint32 data = (size_flag) ? mem_read32(s.m_source_ptr)
-		                                : mem_read16(s.m_source_ptr);
+		const uint32 data = (size_flag) ? mem_read32(s.m_source_ptr) : mem_read16(s.m_source_ptr);
 		if(size_flag) {
 			mem_write32(s.m_destination_ptr, data);
 		} else {
@@ -80,7 +79,7 @@ void ARM7TDMI::dma_run() {
  */
 template<unsigned x>
 void ARM7TDMI::dma_on_enable() {
-	DMAx<x>& s = io.template dma_for_num<x>();
+	DMAx<x>& s = io().template dma_for_num<x>();
 
 	//  In FIFO mode, word count is fixed
 	if(s.m_ctrl->start_timing == DMAStartTiming::Special && (x == 1 || x == 2)) {
@@ -106,7 +105,7 @@ void ARM7TDMI::dma_on_enable() {
  */
 template<unsigned int x>
 void ARM7TDMI::dma_resume() {
-	DMAx<x>& dma = io.template dma_for_num<x>();
+	DMAx<x>& dma = io().template dma_for_num<x>();
 
 	if(dma.m_is_running) {
 		return;
@@ -131,10 +130,10 @@ void ARM7TDMI::dma_resume() {
 }
 
 void ARM7TDMI::dma_start_vblank() {
-	DMAx<0>& dma0 = io.dma0;
-	DMAx<1>& dma1 = io.dma1;
-	DMAx<2>& dma2 = io.dma2;
-	DMAx<3>& dma3 = io.dma3;
+	DMAx<0>& dma0 = io().dma0;
+	DMAx<1>& dma1 = io().dma1;
+	DMAx<2>& dma2 = io().dma2;
+	DMAx<3>& dma3 = io().dma3;
 
 	if(dma0.m_ctrl->enable && dma0.m_ctrl->start_timing == DMAStartTiming::VBlank) {
 		dma_resume<0>();
@@ -154,10 +153,10 @@ void ARM7TDMI::dma_start_vblank() {
 }
 
 void ARM7TDMI::dma_start_hblank() {
-	DMAx<0>& dma0 = io.dma0;
-	DMAx<1>& dma1 = io.dma1;
-	DMAx<2>& dma2 = io.dma2;
-	DMAx<3>& dma3 = io.dma3;
+	DMAx<0>& dma0 = io().dma0;
+	DMAx<1>& dma1 = io().dma1;
+	DMAx<2>& dma2 = io().dma2;
+	DMAx<3>& dma3 = io().dma3;
 
 	if(dma0.m_ctrl->enable && dma0.m_ctrl->start_timing == DMAStartTiming::HBlank) {
 		dma_resume<0>();
@@ -178,41 +177,42 @@ void ARM7TDMI::dma_start_hblank() {
 
 void ARM7TDMI::dma_request_fifoA() {
 	constexpr const uint32 address = 0x040000A0;
-	DMAx<1>& dma1 = io.dma1;
-	DMAx<2>& dma2 = io.dma2;
+	DMAx<1>& dma1 = io().dma1;
+	DMAx<2>& dma2 = io().dma2;
 
-	if(dma1.m_ctrl->enable &&
-	   dma1.m_ctrl->start_timing == DMAStartTiming::Special &&
-	   *dma1.m_destination == address) {
+	if(dma1.m_ctrl->enable && dma1.m_ctrl->start_timing == DMAStartTiming::Special && *dma1.m_destination == address) {
 		dma_resume<1>();
 	}
 
-	if(dma2.m_ctrl->enable &&
-	   dma2.m_ctrl->start_timing == DMAStartTiming::Special &&
-	   *dma2.m_destination == address) {
+	if(dma2.m_ctrl->enable && dma2.m_ctrl->start_timing == DMAStartTiming::Special && *dma2.m_destination == address) {
 		dma_resume<2>();
 	}
 }
 
 void ARM7TDMI::dma_request_fifoB() {
 	constexpr const uint32 address = 0x040000A4;
-	DMAx<1>& dma1 = io.dma1;
-	DMAx<2>& dma2 = io.dma2;
+	DMAx<1>& dma1 = io().dma1;
+	DMAx<2>& dma2 = io().dma2;
 
-	if(dma1.m_ctrl->enable &&
-	   dma1.m_ctrl->start_timing == DMAStartTiming::Special &&
-	   *dma1.m_destination == address) {
+	if(dma1.m_ctrl->enable && dma1.m_ctrl->start_timing == DMAStartTiming::Special && *dma1.m_destination == address) {
 		dma_resume<1>();
 	}
 
-	if(dma2.m_ctrl->enable &&
-	   dma2.m_ctrl->start_timing == DMAStartTiming::Special &&
-	   *dma2.m_destination == address) {
+	if(dma2.m_ctrl->enable && dma2.m_ctrl->start_timing == DMAStartTiming::Special && *dma2.m_destination == address) {
 		dma_resume<2>();
 	}
+}
+template<unsigned int x>
+bool ARM7TDMI::dma_is_running() {
+	return io().template dma_for_num<x>().m_is_running;
 }
 
 template void ARM7TDMI::dma_on_enable<0>();
 template void ARM7TDMI::dma_on_enable<1>();
 template void ARM7TDMI::dma_on_enable<2>();
 template void ARM7TDMI::dma_on_enable<3>();
+
+template bool ARM7TDMI::dma_is_running<0>();
+template bool ARM7TDMI::dma_is_running<1>();
+template bool ARM7TDMI::dma_is_running<2>();
+template bool ARM7TDMI::dma_is_running<3>();

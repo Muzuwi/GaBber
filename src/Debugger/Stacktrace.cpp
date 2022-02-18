@@ -1,5 +1,7 @@
+#include "CPU/ARM7TDMI.hpp"
 #include "Debugger/WindowDefinitions.hpp"
-#include "Headers/GaBber.hpp"
+#include "Emulator/GaBber.hpp"
+#include "Bus/Common/BusInterface.hpp"
 
 void Stacktrace::draw_window() {
 	m_stack.ReadFn = [](const ImU8* addr, size_t off) -> ImU8 {
@@ -9,7 +11,7 @@ void Stacktrace::draw_window() {
 		GaBber::instance().mmu().poke((uint64)addr + off, val);
 	};
 
-	const auto current_sp = GaBber::instance().cpu().sp();
+	const auto current_sp = cpu().sp();
 	m_stack.OptShowDataPreview = true;
 	m_stack.OptGreyOutZeroes = true;
 	m_stack.OptMidColsCount = 4;

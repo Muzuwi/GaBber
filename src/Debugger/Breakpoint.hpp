@@ -1,5 +1,5 @@
 #pragma once
-#include "Headers/StdTypes.hpp"
+#include "Emulator/StdTypes.hpp"
 
 enum BreakpointType {
 	BreakRead = 0x01,

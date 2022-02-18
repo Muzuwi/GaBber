@@ -2,16 +2,13 @@
 #include <fmt/format.h>
 #include <memory>
 #include <optional>
+#include "Bus/IO/Timer.hpp"
 #include "CPU/GPR.hpp"
 #include "CPU/Instructions/ARM.hpp"
 #include "CPU/Instructions/THUMB.hpp"
 #include "CPU/PSR.hpp"
-#include "Headers/StdTypes.hpp"
-#include "IO/DMA.hpp"
-#include "IO/Interrupt.hpp"
-#include "IO/IOContainer.hpp"
-#include "IO/Timer.hpp"
-#include "MMU/IOReg.hpp"
+#include "Emulator/Module.hpp"
+#include "Emulator/StdTypes.hpp"
 
 enum class ExceptionVector {
 	Reset = 0,
@@ -24,22 +21,15 @@ enum class ExceptionVector {
 	Reserved = 7,
 };
 
-class BusInterface;
-class Debugger;
-
 /*
  *  Implementation of the ARM7TDMI processor
  */
-class ARM7TDMI {
+class ARM7TDMI : Module {
 protected:
 	friend class GPRs;
 	friend class IORegisters;
 	friend class TestHarness;
 	friend class Stacktrace;
-
-	IOContainer& io;
-	BusInterface& m_mmu;
-	Debugger& m_debugger;
 
 	CSPR m_status;
 	SPSR m_saved_status;
@@ -50,38 +40,25 @@ protected:
 
 	std::optional<std::reference_wrapper<CSPR>> spsr() {
 		switch(cspr().mode()) {
-			case PRIV_MODE::FIQ:
-				return m_saved_status.m_FIQ;
-			case PRIV_MODE::SVC:
-				return m_saved_status.m_SVC;
-			case PRIV_MODE::ABT:
-				return m_saved_status.m_ABT;
-			case PRIV_MODE::IRQ:
-				return m_saved_status.m_IRQ;
-			case PRIV_MODE::UND:
-				return m_saved_status.m_UND;
-			default:
-				return {};
+			case PRIV_MODE::FIQ: return m_saved_status.m_FIQ;
+			case PRIV_MODE::SVC: return m_saved_status.m_SVC;
+			case PRIV_MODE::ABT: return m_saved_status.m_ABT;
+			case PRIV_MODE::IRQ: return m_saved_status.m_IRQ;
+			case PRIV_MODE::UND: return m_saved_status.m_UND;
+			default: return {};
 		}
 	}
 
 	uint32 const& cr13() const {
 		switch(cspr().mode()) {
 			case PRIV_MODE::SYS:
-			case PRIV_MODE::USR:
-				return m_registers.m_base[13];
-			case PRIV_MODE::FIQ:
-				return m_registers.m_gFIQ[5];
-			case PRIV_MODE::SVC:
-				return m_registers.m_gSVC[0];
-			case PRIV_MODE::ABT:
-				return m_registers.m_gABT[0];
-			case PRIV_MODE::IRQ:
-				return m_registers.m_gIRQ[0];
-			case PRIV_MODE::UND:
-				return m_registers.m_gUND[0];
-			default:
-				ASSERT_NOT_REACHED();
+			case PRIV_MODE::USR: return m_registers.m_base[13];
+			case PRIV_MODE::FIQ: return m_registers.m_gFIQ[5];
+			case PRIV_MODE::SVC: return m_registers.m_gSVC[0];
+			case PRIV_MODE::ABT: return m_registers.m_gABT[0];
+			case PRIV_MODE::IRQ: return m_registers.m_gIRQ[0];
+			case PRIV_MODE::UND: return m_registers.m_gUND[0];
+			default: ASSERT_NOT_REACHED();
 		}
 	}
 	uint32& r13() {
@@ -92,20 +69,13 @@ protected:
 	uint32 const& r14() const {
 		switch(cspr().mode()) {
 			case PRIV_MODE::SYS:
-			case PRIV_MODE::USR:
-				return m_registers.m_base[14];
-			case PRIV_MODE::FIQ:
-				return m_registers.m_gFIQ[6];
-			case PRIV_MODE::SVC:
-				return m_registers.m_gSVC[1];
-			case PRIV_MODE::ABT:
-				return m_registers.m_gABT[1];
-			case PRIV_MODE::IRQ:
-				return m_registers.m_gIRQ[1];
-			case PRIV_MODE::UND:
-				return m_registers.m_gUND[1];
-			default:
-				ASSERT_NOT_REACHED();
+			case PRIV_MODE::USR: return m_registers.m_base[14];
+			case PRIV_MODE::FIQ: return m_registers.m_gFIQ[6];
+			case PRIV_MODE::SVC: return m_registers.m_gSVC[1];
+			case PRIV_MODE::ABT: return m_registers.m_gABT[1];
+			case PRIV_MODE::IRQ: return m_registers.m_gIRQ[1];
+			case PRIV_MODE::UND: return m_registers.m_gUND[1];
+			default: ASSERT_NOT_REACHED();
 		}
 	}
 	uint32& r14() {
@@ -159,7 +129,7 @@ protected:
 	uint32 fetch_instruction();
 	[[nodiscard]] inline size_t current_instr_len() const { return ((cspr().state() == INSTR_MODE::ARM) ? 4 : 2); }
 
-	[[nodiscard]] bool irqs_enabled_globally() const { return io.ime.enabled() && !cspr().is_set(CSPR_REGISTERS::IRQn); }
+	bool irqs_enabled_globally() const;
 	void enter_irq();
 	void enter_swi();
 	bool handle_halt();
@@ -259,7 +229,8 @@ protected:
 
 	template<typename... Args>
 	void log(const char* format, const Args&... args) const {
-		fmt::print("\u001b[32mARM7TDMI{{{}, mode={}, lr={:08x} sp={:08x}, pc={:08x}}}/ ", m_cycles, cspr().mode_str(), r14(), cr13(), const_pc());
+		fmt::print("\u001b[32mARM7TDMI{{{}, mode={}, lr={:08x} sp={:08x}, pc={:08x}}}/ ", m_cycles, cspr().mode_str(),
+		           r14(), cr13(), const_pc());
 		fmt::vprint(format, fmt::make_format_args(args...));
 		fmt::print("\u001b[0m\n");
 	}
@@ -284,7 +255,7 @@ protected:
 	template<unsigned x>
 	void dma_run();
 	template<unsigned x>
-	inline bool dma_is_running() { return io.template dma_for_num<x>().m_is_running; }
+	bool dma_is_running();
 	void dma_run_all();
 
 	/*  ==============================================
@@ -299,11 +270,7 @@ protected:
 
 	unsigned run_to_next_state();
 public:
-	explicit ARM7TDMI(BusInterface& v, Debugger& dbg, IOContainer& _io)
-	    : io(_io)
-	    , m_mmu(v)
-	    , m_debugger(dbg)
-	    , m_registers() {}
+	ARM7TDMI(GaBber& emu);
 
 	void reset();
 	unsigned run_next_instruction();

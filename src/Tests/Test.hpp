@@ -1,7 +1,7 @@
 #pragma once
 #include <list>
 #include "CPU/ARM7TDMI.hpp"
-#include "Headers/StdTypes.hpp"
+#include "Emulator/StdTypes.hpp"
 
 struct MemState {
 	enum class OpSize {

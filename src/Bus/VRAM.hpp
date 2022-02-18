@@ -1,15 +1,14 @@
 #pragma once
-#include "Headers/StdTypes.hpp"
-#include "MMU/BusDevice.hpp"
-#include "MMU/ReaderArray.hpp"
+#include "Bus/Common/BusDevice.hpp"
+#include "Bus/Common/ReaderArray.hpp"
+#include "Emulator/StdTypes.hpp"
 
 class VRAM final : public BusDevice {
 	ReaderArray<96 * kB> m_vram;
 
-	static inline uint32 mirror(uint32 address) {
-		return address % (128 * kB);
-	}
-	static inline uint32 offset_in_mirror(uint32 address) {
+	static constexpr inline uint32 mirror(uint32 address) { return address % (128 * kB); }
+
+	static constexpr inline uint32 offset_in_mirror(uint32 address) {
 		uint32 mirrored = mirror(address);
 		if(mirrored >= 96 * kB) {
 			return (64 * kB) + mirrored % (32 * kB);
@@ -22,65 +21,22 @@ public:
 	    : BusDevice(0x06000000, 0x07000000)
 	    , m_vram() {}
 
-	uint8 read8(uint32 offset) override {
-		offset = offset_in_mirror(offset);
-		return m_vram.read8(offset);
-	}
+	uint8 read8(uint32 offset) override;
+	uint16 read16(uint32 offset) override;
+	uint32 read32(uint32 offset) override;
 
-	uint16 read16(uint32 offset) override {
-		offset = offset_in_mirror(offset);
-		return m_vram.read16(offset);
-	}
-
-	uint32 read32(uint32 offset) override {
-		offset = offset_in_mirror(offset);
-		return m_vram.read32(offset);
-	}
-
-	void write8(uint32 offset, uint8 value) override {
-		offset = offset_in_mirror(offset) & ~1u;
-
-		//  8-bit writes ignored to OBJ
-		//  TODO: Also ignore writes to 0x0014000-0x0017FFF when in bitmap modes
-		if(offset >= 0x0010000 && offset <= 0x0017FFF) {
-			return;
-		}
-
-		//  8-bit value is written to both the upper and lower 8-bits
-		//  of the nearest half-word
-		m_vram.write8(offset, value);
-		m_vram.write8(offset + 1, value);
-	}
-
-	void write16(uint32 offset, uint16 value) override {
-		offset = offset_in_mirror(offset);
-		m_vram.write16(offset, value);
-	}
-
-	void write32(uint32 offset, uint32 value) override {
-		offset = offset_in_mirror(offset);
-		m_vram.write32(offset, value);
-	}
+	void write8(uint32 offset, uint8 value) override;
+	void write16(uint32 offset, uint16 value) override;
+	void write32(uint32 offset, uint32 value) override;
 
 	template<typename T>
 	T readT(uint32 offset) {
-		offset = offset_in_mirror(offset);
-		return m_vram.template readT<T>(offset);
+		return m_vram.template readT<T>(offset_in_mirror(offset));
 	}
 
-	void reload() override {
-		std::memset(&m_vram.array()[0], 0x0, m_vram.size());
-	}
+	void reload() override;
 
-	unsigned int waitcycles32() const override {
-		return 2;
-	}
-
-	unsigned int waitcycles16() const override {
-		return 1;
-	}
-
-	unsigned int waitcycles8() const override {
-		return 1;
-	}
+	unsigned int waitcycles32() const override { return 2; }
+	unsigned int waitcycles16() const override { return 1; }
+	unsigned int waitcycles8() const override { return 1; }
 };

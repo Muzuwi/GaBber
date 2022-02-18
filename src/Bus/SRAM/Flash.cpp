@@ -81,3 +81,12 @@ void Flash::write(uint32 offset, uint8 value) {
 		return;
 	}
 }
+
+void Flash::from_vec(std::vector<uint8>&& vector) {
+	m_buffer = vector;
+	m_buffer.resize(m_size, 0xFF);
+}
+
+std::vector<uint8> const& Flash::to_vec() {
+	return m_buffer;
+}

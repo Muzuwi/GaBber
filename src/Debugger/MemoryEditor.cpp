@@ -1,6 +1,6 @@
 #include "Debugger/WindowDefinitions.hpp"
-#include "Headers/GaBber.hpp"
-#include "MMU/BusInterface.hpp"
+#include "Emulator/GaBber.hpp"
+#include "Bus/Common/BusInterface.hpp"
 
 void MemEditor::draw_window() {
 	static BusInterface& mmu = this->m_emu.mmu();

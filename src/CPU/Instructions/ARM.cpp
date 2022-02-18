@@ -1,6 +1,6 @@
 #include "CPU/ARM7TDMI.hpp"
-#include "Headers/Bits.hpp"
-#include "MMU/BusInterface.hpp"
+#include "Emulator/Bits.hpp"
+#include "Bus/Common/BusInterface.hpp"
 
 void ARM7TDMI::B(ARM::BInstruction instr) {
 	const auto old_pc = const_pc();

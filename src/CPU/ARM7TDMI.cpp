@@ -1,8 +1,11 @@
 #include "CPU/ARM7TDMI.hpp"
+#include "Bus/Common/BusInterface.hpp"
 #include "CPU/Instructions/ARM.hpp"
 #include "Debugger/Debugger.hpp"
-#include "Headers/GaBber.hpp"
-#include "MMU/BusInterface.hpp"
+#include "Emulator/GaBber.hpp"
+
+ARM7TDMI::ARM7TDMI(GaBber& emu)
+    : Module(emu) {}
 
 void ARM7TDMI::reset() {
 	cspr().set_state(INSTR_MODE::ARM);
@@ -19,7 +22,9 @@ void ARM7TDMI::reset() {
 
 	for(unsigned i = 0; i < 16; ++i) {
 		m_registers.m_base[i] = 0;
-		if(i < 7) m_registers.m_gFIQ[i] = 0;
+		if(i < 7) {
+			m_registers.m_gFIQ[i] = 0;
+		}
 		if(i < 2) {
 			m_registers.m_gSVC[i] = 0;
 			m_registers.m_gABT[i] = 0;
@@ -68,7 +73,7 @@ uint32 ARM7TDMI::fetch_instruction() {
 
 void ARM7TDMI::exec_opcode() {
 	const auto opcode = fetch_instruction();
-	m_debugger.on_execute_opcode(const_pc() - 2 * current_instr_len());
+	debugger().on_execute_opcode(const_pc() - 2 * current_instr_len());
 
 	if(cspr().state() == INSTR_MODE::ARM)
 		execute_ARM(opcode);
@@ -175,7 +180,7 @@ void ARM7TDMI::dump_memory_around_pc() const {
 			fmt::print("[");
 		else
 			fmt::print(" ");
-		fmt::print("{:02x}", m_mmu.read8(addr));
+		fmt::print("{:02x}", bus().read8(addr));
 		if(addr == (pc + size - 1))
 			fmt::print("]");
 		else
@@ -185,6 +190,6 @@ void ARM7TDMI::dump_memory_around_pc() const {
 			fmt::print("\n");
 	}
 
-	m_mmu.debug();
-	GaBber::instance().toggle_debug_mode();
+	bus().debug();
+	m_emu.toggle_debug_mode();
 }

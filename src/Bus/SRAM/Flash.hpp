@@ -26,12 +26,6 @@ public:
 	uint8 read(uint32 offset) override;
 	void write(uint32 offset, uint8 value) override;
 
-	void from_vec(std::vector<uint8>&& vector) override {
-		m_buffer = vector;
-		m_buffer.resize(m_size, 0xFF);
-	}
-
-	std::vector<uint8> const& to_vec() override {
-		return m_buffer;
-	}
+	void from_vec(std::vector<uint8>&& vector) override;
+	std::vector<uint8> const& to_vec() override;
 };

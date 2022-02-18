@@ -1,11 +1,11 @@
 #pragma once
-#include "Headers/StdTypes.hpp"
+#include "Emulator/Module.hpp"
+#include "Emulator/StdTypes.hpp"
 #include "Tests/Test.hpp"
 
 class GaBber;
 
-class TestHarness {
-	GaBber& m_gba;
+class TestHarness : Module {
 	unsigned m_tests_run;
 	unsigned m_tests_failed;
 
@@ -45,8 +45,8 @@ class TestHarness {
 	}
 	void test_run(Test&);
 public:
-	TestHarness(GaBber& v)
-	    : m_gba(v) {}
+	TestHarness(GaBber& emu)
+	    : Module(emu) {}
 
 	void run_emulator_tests();
 };

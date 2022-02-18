@@ -1,5 +1,5 @@
 #include "CPU/ARM7TDMI.hpp"
-#include "Headers/Bits.hpp"
+#include "Emulator/Bits.hpp"
 
 uint32 ARM7TDMI::evaluate_operand1(ARM::DataProcessInstruction instr) const {
 	unsigned pc_offset = 0;

@@ -1,5 +1,5 @@
 #pragma once
-#include "Headers/StdTypes.hpp"
+#include "Emulator/StdTypes.hpp"
 
 /*
  *  General purpose registers

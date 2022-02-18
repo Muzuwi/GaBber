@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Headers/GaBber.hpp"
+#include "Emulator/GaBber.hpp"
 
 int main(int argc, char** argv) {
 	if(argc < 2) {

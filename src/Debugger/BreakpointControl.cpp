@@ -1,6 +1,7 @@
 #include <imgui_internal.h>
+#include "Debugger/Debugger.hpp"
 #include "Debugger/WindowDefinitions.hpp"
-#include "Headers/GaBber.hpp"
+#include "Emulator/GaBber.hpp"
 
 void BreakpointControl::draw_window() {
 	auto& flag = m_emu.debugger().m_break_on_undefined;

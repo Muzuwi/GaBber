@@ -1,6 +1,6 @@
 #pragma once
 #include <bit>
-#include "Headers/StdTypes.hpp"
+#include "Emulator/StdTypes.hpp"
 
 namespace ARM {
 	constexpr inline unsigned mult_m_cycles(uint64 multiplier) {

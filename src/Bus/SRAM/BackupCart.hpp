@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "Headers/StdTypes.hpp"
+#include "Emulator/StdTypes.hpp"
 
 enum class BackupCartType {
 	EEPROM,

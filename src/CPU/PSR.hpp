@@ -1,5 +1,5 @@
 #pragma once
-#include "Headers/StdTypes.hpp"
+#include "Emulator/StdTypes.hpp"
 
 enum class INSTR_MODE {
 	ARM,
@@ -50,10 +50,8 @@ class CSPR {
 			case PRIV_MODE::ABT:
 			case PRIV_MODE::IRQ:
 			case PRIV_MODE::UND:
-			case PRIV_MODE::SYS:
-				return true;
-			default:
-				return false;
+			case PRIV_MODE::SYS: return true;
+			default: return false;
 		}
 	}
 public:
@@ -72,21 +70,13 @@ public:
 		}
 	}
 
-	uint32 raw() const {
-		return data;
-	}
+	uint32 raw() const { return data; }
 
-	inline bool is_set(CSPR_REGISTERS mask) const {
-		return (data & (uint32)mask);
-	}
+	inline bool is_set(CSPR_REGISTERS mask) const { return (data & (uint32)mask); }
 
-	inline bool is_clear(CSPR_REGISTERS mask) const {
-		return !(data & (uint32)mask);
-	}
+	inline bool is_clear(CSPR_REGISTERS mask) const { return !(data & (uint32)mask); }
 
-	void set(CSPR_REGISTERS reg, bool v) {
-		data = (data & (~(uint32)reg)) | (v ? (uint32)reg : 0);
-	}
+	void set(CSPR_REGISTERS reg, bool v) { data = (data & (~(uint32)reg)) | (v ? (uint32)reg : 0); }
 
 	void set_flags(uint32 flags, bool F, bool S, bool X, bool C) {
 		if(F) {
@@ -115,18 +105,14 @@ public:
 		}
 	}
 
-	INSTR_MODE state() const {
-		return (data & ((uint32)CSPR_REGISTERS::State)) ? INSTR_MODE::THUMB
-		                                                : INSTR_MODE::ARM;
-	}
+	INSTR_MODE state() const { return (data & ((uint32)CSPR_REGISTERS::State)) ? INSTR_MODE::THUMB : INSTR_MODE::ARM; }
 
 	void set_state(INSTR_MODE state) {
-		data = (data & ~((uint32)CSPR_REGISTERS::State)) | ((state == INSTR_MODE::THUMB) ? (uint32)CSPR_REGISTERS::State : 0u);
+		data = (data & ~((uint32)CSPR_REGISTERS::State)) |
+		       ((state == INSTR_MODE::THUMB) ? (uint32)CSPR_REGISTERS::State : 0u);
 	}
 
-	PRIV_MODE mode() const {
-		return static_cast<PRIV_MODE>(data & (0b11111));
-	}
+	PRIV_MODE mode() const { return static_cast<PRIV_MODE>(data & (0b11111)); }
 
 	const char* mode_str() const {
 		switch(mode()) {
@@ -141,43 +127,32 @@ public:
 		}
 	}
 
-	void set_mode(PRIV_MODE mode) {
-		data = (data & ~0b11111u) | ((uint32)mode & 0b11111u);
-	}
+	void set_mode(PRIV_MODE mode) { data = (data & ~0b11111u) | ((uint32)mode & 0b11111u); }
 
 	bool evaluate_condition(ARM::InstructionCondition condition) const {
 		switch(condition) {
-			case ARM::InstructionCondition::EQ:
-				return is_set(CSPR_REGISTERS::Zero);
-			case ARM::InstructionCondition::NE:
-				return is_clear(CSPR_REGISTERS::Zero);
-			case ARM::InstructionCondition::CS:
-				return is_set(CSPR_REGISTERS::Carry);
-			case ARM::InstructionCondition::CC:
-				return is_clear(CSPR_REGISTERS::Carry);
-			case ARM::InstructionCondition::MI:
-				return is_set(CSPR_REGISTERS::Negative);
-			case ARM::InstructionCondition::PL:
-				return is_clear(CSPR_REGISTERS::Negative);
-			case ARM::InstructionCondition::VS:
-				return is_set(CSPR_REGISTERS::Overflow);
-			case ARM::InstructionCondition::VC:
-				return is_clear(CSPR_REGISTERS::Overflow);
-			case ARM::InstructionCondition::HI:
-				return is_set(CSPR_REGISTERS::Carry) && is_clear(CSPR_REGISTERS::Zero);
-			case ARM::InstructionCondition::LS:
-				return is_clear(CSPR_REGISTERS::Carry) || is_set(CSPR_REGISTERS::Zero);
+			case ARM::InstructionCondition::EQ: return is_set(CSPR_REGISTERS::Zero);
+			case ARM::InstructionCondition::NE: return is_clear(CSPR_REGISTERS::Zero);
+			case ARM::InstructionCondition::CS: return is_set(CSPR_REGISTERS::Carry);
+			case ARM::InstructionCondition::CC: return is_clear(CSPR_REGISTERS::Carry);
+			case ARM::InstructionCondition::MI: return is_set(CSPR_REGISTERS::Negative);
+			case ARM::InstructionCondition::PL: return is_clear(CSPR_REGISTERS::Negative);
+			case ARM::InstructionCondition::VS: return is_set(CSPR_REGISTERS::Overflow);
+			case ARM::InstructionCondition::VC: return is_clear(CSPR_REGISTERS::Overflow);
+			case ARM::InstructionCondition::HI: return is_set(CSPR_REGISTERS::Carry) && is_clear(CSPR_REGISTERS::Zero);
+			case ARM::InstructionCondition::LS: return is_clear(CSPR_REGISTERS::Carry) || is_set(CSPR_REGISTERS::Zero);
 			case ARM::InstructionCondition::GE:
 				return is_set(CSPR_REGISTERS::Negative) == is_set(CSPR_REGISTERS::Overflow);
 			case ARM::InstructionCondition::LT:
 				return is_set(CSPR_REGISTERS::Negative) ^ is_set(CSPR_REGISTERS::Overflow);
 			case ARM::InstructionCondition::GT:
-				return is_clear(CSPR_REGISTERS::Zero) && (is_set(CSPR_REGISTERS::Negative) == is_set(CSPR_REGISTERS::Overflow));
+				return is_clear(CSPR_REGISTERS::Zero) &&
+				       (is_set(CSPR_REGISTERS::Negative) == is_set(CSPR_REGISTERS::Overflow));
 			case ARM::InstructionCondition::LE:
-				return is_set(CSPR_REGISTERS::Zero) || (is_set(CSPR_REGISTERS::Negative) != is_set(CSPR_REGISTERS::Overflow));
+				return is_set(CSPR_REGISTERS::Zero) ||
+				       (is_set(CSPR_REGISTERS::Negative) != is_set(CSPR_REGISTERS::Overflow));
 			case ARM::InstructionCondition::AL:
-			default:
-				return true;
+			default: return true;
 		}
 	}
 };
