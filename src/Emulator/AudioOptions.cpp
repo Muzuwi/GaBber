@@ -57,5 +57,7 @@ void AudioOptions::draw() {
 		ImGui::EndCombo();
 	}
 
-	ImGui::SliderFloat("Volume", &config().volume, 0.0f, 1.0f, "");
+	const unsigned min = 0;
+	const unsigned max = 100;
+	ImGui::SliderScalar("Volume", ImGuiDataType_U32, &config().volume, &min, &max, "%d%%");
 }

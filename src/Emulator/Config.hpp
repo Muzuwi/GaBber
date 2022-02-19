@@ -1,6 +1,6 @@
 #pragma once
 
 struct Config {
-	float volume { 1.0f };
+	unsigned volume { 60 };
 	unsigned target_framerate { 60 };
 };

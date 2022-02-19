@@ -10,7 +10,8 @@ APU::APU(GaBber& emu)
     : Module(emu) {}
 
 void APU::push_samples(float left, float right) {
-	const float master_volume = m_emu.config().volume;
+	const float user_volume = (static_cast<float>(config().volume) / 100.0f);
+	const float master_volume = std::pow(user_volume, 2.0f);
 	m_internal_samples[m_current_sample] = master_volume * left;
 	m_internal_samples[m_current_sample + 1] = master_volume * right;
 
