@@ -83,4 +83,6 @@ public:
 	int speed_scale() const { return m_speed_scale; }
 
 	void on_timer_overflow(unsigned timer_num);
+
+	bool switch_audio_device(char const*);
 };

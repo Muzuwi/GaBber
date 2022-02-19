@@ -67,7 +67,8 @@ add_executable(GaBber
     src/Emulator/Module.hpp
     src/Emulator/Module.cpp
     src/Bus/IO/IOContainer.cpp
-    src/Bus/Common/MemoryLayout.cpp)
+    src/Bus/Common/MemoryLayout.cpp
+    src/Emulator/AudioOptions.cpp)
 
 target_compile_options(GaBber PRIVATE ${GABBER_CXX_FLAGS})
 

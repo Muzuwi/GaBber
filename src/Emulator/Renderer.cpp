@@ -1,19 +1,18 @@
 #include "Renderer.hpp"
 #include <chrono>
 #include <fmt/format.h>
-#include <GL/glew.h>
-#include <optional>
+#include <imgui.h>
+#include <imgui_impl_opengl3.h>
+#include <imgui_impl_sdl.h>
 #include <thread>
-#include "backends/imgui_impl_opengl3.h"
-#include "backends/imgui_impl_sdl.h"
 #include "Bus/IO/Keypad.hpp"
 #include "Debugger/Debugger.hpp"
-#include "GaBber.hpp"
-#include "imgui.h"
+#include "Emulator/GaBber.hpp"
 #include "PPU/PPU.hpp"
 
 Renderer::Renderer(GaBber& emu)
-    : Module(emu) {}
+    : Module(emu)
+    , m_audio_options_window(emu) {}
 
 bool Renderer::initialize_platform() {
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO) != 0) {
@@ -27,7 +26,7 @@ bool Renderer::initialize_platform() {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
-	if(m_emu.debugger().is_debug_mode()) {
+	if(debugger().is_debug_mode()) {
 		m_window = SDL_CreateWindow("GaBber", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720,
 		                            SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
 	} else {
@@ -116,7 +115,7 @@ void Renderer::render_gba_screen() {
 }
 
 void Renderer::render_debugger() {
-	m_emu.debugger().draw_debugger_contents();
+	debugger().draw_debugger_contents();
 }
 
 void Renderer::render_ui_common() {
@@ -138,8 +137,9 @@ void Renderer::render_ui_common() {
 	}
 
 	if(m_shell_flags.audio_options_open) {
-		ImGui::Begin("Audio", &m_shell_flags.audio_options_open, ImGuiWindowFlags_AlwaysAutoResize);
-		render_shell_options_audio();
+		ImGui::Begin("Audio", &m_shell_flags.audio_options_open,
+		             ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
+		m_audio_options_window.draw();
 		ImGui::End();
 	}
 }
@@ -150,7 +150,7 @@ void Renderer::render_frame() {
 
 	//  Update screen texture
 	glBindTexture(GL_TEXTURE_2D, m_screen_texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 240, 160, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, m_emu.ppu().framebuffer());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 240, 160, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, ppu().framebuffer());
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -159,7 +159,7 @@ void Renderer::render_frame() {
 
 	render_ui_common();
 
-	if(!m_emu.debugger().is_debug_mode()) {
+	if(!debugger().is_debug_mode()) {
 		render_gba_screen();
 	} else {
 		render_debugger();
@@ -180,7 +180,7 @@ void Renderer::update() {
 	using hrc = std::chrono::high_resolution_clock;
 	static std::optional<hrc::time_point> s_last_drawn;
 
-	const int64 target_micros = 1000000 / m_emu.config().target_framerate;
+	const int64 target_micros = 1000000 / config().target_framerate;
 	if(s_last_drawn.has_value()) {
 		auto duration = hrc::now() - *s_last_drawn;
 		auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration);
@@ -213,16 +213,16 @@ void Renderer::poll_events() {
 			}
 			case SDL_KEYDOWN: {
 				switch(event.key.keysym.sym) {
-					case SDLK_UP: m_emu.ppu().handle_key_down(KeypadKey::Up); break;
-					case SDLK_DOWN: m_emu.ppu().handle_key_down(KeypadKey::Down); break;
-					case SDLK_LEFT: m_emu.ppu().handle_key_down(KeypadKey::Left); break;
-					case SDLK_RIGHT: m_emu.ppu().handle_key_down(KeypadKey::Right); break;
-					case SDLK_z: m_emu.ppu().handle_key_down(KeypadKey::A); break;
-					case SDLK_x: m_emu.ppu().handle_key_down(KeypadKey::B); break;
-					case SDLK_a: m_emu.ppu().handle_key_down(KeypadKey::Sel); break;
-					case SDLK_s: m_emu.ppu().handle_key_down(KeypadKey::Start); break;
-					case SDLK_q: m_emu.ppu().handle_key_down(KeypadKey::L); break;
-					case SDLK_w: m_emu.ppu().handle_key_down(KeypadKey::R); break;
+					case SDLK_UP: ppu().handle_key_down(KeypadKey::Up); break;
+					case SDLK_DOWN: ppu().handle_key_down(KeypadKey::Down); break;
+					case SDLK_LEFT: ppu().handle_key_down(KeypadKey::Left); break;
+					case SDLK_RIGHT: ppu().handle_key_down(KeypadKey::Right); break;
+					case SDLK_z: ppu().handle_key_down(KeypadKey::A); break;
+					case SDLK_x: ppu().handle_key_down(KeypadKey::B); break;
+					case SDLK_a: ppu().handle_key_down(KeypadKey::Sel); break;
+					case SDLK_s: ppu().handle_key_down(KeypadKey::Start); break;
+					case SDLK_q: ppu().handle_key_down(KeypadKey::L); break;
+					case SDLK_w: ppu().handle_key_down(KeypadKey::R); break;
 					default: break;
 				}
 
@@ -239,16 +239,16 @@ void Renderer::poll_events() {
 			}
 			case SDL_KEYUP: {
 				switch(event.key.keysym.sym) {
-					case SDLK_UP: m_emu.ppu().handle_key_up(KeypadKey::Up); break;
-					case SDLK_DOWN: m_emu.ppu().handle_key_up(KeypadKey::Down); break;
-					case SDLK_LEFT: m_emu.ppu().handle_key_up(KeypadKey::Left); break;
-					case SDLK_RIGHT: m_emu.ppu().handle_key_up(KeypadKey::Right); break;
-					case SDLK_z: m_emu.ppu().handle_key_up(KeypadKey::A); break;
-					case SDLK_x: m_emu.ppu().handle_key_up(KeypadKey::B); break;
-					case SDLK_a: m_emu.ppu().handle_key_up(KeypadKey::Sel); break;
-					case SDLK_s: m_emu.ppu().handle_key_up(KeypadKey::Start); break;
-					case SDLK_q: m_emu.ppu().handle_key_up(KeypadKey::L); break;
-					case SDLK_w: m_emu.ppu().handle_key_up(KeypadKey::R); break;
+					case SDLK_UP: ppu().handle_key_up(KeypadKey::Up); break;
+					case SDLK_DOWN: ppu().handle_key_up(KeypadKey::Down); break;
+					case SDLK_LEFT: ppu().handle_key_up(KeypadKey::Left); break;
+					case SDLK_RIGHT: ppu().handle_key_up(KeypadKey::Right); break;
+					case SDLK_z: ppu().handle_key_up(KeypadKey::A); break;
+					case SDLK_x: ppu().handle_key_up(KeypadKey::B); break;
+					case SDLK_a: ppu().handle_key_up(KeypadKey::Sel); break;
+					case SDLK_s: ppu().handle_key_up(KeypadKey::Start); break;
+					case SDLK_q: ppu().handle_key_up(KeypadKey::L); break;
+					case SDLK_w: ppu().handle_key_up(KeypadKey::R); break;
 					default: break;
 				}
 				break;
@@ -260,10 +260,6 @@ void Renderer::poll_events() {
 			default: break;
 		}
 	}
-}
-
-void Renderer::render_shell_options_audio() {
-	ImGui::SliderFloat("Volume", &m_emu.config().volume, 0.0f, 1.0f, "");
 }
 
 void Renderer::resize_to_debugger() {

@@ -1,6 +1,7 @@
 #pragma once
 #include <GL/glew.h>
 #include <SDL.h>
+#include "Emulator/AudioOptions.hpp"
 #include "Emulator/Module.hpp"
 #include "ShellFlags.hpp"
 
@@ -14,8 +15,8 @@ class Renderer : Module {
 	GLuint m_fb {};
 	GLuint m_screen_texture {};
 	ShellFlags m_shell_flags {};
+	AudioOptions m_audio_options_window;
 
-	void render_shell_options_audio();
 	void render_ui_common();
 	void render_gba_screen();
 	void render_debugger();

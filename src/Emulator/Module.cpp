@@ -32,3 +32,7 @@ PPU& Module::ppu() const {
 BusInterface& Module::bus() const {
 	return m_emu.mmu();
 }
+
+Config& Module::config() const {
+	return m_emu.config();
+}

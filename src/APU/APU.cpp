@@ -491,3 +491,28 @@ void APU::push_sample_fifoB(uint8 value, unsigned sample_rate) {
 		m_soundB.samples.push_back(value);
 	}
 }
+
+bool APU::switch_audio_device(char const* device_name) {
+	SDL_AudioSpec request {};
+	std::memset(&request, 0, sizeof(request));
+
+	request.freq = output_sample_rate;
+
+	request.format = AUDIO_F32;
+	request.channels = 2;
+	request.samples = output_sample_count;
+	request.callback = nullptr;
+
+	SDL_AudioSpec response {};
+	const SDL_AudioDeviceID id = SDL_OpenAudioDevice(device_name, 0, &request, &response, SDL_FALSE);
+	if(id == 0) {
+		return false;
+	}
+
+	SDL_CloseAudioDevice(m_device);
+	SDL_PauseAudioDevice(id, 0);
+
+	m_device = id;
+	m_device_spec = response;
+	return true;
+}
