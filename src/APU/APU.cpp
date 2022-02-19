@@ -1,6 +1,8 @@
 #include "APU.hpp"
 #include <cassert>
 #include <fmt/format.h>
+#include <fstream>
+#include <soxr.h>
 #include <vector>
 #include "Bus/Common/MemoryLayout.hpp"
 #include "CPU/ARM7TDMI.hpp"
@@ -39,21 +41,23 @@ void APU::push_samples(float left, float right) {
 		}
 	}
 
-	assert(SDL_BuildAudioCVT(&m_out_converter, AUDIO_F32, 2, psg_sample_rate, AUDIO_F32, 2, output_sample_rate) > 0);
-	std::vector<uint8> output;
-	output.resize(m_internal_samples.size() * sizeof(float) * m_out_converter.len_mult);
-	std::memcpy(&output[0], &m_internal_samples[0], m_internal_samples.size() * sizeof(float));
+	const double input_rate = (double)psg_sample_rate;
+	const double output_rate = (double)output_sample_rate;
+	//  Per channel
+	const size_t input_length = psg_sample_count / 2;
+	const size_t output_length = output_sample_count / 2;
 
-	m_out_converter.len = m_internal_samples.size() * sizeof(float);
-	m_out_converter.buf = &output[0];
+	std::vector<float> output_samples {};
+	output_samples.resize(output_sample_count);
 
-	if(SDL_ConvertAudio(&m_out_converter) != 0) {
-		fmt::print("Sound/ Format conversion failed: {}\n", SDL_GetError());
-		return;
-	}
+	size_t actual_output_length {};
+	soxr_error_t soxr_error =
+	        soxr_oneshot(input_rate, output_rate, 2, &m_internal_samples[0], input_length, nullptr, &output_samples[0],
+	                     output_length, &actual_output_length, nullptr, nullptr, nullptr);
+	const auto byte_count = actual_output_length * 2 * sizeof(float);
 
-	auto rc = SDL_QueueAudio(m_device, &output[0], m_out_converter.len_cvt);
-	if(rc != 0) {
+	const auto error = SDL_QueueAudio(m_device, &output_samples[0], byte_count);
+	if(error != 0) {
 		fmt::print("Sound/ Queue failed: {}\n", SDL_GetError());
 	}
 }

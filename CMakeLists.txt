@@ -5,6 +5,8 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(fmt REQUIRED)
+find_library(SOXR soxr libsoxr REQUIRED)
+find_path(SOXR_HEADERS soxr.h REQUIRED)
 
 add_subdirectory(extern/)
 include_directories(src/)
@@ -78,4 +80,7 @@ target_link_libraries(GaBber
     SDL2::SDL2
     ImGui
     fmt::fmt
+    ${SOXR}
     )
+target_include_directories(GaBber
+    PRIVATE ${SOXR_HEADERS})
