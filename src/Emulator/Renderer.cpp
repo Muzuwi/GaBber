@@ -12,7 +12,8 @@
 
 Renderer::Renderer(GaBber& emu)
     : Module(emu)
-    , m_audio_options_window(emu) {}
+    , m_audio_options_window(emu)
+    , m_emu_options_window(emu) {}
 
 bool Renderer::initialize_platform() {
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO) != 0) {
@@ -130,6 +131,9 @@ void Renderer::render_ui_common() {
 			if(ImGui::MenuItem("Audio")) {
 				m_shell_flags.audio_options_open = true;
 			}
+			if(ImGui::MenuItem("Emulator")) {
+				m_shell_flags.emu_options_open = true;
+			}
 			ImGui::EndMenu();
 		}
 
@@ -140,6 +144,12 @@ void Renderer::render_ui_common() {
 		ImGui::Begin("Audio", &m_shell_flags.audio_options_open,
 		             ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
 		m_audio_options_window.draw();
+		ImGui::End();
+	}
+	if(m_shell_flags.emu_options_open) {
+		ImGui::Begin("Emulator", &m_shell_flags.emu_options_open,
+		             ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
+		m_emu_options_window.draw();
 		ImGui::End();
 	}
 }
