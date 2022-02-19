@@ -46,7 +46,7 @@ add_executable(GaBber
     src/APU/APU.cpp
     src/Bus/IO/Sound.cpp
     src/Bus/IO/DMA.cpp
-    src/Bus/SRAM/Flash.cpp
+    src/Bus/Cart/Flash.cpp
     src/Debugger/BreakpointControl.cpp
     src/Debugger/Stacktrace.cpp
     src/Bus/BIOS.cpp
@@ -55,7 +55,7 @@ add_executable(GaBber
     src/Bus/OAM.cpp
     src/Bus/Palette.cpp
     src/Bus/ROM.cpp
-    src/Bus/SRAM.cpp
+    src/Bus/PakSRAM.cpp
     src/Bus/VRAM.cpp
     src/Bus/WRAM.cpp
     src/Bus/IO/DebugBackdoor.cpp
@@ -68,7 +68,7 @@ add_executable(GaBber
     src/Emulator/Module.cpp
     src/Bus/IO/IOContainer.cpp
     src/Bus/Common/MemoryLayout.cpp
-    src/Emulator/AudioOptions.cpp src/Emulator/EmulatorOptions.cpp)
+    src/Emulator/AudioOptions.cpp src/Emulator/EmulatorOptions.cpp src/Bus/Cart/SRAM.cpp src/Bus/Cart/SRAM.hpp)
 
 target_compile_options(GaBber PRIVATE ${GABBER_CXX_FLAGS})
 

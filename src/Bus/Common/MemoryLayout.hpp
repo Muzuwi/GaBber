@@ -7,7 +7,7 @@
 #include "Bus/OAM.hpp"
 #include "Bus/Palette.hpp"
 #include "Bus/ROM.hpp"
-#include "Bus/SRAM.hpp"
+#include "Bus/PakSRAM.hpp"
 #include "Bus/VRAM.hpp"
 #include "Bus/WRAM.hpp"
 

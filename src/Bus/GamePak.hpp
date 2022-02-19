@@ -2,12 +2,12 @@
 #include <optional>
 #include <vector>
 #include "Bus/ROM.hpp"
-#include "Bus/SRAM.hpp"
+#include "Bus/PakSRAM.hpp"
 #include "Emulator/StdTypes.hpp"
 
 struct GamePak : Module {
 	ROM rom;
-	SRAM sram;
+	PakSRAM sram;
 
 	GamePak(GaBber& emu)
 	    : Module(emu)

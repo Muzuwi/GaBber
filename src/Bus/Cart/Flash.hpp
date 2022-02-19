@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "Bus/SRAM/BackupCart.hpp"
+#include "Bus/Cart/BackupCart.hpp"
 
 enum class FlashChipMode {
 	Idle,

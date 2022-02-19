@@ -1,15 +1,15 @@
 #pragma once
 #include <memory>
+#include "Bus/Cart/BackupCart.hpp"
 #include "Bus/Common/BusDevice.hpp"
-#include "Bus/SRAM/BackupCart.hpp"
 #include "Emulator/StdTypes.hpp"
 
-class SRAM final : public BusDevice {
+class PakSRAM final : public BusDevice {
 	std::unique_ptr<BackupCart> m_cart;
 
 	static constexpr inline uint32 mirror(uint32 offset) { return offset & 0xFFFFu; }
 public:
-	SRAM(GaBber& emu)
+	PakSRAM(GaBber& emu)
 	    : BusDevice(emu, 0x0e000000, 0x10000000) {}
 
 	void set_cart(std::unique_ptr<BackupCart>&& cart);

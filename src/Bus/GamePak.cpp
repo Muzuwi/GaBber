@@ -1,7 +1,8 @@
 #include "Bus/GamePak.hpp"
 #include <cstring>
 #include <fmt/format.h>
-#include "Bus/SRAM/Flash.hpp"
+#include "Bus/Cart/Flash.hpp"
+#include "Bus/Cart/SRAM.hpp"
 
 std::optional<BackupCartType> GamePak::autodetect_flash(std::vector<uint8> const& rom) {
 	const unsigned aligned_size = rom.size() & ~3u;
@@ -49,6 +50,11 @@ bool GamePak::load_pak(std::vector<uint8>&& rom_, std::vector<uint8>&& sram_) {
 
 	std::unique_ptr<BackupCart> cart;
 	switch(type) {
+		case BackupCartType::SRAM32K: {
+			cart = std::make_unique<SRAM>(m_emu);
+			cart->from_vec(std::move(sram_));
+			break;
+		}
 		case BackupCartType::FLASH64K: {
 			cart = std::make_unique<Flash>(m_emu, 65536);
 			cart->from_vec(std::move(sram_));

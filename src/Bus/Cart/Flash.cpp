@@ -1,4 +1,4 @@
-#include "Bus/SRAM/Flash.hpp"
+#include "Bus/Cart/Flash.hpp"
 #include <fmt/format.h>
 
 uint8 Flash::read(uint32 offset) {
