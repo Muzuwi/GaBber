@@ -40,11 +40,9 @@ class APU : Module {
 
 	SDL_AudioSpec m_device_spec;
 	SDL_AudioDeviceID m_device;
-	SDL_AudioCVT m_out_converter;
 
 	std::array<float, psg_sample_count> m_internal_samples;
 	unsigned m_current_sample;
-	int m_speed_scale { 1 };
 
 	uint64 m_cycles;
 	SoundData m_square1;
@@ -79,8 +77,6 @@ public:
 	void reload_square2();
 	void reload_wave();
 	void set_wave_running(bool running);
-
-	int speed_scale() const { return m_speed_scale; }
 
 	void on_timer_overflow(unsigned timer_num);
 

@@ -122,10 +122,7 @@ void GaBber::emulator_next_state() {
 	assert(cycles > 0 && "Trying to emulate zero cycles!");
 	for(unsigned i = 0; i < cycles; ++i) {
 		m_ppu->cycle();
-		const auto count = m_sound->speed_scale();
-		for(unsigned j = 0; j < (unsigned)count; ++j) {
-			m_sound->cycle();
-		}
+		m_sound->cycle();
 	}
 
 	m_cycle_samples[m_current_sample++] = cycles;
