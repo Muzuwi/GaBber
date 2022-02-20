@@ -5,6 +5,7 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl.h>
 #include <thread>
+#include "APU/APU.hpp"
 #include "Bus/IO/Keypad.hpp"
 #include "Debugger/Debugger.hpp"
 #include "Emulator/GaBber.hpp"
@@ -56,6 +57,9 @@ bool Renderer::initialize_platform() {
 	style.ScrollbarRounding = 2.0f;
 	style.WindowBorderSize = 0.0f;
 	style.FrameRounding = 3.0f;
+	style.ScrollbarSize = 20.0f;
+
+	ImGui::GetIO().ConfigInputTextCursorBlink = true;
 
 	ImVec4* colors = ImGui::GetStyle().Colors;
 	colors[ImGuiCol_TextDisabled] = ImVec4(0.55f, 0.55f, 0.55f, 1.00f);
@@ -136,6 +140,9 @@ void Renderer::render_ui_common() {
 			}
 			ImGui::EndMenu();
 		}
+
+		auto str = fmt::format("Audio Latency: {}ms", apu().audio_latency() * 1000.0f);
+		ImGui::Text("%s", str.c_str());
 
 		ImGui::EndMainMenuBar();
 	}

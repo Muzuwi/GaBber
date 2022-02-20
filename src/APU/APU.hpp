@@ -81,4 +81,6 @@ public:
 	void on_timer_overflow(unsigned timer_num);
 
 	bool switch_audio_device(char const*);
+
+	float audio_latency() const;
 };

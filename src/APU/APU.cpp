@@ -513,3 +513,8 @@ bool APU::switch_audio_device(char const* device_name) {
 	m_device_spec = response;
 	return true;
 }
+
+float APU::audio_latency() const {
+	const unsigned queued_size = SDL_GetQueuedAudioSize(m_device) / (sizeof(float) * 2);
+	return static_cast<float>(queued_size) / static_cast<float>(output_sample_rate);
+}
