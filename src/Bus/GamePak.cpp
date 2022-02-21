@@ -56,12 +56,12 @@ bool GamePak::load_pak(std::vector<uint8>&& rom_, std::vector<uint8>&& sram_) {
 			break;
 		}
 		case BackupCartType::FLASH64K: {
-			cart = std::make_unique<Flash>(m_emu, 65536);
+			cart = std::make_unique<Flash>(m_emu, 0x1CC2u, 65536);
 			cart->from_vec(std::move(sram_));
 			break;
 		}
 		case BackupCartType::FLASH128K: {
-			cart = std::make_unique<Flash>(m_emu, 131072);
+			cart = std::make_unique<Flash>(m_emu, 0x09C2u, 131072);
 			cart->from_vec(std::move(sram_));
 			break;
 		}

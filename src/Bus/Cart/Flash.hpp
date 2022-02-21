@@ -2,26 +2,37 @@
 #include <vector>
 #include "Bus/Cart/BackupCart.hpp"
 
-enum class FlashChipMode {
-	Idle,
-	ID,
-	Erase,
-	Write,
-	BankChange
-};
-
 class Flash final : public BackupCart {
-	const uint32 m_identifier { 0x1cc2u };
+	enum class ReadState {
+		Idle,
+		ID,
+	};
+
+	enum class WriteState {
+		Idle,
+		WroteAA,
+		Wrote55,
+		WriteSingleByte,
+		WriteBankNumber,
+	};
+
+	enum class CommandType {
+		Normal,
+		Erase
+	};
+
+	const uint32 m_identifier;
 	const unsigned m_size;
 
-	FlashChipMode m_mode {};
-	uint8 m_bank;
-	uint8 m_reg5555;
-	uint8 m_reg2aaa;
-	std::vector<uint8> m_buffer;
+	ReadState m_read_state { ReadState::Idle };
+	WriteState m_write_state { WriteState::Idle };
+	CommandType m_command_type { CommandType::Normal };
+	uint8 m_bank {};
+	std::vector<uint8> m_buffer {};
 public:
-	explicit Flash(GaBber& emu, unsigned size)
+	explicit Flash(GaBber& emu, uint32 identifier, unsigned size)
 	    : BackupCart(emu)
+	    , m_identifier(identifier)
 	    , m_size(size) {}
 
 	uint8 read(uint32 offset) override;
