@@ -237,16 +237,24 @@ void IORegisters::draw_sound() {
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
 		{
-			auto freq_hz = 131072u / (2048u - io.ch1ctlX->frequency);
-			//  Draw ch0
+			const auto freq_hz = 131072u / (2048u - io.ch1ctlX->frequency);
+			ImGui::Text("Sweep shift: %d", io.ch1ctlL->sweep_shift);
+			ImGui::Text("Sweep direction: %s", io.ch1ctlL->sweep_decreases ? "down" : "up");
+			ImGui::Text("Sweep time: %d", io.ch1ctlL->sweep_time);
+			ImGui::Text("Length: %d", io.ch1ctlH->length);
+			ImGui::Text("Envelope step: %d", io.ch1ctlH->envelope_step);
+			ImGui::Text("Envelope direction: %s", io.ch1ctlH->envelope_inc ? "up" : "down");
+			ImGui::Text("Envelope volume: %d", io.ch1ctlH->envelope_vol);
 			ImGui::Text("Frequency: %04x [%d Hz]", io.ch1ctlX->frequency, freq_hz);
 		}
 		ImGui::TableNextColumn();
 		{
-			auto freq_hz = 131072u / (2048u - io.ch2ctlH->frequency);
-			//  Draw ch0
+			const auto freq_hz = 131072u / (2048u - io.ch2ctlH->frequency);
+			ImGui::Text("Length: %d", io.ch2ctlL->length);
+			ImGui::Text("Envelope step: %d", io.ch2ctlL->envelope_step);
+			ImGui::Text("Envelope direction: %s", io.ch2ctlL->envelope_inc ? "up" : "down");
+			ImGui::Text("Envelope volume: %d", io.ch2ctlL->envelope_vol);
 			ImGui::Text("Frequency: %04x [%d Hz]", io.ch2ctlH->frequency, freq_hz);
-			//  Draw ch1
 		}
 
 		ImGui::TableNextRow();
@@ -258,14 +266,16 @@ void IORegisters::draw_sound() {
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
 		{
-			//  Draw ch2
+			const unsigned sample_rate = 2097152 / (2048 - io.ch3ctlX->rate);
+			ImGui::Text("Wave RAM Dimension: %s", io.ch3ctlL->dimension ? "one bank/32 digits" : "two banks/64 digits");
+			ImGui::Text("Wave RAM Bank: %d", io.ch3ctlL->bank);
+			ImGui::Text("Length: %d", io.ch3ctlH->length);
+			ImGui::Text("Volume: %d", io.ch3ctlH->volume);
+			ImGui::Text("Force volume: %d", io.ch3ctlH->force_volume);
+			ImGui::Text("Sample rate: %d Hz", sample_rate);
 		}
 		ImGui::TableNextColumn();
-		{
-			const unsigned sample_rate = 2097152 / (2048 - io.ch3ctlX->rate);
-			ImGui::Text("Sample rate: %d Hz", sample_rate);
-			//  Draw ch3
-		}
+		{}
 
 		ImGui::EndTable();
 	}
@@ -304,7 +314,7 @@ void IORegisters::draw_sound() {
 	ImGui::PopID();
 
 	ImGui::PlotLines("Internal samples @ 262.144kHz", &apu().internal_samples()[0], apu().internal_samples().size(), 0,
-	                 nullptr, -1.0, 1.0, ImVec2(800.0, 100.0));
+	                 nullptr, -0.1, 0.1, ImVec2(800.0, 100.0));
 }
 
 void IORegisters::draw_dma() {

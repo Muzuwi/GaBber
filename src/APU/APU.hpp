@@ -2,26 +2,14 @@
 #include <array>
 #include <deque>
 #include <SDL_audio.h>
+#include "APU/FIFOA.hpp"
+#include "APU/FIFOB.hpp"
+#include "APU/Noise.hpp"
+#include "APU/SquareSweep.hpp"
+#include "APU/SquareTone.hpp"
+#include "APU/Wave.hpp"
 #include "Emulator/Module.hpp"
 #include "Emulator/StdTypes.hpp"
-
-struct SoundData {
-	bool running;
-	unsigned length_counter;
-	unsigned volume_counter;
-	unsigned frequency;
-	unsigned envelope_counter;
-	unsigned envelope_step;
-};
-
-struct WaveData : public SoundData {
-	unsigned cycles;
-	unsigned current_digit;
-};
-
-struct FifoData {
-	std::deque<uint8> samples;
-};
 
 class APU : Module {
 	friend class SoundCtlX;
@@ -45,27 +33,14 @@ class APU : Module {
 	unsigned m_current_sample;
 
 	uint64 m_cycles;
-	SoundData m_square1;
-	SoundData m_square2;
-	WaveData m_wave;
-	FifoData m_soundA;
-	FifoData m_soundB;
+	SquareSweep m_square1;
+	SquareTone m_square2;
+	Wave m_wave;
+	Noise m_noise;
+	FIFOA m_fifo_a;
+	FIFOB m_fifo_b;
 
-	void push_sample_fifoA(uint8 value, unsigned sample_rate);
-	void push_sample_fifoB(uint8 value, unsigned sample_rate);
 	void push_samples(float left, float right);
-
-	int16 generate_sample_square1();
-	int16 generate_sample_square2();
-	int16 generate_sample_noise();
-	int16 generate_sample_wave();
-	int16 generate_sample_fifoA();
-	int16 generate_sample_fifoB();
-
-	void timer_tick_length();
-	void timer_tick_sweep();
-	void timer_tick_envelope();
-	void timer_tick_wave();
 public:
 	APU(GaBber&);
 	void init();
@@ -73,14 +48,19 @@ public:
 
 	std::array<float, psg_sample_count> const& internal_samples() const { return m_internal_samples; }
 
-	void reload_square1();
-	void reload_square2();
 	void reload_wave();
 	void set_wave_running(bool running);
 
 	void on_timer_overflow(unsigned timer_num);
 
 	bool switch_audio_device(char const*);
+
+	SquareSweep& square1() { return m_square1; }
+	SquareTone& square2() { return m_square2; }
+	Wave& wave() { return m_wave; }
+	Noise& noise() { return m_noise; }
+	FIFOA& fifo_a() { return m_fifo_a; }
+	FIFOB& fifo_b() { return m_fifo_b; }
 
 	float audio_latency() const;
 };

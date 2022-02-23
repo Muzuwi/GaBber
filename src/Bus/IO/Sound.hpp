@@ -132,7 +132,7 @@ public:
 
 class SoundCtlH final : public IOReg16<0x04000082> {
 protected:
-	static constexpr const uint16 writeable_mask = 0xFF0F;
+	static constexpr const uint16 writeable_mask = 0x770F;
 	static constexpr const uint16 readable_mask = 0x770F;
 
 	uint16 on_read() override;
@@ -149,7 +149,7 @@ public:
 class SoundCtlX final : public IOReg32<0x04000084> {
 protected:
 	static constexpr const uint32 writeable_mask = 0x00000080;
-	static constexpr const uint32 readable_mask = 0x0000008F;
+	static constexpr const uint32 readable_mask = 0x00000080;
 
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
@@ -333,25 +333,19 @@ public:
 };
 
 class SoundFifoA final : public IOReg32<0x040000A0> {
-	std::deque<uint8> m_fifo;
 protected:
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
 public:
 	SoundFifoA(GaBber& emu)
 	    : IOReg32<67109024>(emu) {}
-
-	std::deque<uint8>& fifo() { return m_fifo; }
 };
 
 class SoundFifoB final : public IOReg32<0x040000A4> {
-	std::deque<uint8> m_fifo;
 protected:
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
 public:
 	SoundFifoB(GaBber& emu)
 	    : IOReg32<67109028>(emu) {}
-
-	std::deque<uint8>& fifo() { return m_fifo; }
 };

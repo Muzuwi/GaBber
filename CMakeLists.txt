@@ -70,7 +70,7 @@ add_executable(GaBber
     src/Emulator/Module.cpp
     src/Bus/IO/IOContainer.cpp
     src/Bus/Common/MemoryLayout.cpp
-    src/Emulator/AudioOptions.cpp src/Emulator/EmulatorOptions.cpp src/Bus/Cart/SRAM.cpp src/Bus/Cart/SRAM.hpp)
+    src/Emulator/AudioOptions.cpp src/Emulator/EmulatorOptions.cpp src/Bus/Cart/SRAM.cpp src/Bus/Cart/SRAM.hpp src/APU/Wave.cpp src/APU/Wave.hpp src/APU/SquareSweep.cpp src/APU/SquareSweep.hpp src/APU/SquareTone.cpp src/APU/SquareTone.hpp src/APU/Noise.cpp src/APU/Noise.hpp src/APU/FIFOA.cpp src/APU/FIFOA.hpp src/APU/FIFOB.cpp src/APU/FIFOB.hpp)
 
 target_compile_options(GaBber PRIVATE ${GABBER_CXX_FLAGS})
 

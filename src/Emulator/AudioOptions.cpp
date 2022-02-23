@@ -60,4 +60,10 @@ void AudioOptions::draw() {
 	const unsigned min = 0;
 	const unsigned max = 100;
 	ImGui::SliderScalar("Volume", ImGuiDataType_U32, &config().volume, &min, &max, "%d%%");
+
+	ImGui::Checkbox("Channel 1 enabled", &config().apu_ch1_enabled);
+	ImGui::Checkbox("Channel 2 enabled", &config().apu_ch2_enabled);
+	ImGui::Checkbox("Channel 3 enabled", &config().apu_ch3_enabled);
+	ImGui::Checkbox("Channel 4 enabled", &config().apu_ch4_enabled);
+	ImGui::Checkbox("FIFO enabled", &config().apu_fifo_enabled);
 }
