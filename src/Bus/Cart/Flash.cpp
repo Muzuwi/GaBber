@@ -16,7 +16,7 @@ uint8 Flash::read(uint32 offset) {
 					return m_identifier & 0xFFu;
 				}
 				case 0x1: {
-					return m_identifier >> 16u;
+					return m_identifier >> 8u;
 				}
 				default: {
 					fmt::print("Flash/ Read from invalid ID-mode address [{:08x}]\n", offset);
