@@ -24,8 +24,6 @@ class APU : Module {
 	static_assert(psg_sample_count % 2 == 0, "Invalid PSG sample count. Should be a multiple of 2 (L+R).");
 	static_assert(output_sample_count % 2 == 0, "Invalid output sample count. Should be a multiple of 2 (L+R).");
 
-	static constexpr const float duty_lookup[4] = { 0.125f, 0.25f, 0.5f, 0.75f };
-
 	SDL_AudioSpec m_device_spec;
 	SDL_AudioDeviceID m_device;
 
@@ -43,13 +41,10 @@ class APU : Module {
 	void push_samples(float left, float right);
 public:
 	APU(GaBber&);
-	void init();
+	void initialize_platform();
 	void cycle();
 
 	std::array<float, psg_sample_count> const& internal_samples() const { return m_internal_samples; }
-
-	void reload_wave();
-	void set_wave_running(bool running);
 
 	void on_timer_overflow(unsigned timer_num);
 

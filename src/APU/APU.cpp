@@ -60,7 +60,7 @@ void APU::push_samples(float left, float right) {
 	}
 }
 
-void APU::init() {
+void APU::initialize_platform() {
 	SDL_AudioSpec request {};
 	std::memset(&request, 0, sizeof(request));
 

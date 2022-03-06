@@ -155,7 +155,7 @@ int GaBber::start() {
 		fmt::print("Failed initializing platform renderer\n");
 		return 1;
 	}
-	m_sound->init();
+	m_sound->initialize_platform();
 
 	if(m_debugger->is_debug_mode()) {
 		enter_debug_mode();
