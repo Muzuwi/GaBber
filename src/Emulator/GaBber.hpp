@@ -14,8 +14,10 @@ class Renderer;
 
 class GaBber {
 	friend class Module;
-	std::string m_rom_filename;
-	Config m_config;
+	std::string m_rom_filename {};
+	std::string m_bios_filename { "bios.bin" };
+	std::string m_save_filename {};
+	Config m_config {};
 
 	std::shared_ptr<TestHarness> m_test_harness;
 	std::shared_ptr<MemoryLayout> m_mem;
@@ -25,13 +27,13 @@ class GaBber {
 	std::shared_ptr<PPU> m_ppu;
 	std::shared_ptr<APU> m_sound;
 	std::shared_ptr<Renderer> m_renderer;
-	bool m_test_mode;
+	bool m_test_mode { false };
 	bool m_running { true };
 	bool m_do_step { false };
 
-	bool m_closed;
-	unsigned m_current_sample;
-	std::array<unsigned, 10000> m_cycle_samples;
+	bool m_closed { false };
+	unsigned m_current_sample { 0 };
+	std::array<unsigned, 10000> m_cycle_samples {};
 
 	void emulator_reset();
 	void emulator_loop();
@@ -40,7 +42,7 @@ class GaBber {
 public:
 	GaBber();
 
-	void parse_args(int argc, char** argv);
+	bool parse_args(int argc, char** argv);
 	int start();
 
 	BusInterface& mmu() { return *m_mmu; }

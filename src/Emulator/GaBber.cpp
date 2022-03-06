@@ -1,6 +1,7 @@
 #include "GaBber.hpp"
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <optional>
 #include <vector>
 #include "APU/APU.hpp"
@@ -43,42 +44,101 @@ std::optional<std::vector<uint8>> load_from_file(const std::string& path) {
 	return { rom };
 }
 
-void GaBber::parse_args(int argc, char** argv) {
-	for(int i = 1; i < argc; ++i) {
-		if(std::string("--debug").compare(argv[i]) == 0) {
-			m_debugger->set_debug_mode(true);
+bool GaBber::parse_args(int argc, char** argv) {
+	if(argc < 2) {
+		fmt::print("Usage: <executable> [options] <path-to-rom>\n");
+		fmt::print("Available options:\n");
+		fmt::print("\t--debug\t\tStart the emulator in debug mode\n");
+		fmt::print("\t--bios <path>\t\tUse the specified file as the BIOS\n");
+		fmt::print("\t--save <path>\t\tUse the specified save file\n");
+		fmt::print("\t--test\t\tRun emulator tests\n");
+		return false;
+	}
+
+	std::vector<std::string> arguments { argv + 1, argv + argc };
+
+	auto it = arguments.begin();
+
+	auto skip = [&arguments, &it](unsigned count) { std::ranges::advance(it, count, arguments.end()); };
+
+	auto peek = [&arguments, &it]() -> std::optional<std::string> {
+		auto current = it;
+		std::ranges::advance(current, 1, arguments.end());
+		if(current == arguments.end()) {
+			return { std::nullopt };
 		}
-		if(std::string("--test").compare(argv[i]) == 0) {
+		return { *current };
+	};
+
+	bool save_name_passed = false;
+	bool rom_name_passed = false;
+
+	while(it != arguments.end()) {
+		if(*it == "--debug") {
+			m_debugger->set_debug_mode(true);
+			skip(2);
+		} else if(*it == "--test") {
 			m_test_mode = true;
+			skip(1);
+		} else if(*it == "--bios") {
+			auto name = peek();
+			if(name.has_value()) {
+				m_bios_filename = { *name };
+				skip(2);
+			} else {
+				fmt::print("Missing file path for argument '--bios'\n");
+				return false;
+			}
+		} else if(*it == "--save") {
+			auto path = peek();
+			if(path.has_value()) {
+				save_name_passed = true;
+				m_save_filename = { *path };
+				skip(2);
+			} else {
+				fmt::print("Missing file path for argument '--save'\n");
+				return false;
+			}
+		} else if(!(*it).empty() && (*it)[0] != '-') {
+			rom_name_passed = true;
+			m_rom_filename = { *it };
+			skip(1);
 		}
 	}
 
-	if(argc >= 2) {
-		m_rom_filename = std::string(argv[1]);
+	if(!rom_name_passed) {
+		fmt::print("No ROM file path provided\n");
+		return false;
 	}
+
+	if(!save_name_passed) {
+		m_save_filename = m_rom_filename + ".sav";
+	}
+
+	return true;
 }
 
 int GaBber::start() {
-	auto bios_image = load_from_file("bios.bin");
+	auto bios_image = load_from_file(m_bios_filename);
 	if(!bios_image.has_value()) {
-		std::cerr << "Failed loading BIOS image!";
-		return -1;
+		fmt::print("Failed loading BIOS from file '{}'\n", m_bios_filename);
+		return 1;
 	}
 	m_mem->bios.from_vec(*bios_image);
 
 	if(!m_test_mode) {
 		auto rom = load_from_file(m_rom_filename);
 		if(!rom.has_value()) {
-			std::cerr << "Failed loading ROM from file `" << m_rom_filename << "`\n";
-			return -1;
+			fmt::print("Failed loading ROM from file '{}'\n", m_rom_filename);
+			return 1;
 		}
 
 		std::vector<uint8> save = {};
-		auto maybe_save = load_from_file(m_rom_filename + ".sav");
+		auto maybe_save = load_from_file(m_save_filename);
 		if(maybe_save.has_value()) {
 			save = *maybe_save;
 		} else {
-			std::cerr << "Could not load save file!\n";
+			fmt::print("Failed loading save file from file '{}'\n", m_save_filename);
 		}
 
 		m_mem->pak.load_pak(std::move(*rom), std::move(save));
@@ -92,10 +152,14 @@ int GaBber::start() {
 	}
 
 	if(!m_renderer->initialize_platform()) {
-		std::cerr << "Failed initializing platform renderer\n";
-		return -1;
+		fmt::print("Failed initializing platform renderer\n");
+		return 1;
 	}
 	m_sound->init();
+
+	if(m_debugger->is_debug_mode()) {
+		enter_debug_mode();
+	}
 
 	emulator_loop();
 	emulator_close();
@@ -156,9 +220,9 @@ void GaBber::emulator_reset() {
 }
 
 void GaBber::emulator_close() {
-	std::ofstream save_file { m_rom_filename + ".sav", std::ios_base::binary };
+	std::ofstream save_file { m_save_filename, std::ios_base::binary };
 	if(!save_file.good()) {
-		fmt::print("Failed opening save file!\n");
+		fmt::print("Failed opening save file '{}' for writing\n", m_save_filename);
 		return;
 	}
 
