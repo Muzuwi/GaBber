@@ -100,6 +100,13 @@ void ARM7TDMI::execute_ARM(uint32 opcode) {
 		return;
 	}
 
+#define BADOP(op)                               \
+	case op:                                    \
+		log("Unimplemented opcode: " #op "\n"); \
+		dump_memory_around_pc();                \
+		m_wait_cycles += 1;                     \
+		break
+
 	auto op = ARM::opcode_decode(opcode);
 	switch(op) {
 		case ARM::InstructionType::BBL: this->B(ARM::BInstruction(opcode)); return;
@@ -112,6 +119,15 @@ void ARM7TDMI::execute_ARM(uint32 opcode) {
 		case ARM::InstructionType::BDT: this->BDT(ARM::BDTInstruction(opcode)); return;
 		case ARM::InstructionType::SWP: this->SWP(ARM::SWPInstruction(opcode)); return;
 		case ARM::InstructionType::SWI: this->SWI(ARM::SWIInstruction(opcode)); return;
+
+		BADOP(ARM::InstructionType::CODT);
+		BADOP(ARM::InstructionType::CO9);
+		BADOP(ARM::InstructionType::CODO);
+		BADOP(ARM::InstructionType::CORT);
+		BADOP(ARM::InstructionType::MLH);
+		BADOP(ARM::InstructionType::QALU);
+		BADOP(ARM::InstructionType::CLZ);
+		BADOP(ARM::InstructionType::BKPT);
 
 		case ARM::InstructionType::UD:
 		default: {
@@ -144,6 +160,10 @@ void ARM7TDMI::execute_THUMB(uint16 opcode) {
 		case THUMB::InstructionType::FMT17: THUMB_FMT17(THUMB::InstructionFormat17(opcode)); return;
 		case THUMB::InstructionType::FMT18: THUMB_FMT18(THUMB::InstructionFormat18(opcode)); return;
 		case THUMB::InstructionType::FMT19: THUMB_FMT19(THUMB::InstructionFormat19(opcode)); return;
+
+		BADOP(THUMB::InstructionType::UD9);
+		BADOP(THUMB::InstructionType::BKPT);
+		BADOP(THUMB::InstructionType::BLX9);
 
 		case THUMB::InstructionType::UD:
 		default: {

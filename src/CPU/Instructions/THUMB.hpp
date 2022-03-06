@@ -24,49 +24,83 @@ namespace THUMB {
 		FMT18,
 		FMT19,
 		UD,
+		UD9,
+		BKPT,
+		BLX9,
 		_End
 	};
 
 #define PATTERN(mask, pattern) ((thumb_opcode & mask) == pattern)
 	static inline InstructionType opcode_decode(uint16 thumb_opcode) {
-		if(PATTERN(0xf800, 0x1800))
+		if(PATTERN(0xf800, 0x1800)) {
 			return InstructionType::FMT2;
-		if(PATTERN(0xe000, 0x0))
+		}
+		if(PATTERN(0xe000, 0x0)) {
 			return InstructionType::FMT1;
-		if(PATTERN(0xe000, 0x2000))
+		}
+		if(PATTERN(0xe000, 0x2000)) {
 			return InstructionType::FMT3;
-		if(PATTERN(0xfc00, 0x4000))
+		}
+		if(PATTERN(0xfc00, 0x4000)) {
 			return InstructionType::FMT4;
-		if(PATTERN(0xfc00, 0x4400))
+		}
+		if(PATTERN(0xfc00, 0x4400)) {
 			return InstructionType::FMT5;
-		if(PATTERN(0xf800, 0x4800))
+		}
+		if(PATTERN(0xf800, 0x4800)) {
 			return InstructionType::FMT6;
-		if(PATTERN(0xf200, 0x5000))
+		}
+		if(PATTERN(0xf200, 0x5000)) {
 			return InstructionType::FMT7;
-		if(PATTERN(0xf200, 0x5200))
+		}
+		if(PATTERN(0xf200, 0x5200)) {
 			return InstructionType::FMT8;
-		if(PATTERN(0xe000, 0x6000))
+		}
+		if(PATTERN(0xe000, 0x6000)) {
 			return InstructionType::FMT9;
-		if(PATTERN(0xf000, 0x8000))
+		}
+		if(PATTERN(0xf000, 0x8000)) {
 			return InstructionType::FMT10;
-		if(PATTERN(0xf000, 0x9000))
+		}
+		if(PATTERN(0xf000, 0x9000)) {
 			return InstructionType::FMT11;
-		if(PATTERN(0xf000, 0xa000))
+		}
+		if(PATTERN(0xf000, 0xa000)) {
 			return InstructionType::FMT12;
-		if(PATTERN(0xff00, 0xb000))
+		}
+		if(PATTERN(0xff00, 0xb000)) {
 			return InstructionType::FMT13;
-		if(PATTERN(0xf600, 0xb400))
+		}
+		if(PATTERN(0xff00, 0xbe00)) {
+			return InstructionType::BKPT;
+		}
+		if(PATTERN(0xf600, 0xb400)) {
 			return InstructionType::FMT14;
-		if(PATTERN(0xf000, 0xc000))
+		}
+		if(PATTERN(0xf000, 0xc000)) {
 			return InstructionType::FMT15;
-		if(PATTERN(0xff00, 0xdf00))
+		}
+		if(PATTERN(0xff00, 0xdf00)) {
 			return InstructionType::FMT17;
-		if(PATTERN(0xf000, 0xd000))
+		}
+		if(PATTERN(0xff00, 0xde00)) {
+			return InstructionType::UD9;
+		}
+		if(PATTERN(0xf000, 0xd000)) {
 			return InstructionType::FMT16;
-		if(PATTERN(0xf800, 0xe000))
+		}
+		if(PATTERN(0xf800, 0xe000)) {
 			return InstructionType::FMT18;
-		if(PATTERN(0xf000, 0xf000))
+		}
+		if(PATTERN(0xf801, 0xe800)) {
+			return InstructionType::BLX9;
+		}
+		if(PATTERN(0xf801, 0xe801)) {
+			return InstructionType::UD9;
+		}
+		if(PATTERN(0xf000, 0xf000)) {
 			return InstructionType::FMT19;
+		}
 
 		return InstructionType::UD;
 	}

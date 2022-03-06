@@ -41,33 +41,76 @@ namespace ARM {
 		SWP,
 		SWI,
 		UD,
+		CODT,
+		CO9,
+		CODO,
+		CORT,
+		MLH,
+		QALU,
+		CLZ,
+		BKPT,
 		_End
 	};
 
 #define PATTERN(mask, pattern) ((arm_opcode & mask) == pattern)
 	static inline InstructionType opcode_decode(uint32 arm_opcode) {
-		if(PATTERN(0x0f000000, 0x0f000000))
+		if(PATTERN(0x0f000000, 0x0f000000)) {
 			return InstructionType::SWI;
-		if(PATTERN(0x0e000000, 0x0a000000))
+		}
+		if(PATTERN(0x0f000010, 0x0e000010)) {
+			return InstructionType::CORT;
+		}
+		if(PATTERN(0x0f000010, 0x0e000000)) {
+			return InstructionType::CODO;
+		}
+		if(PATTERN(0x0fe00000, 0x0c400000)) {
+			return InstructionType::CO9;
+		}
+		if(PATTERN(0x0e000000, 0x0c000000)) {
+			return InstructionType::CODT;
+		}
+		if(PATTERN(0x0e000000, 0x0a000000)) {
 			return InstructionType::BBL;
-		if(PATTERN(0x0e000000, 0x08000000))
+		}
+		if(PATTERN(0x0e000000, 0x08000000)) {
 			return InstructionType::BDT;
-		if(PATTERN(0x0c000000, 0x04000000))
+		}
+		if(PATTERN(0x0c000000, 0x04000000)) {
 			return InstructionType::SDT;
-		if(PATTERN(0x0ffffff0, 0x12fff10))
+		}
+		if(PATTERN(0x0ffffff0, 0x12fff10)) {
 			return InstructionType::BX;
-		if(PATTERN(0xfb00ff0, 0x01000090))
+		}
+		if(PATTERN(0xfff000f0, 0xe1200070)) {
+			return InstructionType::BKPT;
+		}
+		if(PATTERN(0x0fff0ff0, 0x016f0f10)) {
+			return InstructionType::CLZ;
+		}
+		if(PATTERN(0x0f900ff0, 0x01000050)) {
+			return InstructionType::QALU;
+		}
+		if(PATTERN(0x0fb00ff0, 0x01000090)) {
 			return InstructionType::SWP;
-		if(PATTERN(0x0fc000f0, 0x90))
+		}
+		if(PATTERN(0x0f900090, 0x01000080)) {
+			return InstructionType::MLH;
+		}
+		if(PATTERN(0x0fc000f0, 0x90)) {
 			return InstructionType::MUL;
-		if(PATTERN(0x0f8000f0, 0x00800090))
+		}
+		if(PATTERN(0x0f8000f0, 0x00800090)) {
 			return InstructionType::MLL;
-		if(PATTERN(0x0e400f90, 0x90))
+		}
+		if(PATTERN(0x0e400f90, 0x90)) {
 			return InstructionType::HDT;
-		if(PATTERN(0x0e400090, 0x400090))
+		}
+		if(PATTERN(0x0e400090, 0x400090)) {
 			return InstructionType::HDT;
-		if(PATTERN(0x0c000000, 0))
+		}
+		if(PATTERN(0x0c000000, 0)) {
 			return InstructionType::ALU;
+		}
 
 		return InstructionType::UD;
 	}
