@@ -280,11 +280,9 @@ void Renderer::poll_events() {
 }
 
 void Renderer::resize_to_debugger() {
-	SDL_SetWindowResizable(m_window, SDL_FALSE);
 	SDL_RestoreWindow(m_window);
 }
 
 void Renderer::resize_to_normal() {
-	SDL_SetWindowResizable(m_window, SDL_TRUE);
 	SDL_MaximizeWindow(m_window);
 }
