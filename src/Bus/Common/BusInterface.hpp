@@ -10,8 +10,8 @@ class BusInterface : Module {
 	friend class BusDevice;
 	friend class TestHarness;
 
-	static std::vector<BusDevice*> s_devices;
-	static bool register_device(BusDevice&);
+	std::vector<BusDevice*> m_devices;
+	bool register_device(BusDevice&);
 
 	unsigned m_last_wait_cycles;
 	BusDevice* find_device(uint32 address, size_t size);

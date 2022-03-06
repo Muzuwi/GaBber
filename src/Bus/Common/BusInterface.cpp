@@ -4,21 +4,19 @@
 #include "Debugger/Debugger.hpp"
 #include "Emulator/GaBber.hpp"
 
-std::vector<BusDevice*> BusInterface::s_devices {};
-
 BusInterface::BusInterface(GaBber& emu)
     : Module(emu) {}
 
 void BusInterface::debug() {
 	log("Device dump:");
-	for(auto& device : s_devices) {
+	for(auto& device : m_devices) {
 		log("Device @{}: start={:08x} end={:08x} (size={})", (void*)device, device->start(), device->end(),
 		    device->size());
 	}
 }
 
 bool BusInterface::register_device(BusDevice& dev) {
-	for(auto& device : s_devices) {
+	for(auto& device : m_devices) {
 		bool device_overlaps_center = dev.start() >= device->start() && dev.end() <= device->end();
 
 		if(device_overlaps_center) {
@@ -29,8 +27,8 @@ bool BusInterface::register_device(BusDevice& dev) {
 	}
 
 	log("Register device {}, {:08x}-{:08x}\n", (void*)&dev, dev.start(), dev.end());
-	s_devices.push_back(&dev);
-	std::sort(s_devices.begin(), s_devices.end(), [](BusDevice*& a, BusDevice*& b) { return a->start() < b->start(); });
+	m_devices.push_back(&dev);
+	std::sort(m_devices.begin(), m_devices.end(), [](BusDevice*& a, BusDevice*& b) { return a->start() < b->start(); });
 	return false;
 }
 
@@ -133,7 +131,7 @@ BusDevice* BusInterface::find_device(uint32 address, size_t size) {
 		return cache;
 	}
 
-	for(auto& dev : s_devices) {
+	for(auto& dev : m_devices) {
 		if(dev->contains(address) && dev->contains(address + size - 1)) {
 			cache = dev;
 			return dev;
@@ -160,7 +158,7 @@ void BusInterface::poke(uint32 addr, uint8 val) {
 }
 
 void BusInterface::reload() {
-	for(auto& dev : s_devices) {
+	for(auto& dev : m_devices) {
 		dev->reload();
 	}
 }

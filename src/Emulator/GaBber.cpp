@@ -15,8 +15,8 @@
 #include "Tests/Harness.hpp"
 
 GaBber::GaBber() {
-	m_mem = std::make_shared<MemoryLayout>(*this);
 	m_mmu = std::make_shared<BusInterface>(*this);
+	m_mem = std::make_shared<MemoryLayout>(*this);
 	m_test_harness = std::make_shared<TestHarness>(*this);
 	m_debugger = std::make_shared<Debugger>(*this);
 	m_cpu = std::make_shared<ARM7TDMI>(*this);
