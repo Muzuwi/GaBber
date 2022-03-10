@@ -1,4 +1,5 @@
 #include "Bus/IO/DMA.hpp"
+#include "Bus/Common/BusInterface.hpp"
 #include "Bus/IO/IOContainer.hpp"
 #include "CPU/ARM7TDMI.hpp"
 
@@ -29,18 +30,29 @@ void ARM7TDMI::dma_run() {
 		return;
 	}
 
-	const unsigned n = s.m_count;
-	while(s.m_count--) {
-		//  In FIFO mode, a 32-bit transfer is forced
-		const bool size_flag = (s.m_ctrl->start_timing == DMAStartTiming::Special && (x == 1 || x == 2))
-		                               ? true
-		                               : s.m_ctrl->transfer_size;
+	//  In FIFO mode, a 32-bit transfer is forced
+	const bool size_flag =
+	        (s.m_ctrl->start_timing == DMAStartTiming::Special && (x == 1 || x == 2)) ? true : s.m_ctrl->transfer_size;
 
+	AccessType type { AccessType::NonSeq };
+
+	while(s.m_count--) {
 		const uint32 data = (size_flag) ? mem_read32(s.m_source_ptr) : mem_read16(s.m_source_ptr);
 		if(size_flag) {
 			mem_write32(s.m_destination_ptr, data);
 		} else {
 			mem_write16(s.m_destination_ptr, static_cast<uint16>(data));
+		}
+
+		if(size_flag) {
+			m_wait_cycles += mem_waits_access32(s.m_source_ptr, type) /*read*/ +
+			                 mem_waits_access32(s.m_destination_ptr, type) /*write*/;
+		} else {
+			m_wait_cycles += mem_waits_access16(s.m_source_ptr, type) /*read*/ +
+			                 mem_waits_access16(s.m_destination_ptr, type) /*write*/;
+		}
+		if(type == AccessType::NonSeq) {
+			type = AccessType::Seq;
 		}
 
 		DMASrcCtrl ctl = s.m_ctrl->src_ctl;
@@ -71,7 +83,12 @@ void ARM7TDMI::dma_run() {
 		s.m_ctrl->enable = false;
 	}
 
-	m_wait_cycles += 2 /*N*/ + 2 * (n - 1) /*S*/ + 2 /*I*/;
+	auto in_pak_area = [](uint32 address) -> bool { return address >= 0x08000000 && address < 0x0E010000; };
+
+	m_wait_cycles += 2 /*I*/;
+	if(in_pak_area(s.m_source_ptr) && in_pak_area(s.m_destination_ptr)) {
+		m_wait_cycles += 2 /*I*/;
+	}
 }
 
 /*

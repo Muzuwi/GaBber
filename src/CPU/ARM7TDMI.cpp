@@ -34,6 +34,7 @@ void ARM7TDMI::reset() {
 	}
 
 	pc() = 0x0 + 8;
+	//	pc() = 0xFFFF0000 + 8;
 	m_pc_dirty = false;
 }
 
@@ -95,8 +96,8 @@ void ARM7TDMI::exec_opcode() {
 
 void ARM7TDMI::execute_ARM(uint32 opcode) {
 	if(!cspr().evaluate_condition(ARM::Instruction(opcode).condition())) {
-		//  Unevaluated instructions take 1 cycle anyway
-		m_wait_cycles += 1;
+		//  Unevaluated instructions take one S-cycle
+		m_wait_cycles += mem_waits_access32(const_pc(), AccessType::Seq);
 		return;
 	}
 
@@ -118,7 +119,9 @@ void ARM7TDMI::execute_ARM(uint32 opcode) {
 		case ARM::InstructionType::HDT: this->HDT(ARM::HDTInstruction(opcode)); return;
 		case ARM::InstructionType::BDT: this->BDT(ARM::BDTInstruction(opcode)); return;
 		case ARM::InstructionType::SWP: this->SWP(ARM::SWPInstruction(opcode)); return;
-		case ARM::InstructionType::SWI: this->SWI(ARM::SWIInstruction(opcode)); return;
+		case ARM::InstructionType::SWI:
+			this->SWI(ARM::SWIInstruction(opcode));
+			return;
 
 		BADOP(ARM::InstructionType::CODT);
 		BADOP(ARM::InstructionType::CO9);
@@ -159,7 +162,9 @@ void ARM7TDMI::execute_THUMB(uint16 opcode) {
 		case THUMB::InstructionType::FMT16: THUMB_FMT16(THUMB::InstructionFormat16(opcode)); return;
 		case THUMB::InstructionType::FMT17: THUMB_FMT17(THUMB::InstructionFormat17(opcode)); return;
 		case THUMB::InstructionType::FMT18: THUMB_FMT18(THUMB::InstructionFormat18(opcode)); return;
-		case THUMB::InstructionType::FMT19: THUMB_FMT19(THUMB::InstructionFormat19(opcode)); return;
+		case THUMB::InstructionType::FMT19:
+			THUMB_FMT19(THUMB::InstructionFormat19(opcode));
+			return;
 
 		BADOP(THUMB::InstructionType::UD9);
 		BADOP(THUMB::InstructionType::BKPT);

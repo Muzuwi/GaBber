@@ -14,7 +14,7 @@ void ARM7TDMI::THUMB_ALU(THUMB::InstructionFormat4 instr) {
 		&ARM7TDMI::THUMB_ORR, &ARM7TDMI::THUMB_MUL, &ARM7TDMI::THUMB_BIC, &ARM7TDMI::THUMB_MVN,
 	};
 
-	m_wait_cycles += 1 /*S*/;
+	m_wait_cycles += mem_waits_access16(const_pc() + 4, AccessType::Seq);
 	auto func = s_thumb_alu_lookup[instr.opcode()];
 	(*this.*func)(instr);
 }
@@ -45,7 +45,7 @@ void ARM7TDMI::THUMB_FMT1(THUMB::InstructionFormat1 instr) {
 		}
 	}
 
-	m_wait_cycles += 1 /*S*/;
+	m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 }
 
 void ARM7TDMI::THUMB_FMT2(THUMB::InstructionFormat2 instr) {
@@ -54,11 +54,11 @@ void ARM7TDMI::THUMB_FMT2(THUMB::InstructionFormat2 instr) {
 
 	uint32 operand2 = (instr.immediate_is_value()) ? (instr.immediate()) : (creg(instr.immediate()));
 
-	uint32 result = (instr.subtract()) ? _alu_sub(source, operand2, true) : _alu_add(source, operand2, true);
+	const uint32 result = (instr.subtract()) ? _alu_sub(source, operand2, true) : _alu_add(source, operand2, true);
 
 	destination = result;
 
-	m_wait_cycles += 1 /*S*/;
+	m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 }
 
 void ARM7TDMI::THUMB_FMT3(THUMB::InstructionFormat3 instr) {
@@ -87,7 +87,7 @@ void ARM7TDMI::THUMB_FMT3(THUMB::InstructionFormat3 instr) {
 		default: ASSERT_NOT_REACHED();
 	}
 
-	m_wait_cycles += 1 /*S*/;
+	m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 }
 
 void ARM7TDMI::THUMB_FMT5(THUMB::InstructionFormat5 instr) {
@@ -95,37 +95,54 @@ void ARM7TDMI::THUMB_FMT5(THUMB::InstructionFormat5 instr) {
 
 	switch(instr.opcode()) {
 		case 0: {
+			m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
+
 			auto& destination = reg(instr.destination_reg());
 			destination = source + destination;
-			m_wait_cycles += 1 /*S*/;
+
 			if(instr.destination_reg() == 15) {
-				m_wait_cycles += 1 /*S*/ + 1 /*N*/;
+				m_wait_cycles += mem_waits_access16(const_pc(), AccessType::NonSeq) +
+				                 mem_waits_access16(const_pc(), AccessType::Seq);
 			}
 			break;
 		}
 		case 1: {
 			const auto& destination = creg(instr.destination_reg());
 			(void)_alu_sub(destination, source, true);
-			m_wait_cycles += 1 /*S*/;
+
+			m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 			break;
 		}
 		case 2: {
+			m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
+
 			auto& destination = reg(instr.destination_reg());
 			destination = source;
-			m_wait_cycles += 1 /*S*/;
+
 			if(instr.destination_reg() == 15) {
-				m_wait_cycles += 1 /*S*/ + 1 /*N*/;
+				m_wait_cycles += mem_waits_access16(const_pc(), AccessType::NonSeq) +
+				                 mem_waits_access16(const_pc(), AccessType::Seq);
 			}
 			break;
 		}
 		case 3: {
 			if(!instr.MSBd()) {
+				m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
+
 				cspr().set_state((source & 1) ? INSTR_MODE::THUMB : INSTR_MODE::ARM);
-				if(!(source & 1))
+				if(!(source & 1)) {
 					pc() = source & ~2u;
-				else
+				} else {
 					pc() = source & ~1u;
-				m_wait_cycles += 2 /*S*/ + 1 /*N*/;
+				}
+
+				if(cspr().state() == INSTR_MODE::ARM) {
+					m_wait_cycles += mem_waits_access32(const_pc() + 0, AccessType::NonSeq) +
+					                 mem_waits_access32(const_pc() + 4, AccessType::Seq);
+				} else {
+					m_wait_cycles += mem_waits_access16(const_pc() + 0, AccessType::NonSeq) +
+					                 mem_waits_access16(const_pc() + 2, AccessType::Seq);
+				}
 			}
 			break;
 		}
@@ -139,7 +156,8 @@ void ARM7TDMI::THUMB_FMT6(THUMB::InstructionFormat6 instr) {
 	const auto aligned_pc = const_pc() & ~0x3;
 	destination = static_cast<uint32>(mem_read32(aligned_pc + immediate_shifted));
 
-	m_wait_cycles += 1 /*S*/ + 1 /*N*/ + 1 /*I*/;
+	m_wait_cycles += 1 /*I*/ + mem_waits_access16(const_pc(), AccessType::Seq) +
+	                 mem_waits_access32(aligned_pc + immediate_shifted, AccessType::NonSeq);
 }
 
 void ARM7TDMI::THUMB_FMT7(THUMB::InstructionFormat7 instr) {
@@ -150,28 +168,31 @@ void ARM7TDMI::THUMB_FMT7(THUMB::InstructionFormat7 instr) {
 	if(instr.load_from_memory()) {
 		auto& target = reg(instr.target_reg());
 
-		if(instr.quantity_in_bytes())
+		if(instr.quantity_in_bytes()) {
 			target = mem_read8(address);
-		else {
+			m_wait_cycles += mem_waits_access8(address, AccessType::NonSeq);
+		} else {
 			auto word = mem_read32(address & ~3u);//  Force align
 			//  Rotate
 			if(address & 3u) {
 				word = Bits::rotr32(word, (address & 3u) * 8);
 			}
-
 			target = word;
-		}
 
-		m_wait_cycles += 1 /*S*/ + 1 /*N*/ + 1 /*I*/;
+			m_wait_cycles += mem_waits_access32(address & ~3u, AccessType::NonSeq);
+		}
+		m_wait_cycles += 1 /*I*/ + mem_waits_access16(const_pc(), AccessType::Seq);
 	} else {
 		const auto target = creg(instr.target_reg());
 
-		if(instr.quantity_in_bytes())
+		if(instr.quantity_in_bytes()) {
 			mem_write8(address, target & 0xFFu);
-		else
+			m_wait_cycles += mem_waits_access8(address, AccessType::NonSeq);
+		} else {
 			mem_write32(address, target);
-
-		m_wait_cycles += 2 /*N*/;
+			m_wait_cycles += mem_waits_access32(address, AccessType::NonSeq);
+		}
+		m_wait_cycles += mem_waits_access16(const_pc(), AccessType::NonSeq);
 	}
 }
 
@@ -185,7 +206,8 @@ void ARM7TDMI::THUMB_FMT8(THUMB::InstructionFormat8 instr) {
 			const auto destination = creg(instr.destination_reg());
 			mem_write16(address & ~1u, destination & 0xffff);
 
-			m_wait_cycles += 2 /*N*/;
+			m_wait_cycles += mem_waits_access16(address & ~1u, AccessType::NonSeq) +
+			                 mem_waits_access16(const_pc(), AccessType::NonSeq);
 			break;
 		}
 		case 1: {
@@ -194,7 +216,8 @@ void ARM7TDMI::THUMB_FMT8(THUMB::InstructionFormat8 instr) {
 			uint8 val = mem_read8(address);
 			destination = Bits::sign_extend<8>(val);
 
-			m_wait_cycles += 1 /*S*/ + 1 /*N*/ + 1 /*I*/;
+			m_wait_cycles += 1 /*I*/ + mem_waits_access8(address, AccessType::NonSeq) +
+			                 mem_waits_access16(const_pc(), AccessType::Seq);
 			break;
 		}
 		case 2: {
@@ -209,7 +232,8 @@ void ARM7TDMI::THUMB_FMT8(THUMB::InstructionFormat8 instr) {
 
 			destination = word;
 
-			m_wait_cycles += 1 /*S*/ + 1 /*N*/ + 1 /*I*/;
+			m_wait_cycles += 1 /*I*/ + mem_waits_access16(address & ~1u, AccessType::NonSeq) +
+			                 mem_waits_access16(const_pc(), AccessType::Seq);
 			break;
 		}
 		case 3: {
@@ -227,7 +251,8 @@ void ARM7TDMI::THUMB_FMT8(THUMB::InstructionFormat8 instr) {
 
 			destination = word;
 
-			m_wait_cycles += 1 /*S*/ + 1 /*N*/ + 1 /*I*/;
+			m_wait_cycles += 1 /*I*/ + mem_waits_access16(address, AccessType::NonSeq) +
+			                 mem_waits_access16(const_pc(), AccessType::Seq);
 			break;
 		}
 
@@ -246,9 +271,10 @@ void ARM7TDMI::THUMB_FMT9(THUMB::InstructionFormat9 instr) {
 	if(instr.load_from_memory()) {
 		auto& target = reg(instr.target_reg());
 
-		if(instr.quantity_in_bytes())
+		if(instr.quantity_in_bytes()) {
 			target = mem_read8(address);
-		else {
+			m_wait_cycles += mem_waits_access8(address, AccessType::NonSeq);
+		} else {
 			auto word = mem_read32(address & ~3u);//  Force align
 			//  Rotate
 			if(address & 3u) {
@@ -256,18 +282,21 @@ void ARM7TDMI::THUMB_FMT9(THUMB::InstructionFormat9 instr) {
 			}
 
 			target = word;
+			m_wait_cycles += mem_waits_access32(address & ~3u, AccessType::NonSeq);
 		}
 
-		m_wait_cycles += 1 /*S*/ + 1 /*N*/ + 1 /*I*/;
+		m_wait_cycles += 1 /*I*/ + mem_waits_access16(const_pc(), AccessType::Seq);
 	} else {
 		const auto target = creg(instr.target_reg());
 
-		if(instr.quantity_in_bytes())
+		if(instr.quantity_in_bytes()) {
 			mem_write8(address, target & 0xFFu);
-		else
+			m_wait_cycles += mem_waits_access8(address, AccessType::NonSeq);
+		} else {
 			mem_write32(address, target);
-
-		m_wait_cycles += 2 /*N*/;
+			m_wait_cycles += mem_waits_access32(address, AccessType::NonSeq);
+		}
+		m_wait_cycles += mem_waits_access16(const_pc(), AccessType::NonSeq);
 	}
 }
 
@@ -288,13 +317,15 @@ void ARM7TDMI::THUMB_FMT10(THUMB::InstructionFormat10 instr) {
 
 		target = word;
 
-		m_wait_cycles += 1 /*S*/ + 1 /*N*/ + 1 /*I*/;
+		m_wait_cycles += 1 /*I*/ + mem_waits_access16(address & ~1u, AccessType::NonSeq) +
+		                 mem_waits_access16(const_pc(), AccessType::Seq);
 	} else {
 		const auto target = creg(instr.target_reg());
 
 		mem_write16(address & ~1u, target & 0xFFFF);
 
-		m_wait_cycles += 2 /*N*/;
+		m_wait_cycles += mem_waits_access16(address & ~1u, AccessType::NonSeq) +
+		                 mem_waits_access16(const_pc(), AccessType::NonSeq);
 	}
 }
 
@@ -313,13 +344,15 @@ void ARM7TDMI::THUMB_FMT11(THUMB::InstructionFormat11 instr) {
 
 		destination = word;
 
-		m_wait_cycles += 1 /*S*/ + 1 /*N*/ + 1 /*I*/;
+		m_wait_cycles += 1 /*I*/ + mem_waits_access32(address & ~3u, AccessType::NonSeq) +
+		                 mem_waits_access16(const_pc(), AccessType::Seq);
 	} else {
 		const auto destination = creg(instr.destination_reg());
 
 		mem_write32(address & ~3u, destination);
 
-		m_wait_cycles += 2 /*N*/;
+		m_wait_cycles += mem_waits_access32(address & ~3u, AccessType::NonSeq) +
+		                 mem_waits_access16(const_pc(), AccessType::NonSeq);
 	}
 }
 
@@ -331,7 +364,7 @@ void ARM7TDMI::THUMB_FMT12(THUMB::InstructionFormat12 instr) {
 
 	destination = address;
 
-	m_wait_cycles += 1 /*S*/;
+	m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 }
 
 void ARM7TDMI::THUMB_FMT13(THUMB::InstructionFormat13 instr) {
@@ -339,7 +372,7 @@ void ARM7TDMI::THUMB_FMT13(THUMB::InstructionFormat13 instr) {
 
 	sp() = (instr.offset_is_negative()) ? sp() - offset : sp() + offset;
 
-	m_wait_cycles += 1 /*S*/;
+	m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 }
 
 void ARM7TDMI::THUMB_FMT14(THUMB::InstructionFormat14 instr) {
@@ -357,9 +390,12 @@ void ARM7TDMI::THUMB_FMT14(THUMB::InstructionFormat14 instr) {
 			pc() = stack_pop32() & ~0x1;
 		}
 
-		m_wait_cycles += n /*S*/ + 1 /*N*/ + 1 /*I*/;
+		//  FIXME: Weird timing edge cases
+		m_wait_cycles += 1 /*I*/ + mem_waits_access32(sp() + 0, AccessType::NonSeq) +
+		                 n * mem_waits_access32(sp() + 0, AccessType::Seq);
 		if(instr.store_lr_load_pc()) {
-			m_wait_cycles += 1 /*S*/ + 1 /*N*/;
+			m_wait_cycles += mem_waits_access32(const_pc(), AccessType::NonSeq) +
+			                 mem_waits_access32(const_pc() + 2, AccessType::Seq);
 		}
 	}
 	//  PUSH {Rlist}
@@ -374,8 +410,11 @@ void ARM7TDMI::THUMB_FMT14(THUMB::InstructionFormat14 instr) {
 			}
 		}
 
+		//  FIXME: Weird timing edge cases
 		const unsigned clamped_n = n > 0 ? n - 1 : 0;//  (n-1)
-		m_wait_cycles += clamped_n /*S*/ + 2 /*N*/;
+		m_wait_cycles += mem_waits_access32(sp(), AccessType::NonSeq) +
+		                 clamped_n * mem_waits_access32(sp(), AccessType::Seq) +
+		                 mem_waits_access32(const_pc() + 8, AccessType::NonSeq);
 	}
 }
 
@@ -426,24 +465,32 @@ void ARM7TDMI::THUMB_FMT15(THUMB::InstructionFormat15 instr) {
 	reg(instr.base_reg()) = ptr;//  FIXME:  Potential weirdness with constness and R15
 
 	if(instr.load_from_memory()) {
-		m_wait_cycles += n /*S*/ + 1 /*N*/ + 1 /*I*/;
+		//  FIXME: Weird timing edge cases
+		m_wait_cycles += 1 /*I*/ + mem_waits_access32(ptr + 0, AccessType::NonSeq) +
+		                 n * mem_waits_access32(ptr + 0, AccessType::Seq);
 	} else {
-		m_wait_cycles += (n - 1) /*S*/ + 2 /*N*/;
+		//  FIXME: Weird timing edge cases
+		m_wait_cycles += mem_waits_access32(ptr, AccessType::NonSeq) +
+		                 (n - 1) * mem_waits_access32(ptr, AccessType::Seq) +
+		                 mem_waits_access32(const_pc() + 8, AccessType::NonSeq);
 	}
 }
 
 void ARM7TDMI::THUMB_FMT16(THUMB::InstructionFormat16 instr) {
 	if(!cspr().evaluate_condition(instr.condition())) {
-		m_wait_cycles += 1 /*S*/;
+		m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 		return;
 	}
+
+	m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 
 	const auto offset = Bits::sign_extend<9>(static_cast<uint16>(instr.offset()) << 1u);
 	const auto new_pc = pc() + offset;
 
 	pc() = new_pc;
 
-	m_wait_cycles += 2 /*S*/ + 1 /*N*/;
+	m_wait_cycles += mem_waits_access16(const_pc() + 0, AccessType::NonSeq) +
+	                 mem_waits_access16(const_pc() + 2, AccessType::Seq);
 }
 
 void ARM7TDMI::THUMB_FMT17(THUMB::InstructionFormat17) {
@@ -451,10 +498,13 @@ void ARM7TDMI::THUMB_FMT17(THUMB::InstructionFormat17) {
 }
 
 void ARM7TDMI::THUMB_FMT18(THUMB::InstructionFormat18 instr) {
+	m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
+
 	auto new_pc = pc() + Bits::sign_extend<12>(instr.offset() << 1u);
 	pc() = new_pc;
 
-	m_wait_cycles += 2 /*S*/ + 1 /*N*/;
+	m_wait_cycles += mem_waits_access16(const_pc() + 0, AccessType::NonSeq) +
+	                 mem_waits_access16(const_pc() + 2, AccessType::Seq);
 }
 
 void ARM7TDMI::THUMB_FMT19(THUMB::InstructionFormat19 instr) {
@@ -462,13 +512,16 @@ void ARM7TDMI::THUMB_FMT19(THUMB::InstructionFormat19 instr) {
 		auto offset = Bits::sign_extend<23>(static_cast<uint32>(instr.offset()) << 12u);
 		lr() = (const_pc() + offset);
 
-		m_wait_cycles += 1 /*S*/;
+		m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 	} else {
+		m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
+
 		const auto next_pc = pc() - 2;
 		pc() = lr() + ((instr.offset() << 1u));
 		lr() = next_pc | 0x1;
 
-		m_wait_cycles += 2 /*S*/ + 1 /*N*/;
+		m_wait_cycles += mem_waits_access16(const_pc() + 0, AccessType::NonSeq) +
+		                 mem_waits_access16(const_pc() + 2, AccessType::Seq);
 	}
 }
 

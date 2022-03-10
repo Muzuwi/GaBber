@@ -1,5 +1,6 @@
 #include "BusInterface.hpp"
 #include <iostream>
+#include "Bus/IO/IOContainer.hpp"
 #include "BusDevice.hpp"
 #include "Debugger/Debugger.hpp"
 #include "Emulator/GaBber.hpp"
@@ -160,5 +161,125 @@ void BusInterface::poke(uint32 addr, uint8 val) {
 void BusInterface::reload() {
 	for(auto& dev : m_devices) {
 		dev->reload();
+	}
+}
+
+unsigned BusInterface::waits32(uint32 address, AccessType type) {
+	switch(region_from_address(address)) {
+		case Region::BIOS:
+		case Region::IWRAM:
+		case Region::IO:
+		case Region::OAM: {
+			return 1;
+		}
+		case Region::WRAM: {
+			//  FIXME: TODO
+			return 6;
+		}
+		case Region::VRAM:
+		case Region::PAL: {
+			return 2;
+		}
+		case Region::PAKROM0: {
+			return waits16(address, type) + waits16(address + 2, AccessType::Seq);
+		}
+		case Region::PAKROM1: {
+			return waits16(address, type) + waits16(address + 2, AccessType::Seq);
+		}
+		case Region::PAKROM2: {
+			return waits16(address, type) + waits16(address + 2, AccessType::Seq);
+		}
+		case Region::PAKSRAM: {
+			return io().waitctl.sram_wait();
+		}
+		default: ASSERT_NOT_REACHED();
+	}
+}
+
+unsigned BusInterface::waits16(uint32 address, AccessType type) {
+	switch(region_from_address(address)) {
+		case Region::BIOS:
+		case Region::IWRAM:
+		case Region::IO:
+		case Region::OAM: {
+			return 1;
+		}
+		case Region::WRAM: {
+			//  FIXME: TODO
+			return 3;
+		}
+		case Region::VRAM:
+		case Region::PAL: {
+			return 1;
+		}
+		case Region::PAKROM0: {
+			if((address % 128 * kB) == 0) {
+				type = AccessType::NonSeq;
+			}
+			return type == AccessType::Seq ? io().waitctl.wait0_sequential() + 1
+			                               : io().waitctl.wait0_nonsequential() + 1;
+		}
+		case Region::PAKROM1: {
+			if((address % 128 * kB) == 0) {
+				type = AccessType::NonSeq;
+			}
+			return type == AccessType::Seq ? io().waitctl.wait1_sequential() + 1
+			                               : io().waitctl.wait1_nonsequential() + 1;
+		}
+		case Region::PAKROM2: {
+			if((address % 128 * kB) == 0) {
+				type = AccessType::NonSeq;
+			}
+			return type == AccessType::Seq ? io().waitctl.wait2_sequential() + 1
+			                               : io().waitctl.wait2_nonsequential() + 1;
+		}
+		case Region::PAKSRAM: {
+			return io().waitctl.sram_wait() + 1;
+		}
+		default: ASSERT_NOT_REACHED();
+	}
+}
+
+unsigned BusInterface::waits8(uint32 address, AccessType type) {
+	switch(region_from_address(address)) {
+		case Region::BIOS:
+		case Region::IWRAM:
+		case Region::IO:
+		case Region::OAM: {
+			return 1;
+		}
+		case Region::WRAM: {
+			//  FIXME: TODO
+			return 3;
+		}
+		case Region::VRAM:
+		case Region::PAL: {
+			return 1;
+		}
+		case Region::PAKROM0: {
+			if((address % 128 * kB) == 0) {
+				type = AccessType::NonSeq;
+			}
+			return type == AccessType::Seq ? io().waitctl.wait0_sequential() + 1
+			                               : io().waitctl.wait0_nonsequential() + 1;
+		}
+		case Region::PAKROM1: {
+			if((address % 128 * kB) == 0) {
+				type = AccessType::NonSeq;
+			}
+			return type == AccessType::Seq ? io().waitctl.wait1_sequential() + 1
+			                               : io().waitctl.wait1_nonsequential() + 1;
+		}
+		case Region::PAKROM2: {
+			if((address % 128 * kB) == 0) {
+				type = AccessType::NonSeq;
+			}
+			return type == AccessType::Seq ? io().waitctl.wait2_sequential() + 1
+			                               : io().waitctl.wait2_nonsequential() + 1;
+		}
+		case Region::PAKSRAM: {
+			return io().waitctl.sram_wait() + 1;
+		}
+		default: ASSERT_NOT_REACHED();
 	}
 }

@@ -71,11 +71,21 @@ protected:
 	static constexpr const uint32 writeable_mask = 0x00005FFF;
 	static constexpr const uint32 readable_mask = 0x00005FFF;
 
+	static constexpr const unsigned cycle_lookup[4] = { 4, 3, 2, 8 };
+
 	uint32 on_read() override;
 	void on_write(uint32 new_value) override;
 public:
 	WaitControl(GaBber& emu)
 	    : IOReg32<67109380>(emu) {}
+
+	unsigned sram_wait() const { return cycle_lookup[m_register & 0x3u]; }
+	unsigned wait0_nonsequential() const { return cycle_lookup[(m_register >> 2u) & 0x3u]; }
+	unsigned wait1_nonsequential() const { return cycle_lookup[(m_register >> 5u) & 0x3u]; }
+	unsigned wait2_nonsequential() const { return cycle_lookup[(m_register >> 8u) & 0x3u]; }
+	unsigned wait0_sequential() const { return ((m_register >> 4u) & 1u) == 0 ? 2 : 1; }
+	unsigned wait1_sequential() const { return ((m_register >> 7u) & 1u) == 0 ? 4 : 1; }
+	unsigned wait2_sequential() const { return ((m_register >> 10u) & 1u) == 0 ? 8 : 1; }
 };
 
 class MemCtl final : public IOReg32<0x04000800> {

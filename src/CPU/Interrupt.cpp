@@ -1,3 +1,4 @@
+#include "Bus/Common/BusInterface.hpp"
 #include "Bus/IO/IOContainer.hpp"
 #include "CPU/ARM7TDMI.hpp"
 #include "Debugger/Debugger.hpp"
@@ -20,7 +21,10 @@ void ARM7TDMI::enter_swi() {
 	cspr().set_mode(PRIV_MODE::SVC);
 	cspr().set(CSPR_REGISTERS::IRQn, true);
 	pc() = 0x08;
-	m_wait_cycles += 2 /*S*/ + 1 /*N*/;
+
+	m_wait_cycles += mem_waits_access32(const_pc(), AccessType::NonSeq) +
+	                 mem_waits_access32(const_pc() + 4, AccessType::Seq) +
+	                 mem_waits_access32(const_pc() + 8, AccessType::Seq);
 }
 
 void ARM7TDMI::raise_irq(IRQType type) {

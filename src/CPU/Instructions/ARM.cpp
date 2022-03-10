@@ -5,16 +5,21 @@
 void ARM7TDMI::B(ARM::BInstruction instr) {
 	const auto old_pc = const_pc();
 
+	m_wait_cycles += mem_waits_access32(old_pc, AccessType::Seq);
+
 	pc() = const_pc() + instr.offset();
 	if(instr.is_link())
 		r14() = old_pc - 4;
 
-	m_wait_cycles += 2 /*S*/ + 1 /*N*/;
+	m_wait_cycles += mem_waits_access32(const_pc() + 0, AccessType::NonSeq) +
+	                 mem_waits_access32(const_pc() + 4, AccessType::Seq);
 }
 
 void ARM7TDMI::BX(ARM::BXInstruction instr) {
 	const auto& reg = creg(instr.reg());
 	const bool is_thumb = reg & 1;
+
+	m_wait_cycles += mem_waits_access32(const_pc(), AccessType::Seq);
 
 	if(is_thumb)
 		pc() = reg & ~1u;
@@ -23,7 +28,13 @@ void ARM7TDMI::BX(ARM::BXInstruction instr) {
 
 	cspr().set_state(!is_thumb ? INSTR_MODE::ARM : INSTR_MODE::THUMB);
 
-	m_wait_cycles += 2 /*S*/ + 1 /*N*/;
+	if(cspr().state() == INSTR_MODE::ARM) {
+		m_wait_cycles += mem_waits_access32(const_pc() + 0, AccessType::NonSeq) +
+		                 mem_waits_access32(const_pc() + 4, AccessType::Seq);
+	} else {
+		m_wait_cycles += mem_waits_access16(const_pc() + 0, AccessType::NonSeq) +
+		                 mem_waits_access16(const_pc() + 2, AccessType::Seq);
+	}
 }
 
 void ARM7TDMI::DPI(ARM::DataProcessInstruction instr) {
@@ -37,6 +48,8 @@ void ARM7TDMI::DPI(ARM::DataProcessInstruction instr) {
 		&ARM7TDMI::ORR, &ARM7TDMI::MOV, &ARM7TDMI::BIC, &ARM7TDMI::MVN,
 	};
 
+	m_wait_cycles += mem_waits_access32(const_pc(), AccessType::Seq);
+
 	auto func = s_dp_instruction_lookup[instr.opcode()];
 	(*this.*func)(instr);
 
@@ -48,12 +61,16 @@ void ARM7TDMI::DPI(ARM::DataProcessInstruction instr) {
 		}
 	}
 
-	m_wait_cycles += 1 /*S*/;
-	if(instr.destination_reg() == 15) {
-		m_wait_cycles += 1 /*S*/ + 1 /*N*/;
+	const bool shift_rs = !instr.immediate_is_value() && instr.is_shift_reg();
+	const bool dest_pc = instr.destination_reg() == 15;
+
+	if(dest_pc) {
+		m_wait_cycles += mem_waits_access32(const_pc(), AccessType::NonSeq) +
+		                 mem_waits_access32(const_pc() + 4, AccessType::Seq);
 	}
-	if(instr.immediate_is_value() && instr.is_shift_reg()) {
-		m_wait_cycles += 1 /*I*/;
+
+	if(shift_rs) {
+		m_wait_cycles += 1 /* I */;
 	}
 }
 
@@ -328,12 +345,26 @@ void ARM7TDMI::HDT(ARM::HDTInstruction instr) {
 		reg(instr.target_reg()) = word_for_load;
 
 	if(instr.load_from_memory()) {
-		m_wait_cycles += 1 /*S*/ + 1 /*N*/ + 1 /*I*/;
+		if(instr.opcode() == 2) {
+			m_wait_cycles += 1 /*I*/ + mem_waits_access8(address, AccessType::NonSeq);
+		} else {
+			m_wait_cycles += 1 /*I*/ + mem_waits_access16(address, AccessType::NonSeq);
+		}
+
 		if(instr.target_reg() == 15) {
-			m_wait_cycles += 1 /*S*/ + 1 /*N*/;
+			m_wait_cycles += mem_waits_access32(const_pc(), AccessType::NonSeq) +
+			                 mem_waits_access32(const_pc() + 4, AccessType::Seq) +
+			                 mem_waits_access32(const_pc() + 8, AccessType::Seq);
+		} else {
+			m_wait_cycles += mem_waits_access32(const_pc() + 12, AccessType::Seq);
 		}
 	} else {
-		m_wait_cycles += 2 /*N*/;
+		m_wait_cycles += mem_waits_access32(const_pc() + 12, AccessType::NonSeq);
+		if(instr.opcode() == 2) {
+			m_wait_cycles += mem_waits_access8(address, AccessType::NonSeq);
+		} else {
+			m_wait_cycles += mem_waits_access16(address, AccessType::NonSeq);
+		}
 	}
 }
 
@@ -378,9 +409,21 @@ void ARM7TDMI::SDT(ARM::SDTInstruction instr) {
 			reg(instr.base_reg()) = address;
 
 		target = word;
-		m_wait_cycles += 1 /*S*/ + 1 /*N*/ + 1 /*I*/;
-		if(instr.target_reg() == 15) {
-			m_wait_cycles += 1 /*S*/ + 1 /*N*/;
+
+		if(instr.load_from_memory()) {
+			if(instr.quantity_in_bytes()) {
+				m_wait_cycles += 1 /*I*/ + mem_waits_access8(address, AccessType::NonSeq);
+			} else {
+				m_wait_cycles += 1 /*I*/ + mem_waits_access32(address, AccessType::NonSeq);
+			}
+
+			if(instr.target_reg() == 15) {
+				m_wait_cycles += mem_waits_access32(const_pc(), AccessType::NonSeq) +
+				                 mem_waits_access32(const_pc() + 4, AccessType::Seq) +
+				                 mem_waits_access32(const_pc() + 8, AccessType::Seq);
+			} else {
+				m_wait_cycles += mem_waits_access32(const_pc() + 12, AccessType::Seq);
+			}
 		}
 	} else {
 		const auto& target = creg(instr.target_reg());
@@ -395,7 +438,12 @@ void ARM7TDMI::SDT(ARM::SDTInstruction instr) {
 		if((instr.writeback() || !instr.preindex()) && instr.base_reg() != 15)
 			reg(instr.base_reg()) = address;
 
-		m_wait_cycles += 2 /*N*/;
+		m_wait_cycles += mem_waits_access32(const_pc() + 12, AccessType::NonSeq);
+		if(instr.quantity_in_bytes()) {
+			m_wait_cycles += mem_waits_access8(address, AccessType::NonSeq);
+		} else {
+			m_wait_cycles += mem_waits_access16(address, AccessType::NonSeq);
+		}
 	}
 }
 
@@ -415,7 +463,13 @@ void ARM7TDMI::SWP(ARM::SWPInstruction instr) {
 		mem_write32(swap_address & ~3u, source);
 		dest = prev_contents;
 	}
-	m_wait_cycles += 1 /*S*/ + 2 /*N*/ + 1 /*I*/;
+
+	m_wait_cycles += 1 /*I*/ + mem_waits_access32(const_pc() + 12, AccessType::Seq);
+	if(instr.swap_byte()) {
+		m_wait_cycles += 2 * mem_waits_access8(swap_address, AccessType::NonSeq);
+	} else {
+		m_wait_cycles += 2 * mem_waits_access32(swap_address, AccessType::NonSeq);
+	}
 }
 
 void ARM7TDMI::SWI(ARM::SWIInstruction) {
@@ -447,8 +501,8 @@ void ARM7TDMI::MLL(ARM::MultLongInstruction instr) {
 		cspr().set(CSPR_REGISTERS::Carry, true);//  FIXME: ???
 	}
 
-	m_wait_cycles += 1 /*S*/
-	                 + (instr.is_signed() ? ARM::mult_m_cycles(m) : ARM::unsigned_mult_m_cycles(m)) + 1 +
+	m_wait_cycles += mem_waits_access32(const_pc() + 12, AccessType::Seq) +
+	                 (instr.is_signed() ? ARM::mult_m_cycles(m) : ARM::unsigned_mult_m_cycles(m)) + 1 +
 	                 (instr.should_accumulate() ? 1 : 0);
 }
 
@@ -467,7 +521,8 @@ void ARM7TDMI::MUL(ARM::MultInstruction instr) {
 		cspr().set(CSPR_REGISTERS::Carry, false);//  "is set to a meaningless value"
 	}
 
-	m_wait_cycles += 1 /*S*/ + ARM::mult_m_cycles(s) + (instr.should_accumulate() ? 1 : 0);
+	m_wait_cycles += mem_waits_access32(const_pc() + 12, AccessType::Seq) + ARM::mult_m_cycles(s) +
+	                 (instr.should_accumulate() ? 1 : 0);
 }
 
 void ARM7TDMI::BDT(ARM::BDTInstruction instr) {
@@ -540,11 +595,17 @@ void ARM7TDMI::BDT(ARM::BDTInstruction instr) {
 	}
 
 	if(instr.load_from_memory()) {
-		m_wait_cycles += n /*S*/ + 1 /*N*/ + 1 /*I*/;
+		//  FIXME: Weird timing edge cases
+		m_wait_cycles += 1 /*I*/ + mem_waits_access32(address, AccessType::NonSeq) +
+		                 n * mem_waits_access32(address, AccessType::Seq);
 		if(instr.is_register_in_list(15)) {
-			m_wait_cycles += 1 /*S*/ + 1 /*N*/;
+			m_wait_cycles += mem_waits_access32(const_pc(), AccessType::NonSeq) +
+			                 mem_waits_access32(const_pc() + 4, AccessType::Seq);
 		}
 	} else {
-		m_wait_cycles += (n - 1) /*S*/ + 2 /*N*/;
+		//  FIXME: Weird timing edge cases
+		m_wait_cycles += mem_waits_access32(address, AccessType::NonSeq) +
+		                 (n - 1) * mem_waits_access32(address, AccessType::Seq) +
+		                 mem_waits_access32(const_pc() + 12, AccessType::NonSeq);
 	}
 }

@@ -21,6 +21,8 @@ enum class ExceptionVector {
 	Reserved = 7,
 };
 
+enum class AccessType;
+
 /*
  *  Implementation of the ARM7TDMI processor
  */
@@ -243,6 +245,9 @@ protected:
 	void mem_write8(uint32 address, uint8 val);
 	void mem_write16(uint32 address, uint16 val);
 	void mem_write32(uint32 address, uint32 val);
+	unsigned mem_waits_access32(uint32 address, AccessType type);
+	unsigned mem_waits_access16(uint32 address, AccessType type);
+	unsigned mem_waits_access8(uint32 address, AccessType type);
 	uint32 mem_read_arm_opcode(uint32 address) const;
 	uint16 mem_read_thumb_opcode(uint32 address) const;
 
