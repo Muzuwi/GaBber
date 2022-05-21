@@ -12,12 +12,10 @@
 #include "Debugger/Debugger.hpp"
 #include "Emulator/Renderer.hpp"
 #include "PPU/PPU.hpp"
-#include "Tests/Harness.hpp"
 
 GaBber::GaBber() {
 	m_mmu = std::make_shared<BusInterface>(*this);
 	m_mem = std::make_shared<MemoryLayout>(*this);
-	m_test_harness = std::make_shared<TestHarness>(*this);
 	m_debugger = std::make_shared<Debugger>(*this);
 	m_cpu = std::make_shared<ARM7TDMI>(*this);
 	m_ppu = std::make_shared<PPU>(*this);
@@ -77,9 +75,6 @@ bool GaBber::parse_args(int argc, char** argv) {
 		if(*it == "--debug") {
 			m_debugger->set_debug_mode(true);
 			skip(2);
-		} else if(*it == "--test") {
-			m_test_mode = true;
-			skip(1);
 		} else if(*it == "--bios") {
 			auto name = peek();
 			if(name.has_value()) {
@@ -126,30 +121,23 @@ int GaBber::start() {
 	}
 	m_mem->bios.from_vec(*bios_image);
 
-	if(!m_test_mode) {
-		auto rom = load_from_file(m_rom_filename);
-		if(!rom.has_value()) {
-			fmt::print("Failed loading ROM from file '{}'\n", m_rom_filename);
-			return 1;
-		}
-
-		std::vector<uint8> save = {};
-		auto maybe_save = load_from_file(m_save_filename);
-		if(maybe_save.has_value()) {
-			save = *maybe_save;
-		} else {
-			fmt::print("Failed loading save file from file '{}'\n", m_save_filename);
-		}
-
-		m_mem->pak.load_pak(std::move(*rom), std::move(save));
+	auto rom = load_from_file(m_rom_filename);
+	if(!rom.has_value()) {
+		fmt::print("Failed loading ROM from file '{}'\n", m_rom_filename);
+		return 1;
 	}
+
+	std::vector<uint8> save = {};
+	auto maybe_save = load_from_file(m_save_filename);
+	if(maybe_save.has_value()) {
+		save = *maybe_save;
+	} else {
+		fmt::print("Failed loading save file from file '{}'\n", m_save_filename);
+	}
+
+	m_mem->pak.load_pak(std::move(*rom), std::move(save));
 
 	emulator_reset();
-
-	if(m_test_mode) {
-		m_test_harness->run_emulator_tests();
-		return 0;
-	}
 
 	if(!m_renderer->initialize_platform()) {
 		fmt::print("Failed initializing platform renderer\n");

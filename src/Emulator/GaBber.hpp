@@ -27,7 +27,6 @@ class GaBber {
 	std::shared_ptr<PPU> m_ppu;
 	std::shared_ptr<APU> m_sound;
 	std::shared_ptr<Renderer> m_renderer;
-	bool m_test_mode { false };
 	bool m_running { true };
 	bool m_do_step { false };
 
