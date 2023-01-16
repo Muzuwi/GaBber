@@ -6,3 +6,5 @@
 !/.gitignore
 !.clang-format
 !LICENSE
+!/res
+!README.md
