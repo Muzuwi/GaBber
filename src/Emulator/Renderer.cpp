@@ -42,7 +42,8 @@ bool Renderer::initialize_platform() {
 	auto status = glewInit();
 	if(status != GLEW_OK) {
 		fmt::print("GLEW initialization failed!\n");
-		fmt::print("Error: {}\n", glewGetErrorString(status));
+		const auto str = std::string { reinterpret_cast<char const*>(glewGetErrorString(status)) };
+		fmt::print("Error: {}\n", str);
 		return false;
 	}
 

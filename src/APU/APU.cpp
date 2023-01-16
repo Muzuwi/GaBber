@@ -1,4 +1,5 @@
 #include "APU.hpp"
+#include <algorithm>
 #include <cassert>
 #include <fmt/format.h>
 #include <soxr.h>
