@@ -15,4 +15,4 @@ typedef int8_t int8;
 #define kB (1024)
 #define MB (1024 * 1024)
 
-#define ASSERT_NOT_REACHED() assert(false && "ASSERT_NOT_REACHED failed")
+#define ASSERT_NOT_REACHED() __builtin_unreachable()
