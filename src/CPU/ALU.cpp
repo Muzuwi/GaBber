@@ -1,14 +1,17 @@
+#include <disarmv4t/shift.hpp>
 #include "CPU/ARM7TDMI.hpp"
 #include "Emulator/Bits.hpp"
 
-uint32 ARM7TDMI::evaluate_operand1(ARM::DataProcessInstruction instr) const {
+namespace arm = disarmv4t::arm::instr;
+
+uint32 ARM7TDMI::evaluate_operand1(arm::DataProcessInstruction instr) const {
 	unsigned pc_offset = 0;
 	if(!instr.immediate_is_value() && instr.is_shift_reg() && instr.operand1_reg() == 15)
 		pc_offset = 4;
 	return creg(instr.operand1_reg()) + pc_offset;
 }
 
-uint32 ARM7TDMI::evaluate_operand2(ARM::DataProcessInstruction instr, bool affect_carry) {
+uint32 ARM7TDMI::evaluate_operand2(arm::DataProcessInstruction instr, bool affect_carry) {
 	affect_carry = instr.should_set_condition() && affect_carry;
 
 	if(instr.immediate_is_value()) {
@@ -35,10 +38,10 @@ uint32 ARM7TDMI::evaluate_operand2(ARM::DataProcessInstruction instr, bool affec
 		}
 
 		switch(instr.shift_type()) {
-			case ARM::ShiftType::LogicalLeft: return _shift_lsl(operand2, shift_count, affect_carry);
-			case ARM::ShiftType::LogicalRight: return _shift_lsr(operand2, shift_count, affect_carry);
-			case ARM::ShiftType::ArithmeticRight: return _shift_asr(operand2, shift_count, affect_carry);
-			case ARM::ShiftType::RotateRight: return _shift_ror(operand2, shift_count, affect_carry);
+			case disarmv4t::ShiftType::LogicalLeft: return _shift_lsl(operand2, shift_count, affect_carry);
+			case disarmv4t::ShiftType::LogicalRight: return _shift_lsr(operand2, shift_count, affect_carry);
+			case disarmv4t::ShiftType::ArithmeticRight: return _shift_asr(operand2, shift_count, affect_carry);
+			case disarmv4t::ShiftType::RotateRight: return _shift_ror(operand2, shift_count, affect_carry);
 			default: ASSERT_NOT_REACHED();
 		}
 	}

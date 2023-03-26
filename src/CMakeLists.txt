@@ -19,6 +19,7 @@ if(UNIX)
         SDL2::SDL2
         ImGui
         fmt::fmt
+        disarmv4t::disarmv4t
         ${SOXR}
         )
 

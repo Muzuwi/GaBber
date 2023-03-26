@@ -1,4 +1,5 @@
 #pragma once
+#include <disarmv4t/condition.hpp>
 #include "Emulator/StdTypes.hpp"
 
 enum class INSTR_MODE {
@@ -129,29 +130,31 @@ public:
 
 	void set_mode(PRIV_MODE mode) { data = (data & ~0b11111u) | ((uint32)mode & 0b11111u); }
 
-	bool evaluate_condition(ARM::InstructionCondition condition) const {
+	bool evaluate_condition(disarmv4t::InstructionCondition condition) const {
 		switch(condition) {
-			case ARM::InstructionCondition::EQ: return is_set(CSPR_REGISTERS::Zero);
-			case ARM::InstructionCondition::NE: return is_clear(CSPR_REGISTERS::Zero);
-			case ARM::InstructionCondition::CS: return is_set(CSPR_REGISTERS::Carry);
-			case ARM::InstructionCondition::CC: return is_clear(CSPR_REGISTERS::Carry);
-			case ARM::InstructionCondition::MI: return is_set(CSPR_REGISTERS::Negative);
-			case ARM::InstructionCondition::PL: return is_clear(CSPR_REGISTERS::Negative);
-			case ARM::InstructionCondition::VS: return is_set(CSPR_REGISTERS::Overflow);
-			case ARM::InstructionCondition::VC: return is_clear(CSPR_REGISTERS::Overflow);
-			case ARM::InstructionCondition::HI: return is_set(CSPR_REGISTERS::Carry) && is_clear(CSPR_REGISTERS::Zero);
-			case ARM::InstructionCondition::LS: return is_clear(CSPR_REGISTERS::Carry) || is_set(CSPR_REGISTERS::Zero);
-			case ARM::InstructionCondition::GE:
+			case disarmv4t::InstructionCondition::EQ: return is_set(CSPR_REGISTERS::Zero);
+			case disarmv4t::InstructionCondition::NE: return is_clear(CSPR_REGISTERS::Zero);
+			case disarmv4t::InstructionCondition::CS: return is_set(CSPR_REGISTERS::Carry);
+			case disarmv4t::InstructionCondition::CC: return is_clear(CSPR_REGISTERS::Carry);
+			case disarmv4t::InstructionCondition::MI: return is_set(CSPR_REGISTERS::Negative);
+			case disarmv4t::InstructionCondition::PL: return is_clear(CSPR_REGISTERS::Negative);
+			case disarmv4t::InstructionCondition::VS: return is_set(CSPR_REGISTERS::Overflow);
+			case disarmv4t::InstructionCondition::VC: return is_clear(CSPR_REGISTERS::Overflow);
+			case disarmv4t::InstructionCondition::HI:
+				return is_set(CSPR_REGISTERS::Carry) && is_clear(CSPR_REGISTERS::Zero);
+			case disarmv4t::InstructionCondition::LS:
+				return is_clear(CSPR_REGISTERS::Carry) || is_set(CSPR_REGISTERS::Zero);
+			case disarmv4t::InstructionCondition::GE:
 				return is_set(CSPR_REGISTERS::Negative) == is_set(CSPR_REGISTERS::Overflow);
-			case ARM::InstructionCondition::LT:
+			case disarmv4t::InstructionCondition::LT:
 				return is_set(CSPR_REGISTERS::Negative) ^ is_set(CSPR_REGISTERS::Overflow);
-			case ARM::InstructionCondition::GT:
+			case disarmv4t::InstructionCondition::GT:
 				return is_clear(CSPR_REGISTERS::Zero) &&
 				       (is_set(CSPR_REGISTERS::Negative) == is_set(CSPR_REGISTERS::Overflow));
-			case ARM::InstructionCondition::LE:
+			case disarmv4t::InstructionCondition::LE:
 				return is_set(CSPR_REGISTERS::Zero) ||
 				       (is_set(CSPR_REGISTERS::Negative) != is_set(CSPR_REGISTERS::Overflow));
-			case ARM::InstructionCondition::AL:
+			case disarmv4t::InstructionCondition::AL:
 			default: return true;
 		}
 	}

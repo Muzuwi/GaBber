@@ -1,11 +1,11 @@
 #pragma once
+#include <disarmv4t/arm.hpp>
+#include <disarmv4t/thumb.hpp>
 #include <fmt/format.h>
 #include <memory>
 #include <optional>
 #include "Bus/IO/Timer.hpp"
 #include "CPU/GPR.hpp"
-#include "CPU/Instructions/ARM.hpp"
-#include "CPU/Instructions/THUMB.hpp"
 #include "CPU/PSR.hpp"
 #include "Emulator/Module.hpp"
 #include "Emulator/StdTypes.hpp"
@@ -155,79 +155,107 @@ protected:
 	uint32 _alu_asr(uint32 op1, uint32 op2);
 	uint32 _alu_ror(uint32 op1, uint32 op2);
 
-	uint32 evaluate_operand1(ARM::DataProcessInstruction instr) const;
-	uint32 evaluate_operand2(ARM::DataProcessInstruction instr, bool affect_carry = false);
+	//  FIXME: Move this elsewhere
+	constexpr unsigned mult_m_cycles(uint64 multiplier) {
+		multiplier >>= 8;
+		if(multiplier == 0 || multiplier == 0xFFFFFF)
+			return 1;
+		multiplier >>= 8;
+		if(multiplier == 0 || multiplier == 0xFFFF)
+			return 2;
+		multiplier >>= 8;
+		if(multiplier == 0 || multiplier == 0xFF)
+			return 3;
+		return 4;
+	}
+
+	//  FIXME: Move this elsewhere
+	constexpr unsigned unsigned_mult_m_cycles(uint64 multiplier) {
+		multiplier >>= 8;
+		if(multiplier == 0)
+			return 1;
+		multiplier >>= 8;
+		if(multiplier == 0)
+			return 2;
+		multiplier >>= 8;
+		if(multiplier == 0)
+			return 3;
+		return 4;
+	}
+
+	uint32 evaluate_operand1(disarmv4t::arm::instr::DataProcessInstruction instr) const;
+	uint32 evaluate_operand2(disarmv4t::arm::instr::DataProcessInstruction instr, bool affect_carry = false);
 	void stack_push32(uint32 val);
 	uint32 stack_pop32();
 
 	/*
 	 *  ARM Opcodes
 	 */
-	void BX(ARM::BXInstruction);
-	void B(ARM::BInstruction);
-	void SWP(ARM::SWPInstruction);
-	void DPI(ARM::DataProcessInstruction);
-	void AND(ARM::DataProcessInstruction);
-	void EOR(ARM::DataProcessInstruction);
-	void SUB(ARM::DataProcessInstruction);
-	void RSB(ARM::DataProcessInstruction);
-	void ADD(ARM::DataProcessInstruction);
-	void ADC(ARM::DataProcessInstruction);
-	void SBC(ARM::DataProcessInstruction);
-	void RSC(ARM::DataProcessInstruction);
-	void TST(ARM::DataProcessInstruction);
-	void TEQ(ARM::DataProcessInstruction);
-	void CMP(ARM::DataProcessInstruction);
-	void CMN(ARM::DataProcessInstruction);
-	void ORR(ARM::DataProcessInstruction);
-	void MOV(ARM::DataProcessInstruction);
-	void BIC(ARM::DataProcessInstruction);
-	void MVN(ARM::DataProcessInstruction);
-	void SDT(ARM::SDTInstruction);
-	void SWI(ARM::SWIInstruction);
-	void MLL(ARM::MultLongInstruction);
-	void MUL(ARM::MultInstruction);
-	void BDT(ARM::BDTInstruction);
-	void HDT(ARM::HDTInstruction);
+	void BX(disarmv4t::arm::instr::BXInstruction);
+	void B(disarmv4t::arm::instr::BInstruction);
+	void SWP(disarmv4t::arm::instr::SWPInstruction);
+	void DPI(disarmv4t::arm::instr::DataProcessInstruction);
+	void AND(disarmv4t::arm::instr::DataProcessInstruction);
+	void EOR(disarmv4t::arm::instr::DataProcessInstruction);
+	void SUB(disarmv4t::arm::instr::DataProcessInstruction);
+	void RSB(disarmv4t::arm::instr::DataProcessInstruction);
+	void ADD(disarmv4t::arm::instr::DataProcessInstruction);
+	void ADC(disarmv4t::arm::instr::DataProcessInstruction);
+	void SBC(disarmv4t::arm::instr::DataProcessInstruction);
+	void RSC(disarmv4t::arm::instr::DataProcessInstruction);
+	void TST(disarmv4t::arm::instr::DataProcessInstruction);
+	void TEQ(disarmv4t::arm::instr::DataProcessInstruction);
+	void CMP(disarmv4t::arm::instr::DataProcessInstruction);
+	void CMN(disarmv4t::arm::instr::DataProcessInstruction);
+	void ORR(disarmv4t::arm::instr::DataProcessInstruction);
+	void MOV(disarmv4t::arm::instr::DataProcessInstruction);
+	void BIC(disarmv4t::arm::instr::DataProcessInstruction);
+	void MVN(disarmv4t::arm::instr::DataProcessInstruction);
+	void SDT(disarmv4t::arm::instr::SDTInstruction);
+	void SWI(disarmv4t::arm::instr::SWIInstruction);
+	void MLL(disarmv4t::arm::instr::MultLongInstruction);
+	void MUL(disarmv4t::arm::instr::MultInstruction);
+	void BDT(disarmv4t::arm::instr::BDTInstruction);
+	void HDT(disarmv4t::arm::instr::HDTInstruction);
 
 	/*
 	 *  THUMB opcodes
 	 */
-	void THUMB_FMT1(THUMB::InstructionFormat1);
-	void THUMB_FMT2(THUMB::InstructionFormat2);
-	void THUMB_FMT3(THUMB::InstructionFormat3);
-	void THUMB_FMT5(THUMB::InstructionFormat5);
-	void THUMB_FMT6(THUMB::InstructionFormat6);
-	void THUMB_FMT7(THUMB::InstructionFormat7);
-	void THUMB_FMT8(THUMB::InstructionFormat8);
-	void THUMB_FMT9(THUMB::InstructionFormat9);
-	void THUMB_FMT10(THUMB::InstructionFormat10);
-	void THUMB_FMT11(THUMB::InstructionFormat11);
-	void THUMB_FMT12(THUMB::InstructionFormat12);
-	void THUMB_FMT13(THUMB::InstructionFormat13);
-	void THUMB_FMT14(THUMB::InstructionFormat14);
-	void THUMB_FMT15(THUMB::InstructionFormat15);
-	void THUMB_FMT16(THUMB::InstructionFormat16);
-	void THUMB_FMT17(THUMB::InstructionFormat17);
-	void THUMB_FMT18(THUMB::InstructionFormat18);
-	void THUMB_FMT19(THUMB::InstructionFormat19);
-	void THUMB_ALU(THUMB::InstructionFormat4);
-	void THUMB_AND(THUMB::InstructionFormat4);
-	void THUMB_EOR(THUMB::InstructionFormat4);
-	void THUMB_LSL(THUMB::InstructionFormat4);
-	void THUMB_LSR(THUMB::InstructionFormat4);
-	void THUMB_ASR(THUMB::InstructionFormat4);
-	void THUMB_ADC(THUMB::InstructionFormat4);
-	void THUMB_SBC(THUMB::InstructionFormat4);
-	void THUMB_ROR(THUMB::InstructionFormat4);
-	void THUMB_TST(THUMB::InstructionFormat4);
-	void THUMB_NEG(THUMB::InstructionFormat4);
-	void THUMB_CMP(THUMB::InstructionFormat4);
-	void THUMB_CMN(THUMB::InstructionFormat4);
-	void THUMB_ORR(THUMB::InstructionFormat4);
-	void THUMB_MUL(THUMB::InstructionFormat4);
-	void THUMB_BIC(THUMB::InstructionFormat4);
-	void THUMB_MVN(THUMB::InstructionFormat4);
+	void THUMB_FMT1(disarmv4t::thumb::instr::InstructionFormat1);
+	void THUMB_FMT2(disarmv4t::thumb::instr::InstructionFormat2);
+	void THUMB_FMT3(disarmv4t::thumb::instr::InstructionFormat3);
+	void THUMB_FMT5(disarmv4t::thumb::instr::InstructionFormat5);
+	void THUMB_FMT6(disarmv4t::thumb::instr::InstructionFormat6);
+	void THUMB_FMT7(disarmv4t::thumb::instr::InstructionFormat7);
+	void THUMB_FMT8(disarmv4t::thumb::instr::InstructionFormat8);
+	void THUMB_FMT9(disarmv4t::thumb::instr::InstructionFormat9);
+	void THUMB_FMT10(disarmv4t::thumb::instr::InstructionFormat10);
+	void THUMB_FMT11(disarmv4t::thumb::instr::InstructionFormat11);
+	void THUMB_FMT12(disarmv4t::thumb::instr::InstructionFormat12);
+	void THUMB_FMT13(disarmv4t::thumb::instr::InstructionFormat13);
+	void THUMB_FMT14(disarmv4t::thumb::instr::InstructionFormat14);
+	void THUMB_FMT15(disarmv4t::thumb::instr::InstructionFormat15);
+	void THUMB_FMT16(disarmv4t::thumb::instr::InstructionFormat16);
+	void THUMB_FMT17(disarmv4t::thumb::instr::InstructionFormat17);
+	void THUMB_FMT18(disarmv4t::thumb::instr::InstructionFormat18);
+	void THUMB_FMT19(disarmv4t::thumb::instr::InstructionFormat19);
+	void THUMB_ALU(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_AND(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_EOR(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_LSL(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_LSR(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_ASR(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_ADC(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_SBC(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_ROR(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_TST(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_NEG(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_CMP(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_CMN(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_ORR(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_MUL(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_BIC(disarmv4t::thumb::instr::InstructionFormat4);
+	void THUMB_MVN(disarmv4t::thumb::instr::InstructionFormat4);
 
 	template<typename... Args>
 	void log(const char* format, const Args&... args) const {

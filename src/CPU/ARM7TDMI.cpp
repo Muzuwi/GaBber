@@ -1,6 +1,5 @@
 #include "CPU/ARM7TDMI.hpp"
 #include "Bus/Common/BusInterface.hpp"
-#include "CPU/Instructions/ARM.hpp"
 #include "Debugger/Debugger.hpp"
 #include "Emulator/GaBber.hpp"
 
@@ -95,7 +94,7 @@ void ARM7TDMI::exec_opcode() {
 }
 
 void ARM7TDMI::execute_ARM(uint32 opcode) {
-	if(!cspr().evaluate_condition(ARM::Instruction(opcode).condition())) {
+	if(!cspr().evaluate_condition(disarmv4t::arm::instr::Instruction(opcode).condition())) {
 		//  Unevaluated instructions take one S-cycle
 		m_wait_cycles += mem_waits_access32(const_pc(), AccessType::Seq);
 		return;
@@ -108,31 +107,58 @@ void ARM7TDMI::execute_ARM(uint32 opcode) {
 		m_wait_cycles += 1;                     \
 		break
 
-	auto op = ARM::opcode_decode(opcode);
+	auto op = disarmv4t::arm::decode(opcode);
 	switch(op) {
-		case ARM::InstructionType::BBL: this->B(ARM::BInstruction(opcode)); return;
-		case ARM::InstructionType::BX: this->BX(ARM::BXInstruction(opcode)); return;
-		case ARM::InstructionType::ALU: this->DPI(ARM::DataProcessInstruction(opcode)); return;
-		case ARM::InstructionType::MUL: this->MUL(ARM::MultInstruction(opcode)); return;
-		case ARM::InstructionType::MLL: this->MLL(ARM::MultLongInstruction(opcode)); return;
-		case ARM::InstructionType::SDT: this->SDT(ARM::SDTInstruction(opcode)); return;
-		case ARM::InstructionType::HDT: this->HDT(ARM::HDTInstruction(opcode)); return;
-		case ARM::InstructionType::BDT: this->BDT(ARM::BDTInstruction(opcode)); return;
-		case ARM::InstructionType::SWP: this->SWP(ARM::SWPInstruction(opcode)); return;
-		case ARM::InstructionType::SWI:
-			this->SWI(ARM::SWIInstruction(opcode));
+		case disarmv4t::arm::InstructionType::BBL: {
+			this->B(disarmv4t::arm::instr::BInstruction(opcode));
 			return;
-
-		BADOP(ARM::InstructionType::CODT);
-		BADOP(ARM::InstructionType::CO9);
-		BADOP(ARM::InstructionType::CODO);
-		BADOP(ARM::InstructionType::CORT);
-		BADOP(ARM::InstructionType::MLH);
-		BADOP(ARM::InstructionType::QALU);
-		BADOP(ARM::InstructionType::CLZ);
-		BADOP(ARM::InstructionType::BKPT);
-
-		case ARM::InstructionType::UD:
+		}
+		case disarmv4t::arm::InstructionType::BX: {
+			this->BX(disarmv4t::arm::instr::BXInstruction(opcode));
+			return;
+		}
+		case disarmv4t::arm::InstructionType::ALU: {
+			this->DPI(disarmv4t::arm::instr::DataProcessInstruction(opcode));
+			return;
+		}
+		case disarmv4t::arm::InstructionType::MUL: {
+			this->MUL(disarmv4t::arm::instr::MultInstruction(opcode));
+			return;
+		}
+		case disarmv4t::arm::InstructionType::MLL: {
+			this->MLL(disarmv4t::arm::instr::MultLongInstruction(opcode));
+			return;
+		}
+		case disarmv4t::arm::InstructionType::SDT: {
+			this->SDT(disarmv4t::arm::instr::SDTInstruction(opcode));
+			return;
+		}
+		case disarmv4t::arm::InstructionType::HDT: {
+			this->HDT(disarmv4t::arm::instr::HDTInstruction(opcode));
+			return;
+		}
+		case disarmv4t::arm::InstructionType::BDT: {
+			this->BDT(disarmv4t::arm::instr::BDTInstruction(opcode));
+			return;
+		}
+		case disarmv4t::arm::InstructionType::SWP: {
+			this->SWP(disarmv4t::arm::instr::SWPInstruction(opcode));
+			return;
+		}
+		case disarmv4t::arm::InstructionType::SWI: {
+			this->SWI(disarmv4t::arm::instr::SWIInstruction(opcode));
+			return;
+		}// clang-format off
+		BADOP(disarmv4t::arm::InstructionType::CODT);
+		BADOP(disarmv4t::arm::InstructionType::CO9);
+		BADOP(disarmv4t::arm::InstructionType::CODO);
+		BADOP(disarmv4t::arm::InstructionType::CORT);
+		BADOP(disarmv4t::arm::InstructionType::MLH);
+		BADOP(disarmv4t::arm::InstructionType::QALU);
+		BADOP(disarmv4t::arm::InstructionType::CLZ);
+		BADOP(disarmv4t::arm::InstructionType::BKPT);
+		// clang-format on
+		case disarmv4t::arm::InstructionType::UD:
 		default: {
 			log("Invalid ARM opcode={:08x}", opcode);
 			dump_memory_around_pc();
@@ -142,35 +168,89 @@ void ARM7TDMI::execute_ARM(uint32 opcode) {
 }
 
 void ARM7TDMI::execute_THUMB(uint16 opcode) {
-	auto op = THUMB::opcode_decode(opcode);
+	auto op = disarmv4t::thumb::decode(opcode);
 	switch(op) {
-		case THUMB::InstructionType::FMT1: THUMB_FMT1(THUMB::InstructionFormat1(opcode)); return;
-		case THUMB::InstructionType::FMT2: THUMB_FMT2(THUMB::InstructionFormat2(opcode)); return;
-		case THUMB::InstructionType::FMT3: THUMB_FMT3(THUMB::InstructionFormat3(opcode)); return;
-		case THUMB::InstructionType::FMT4: THUMB_ALU(THUMB::InstructionFormat4(opcode)); return;
-		case THUMB::InstructionType::FMT5: THUMB_FMT5(THUMB::InstructionFormat5(opcode)); return;
-		case THUMB::InstructionType::FMT6: THUMB_FMT6(THUMB::InstructionFormat6(opcode)); return;
-		case THUMB::InstructionType::FMT7: THUMB_FMT7(THUMB::InstructionFormat7(opcode)); return;
-		case THUMB::InstructionType::FMT8: THUMB_FMT8(THUMB::InstructionFormat8(opcode)); return;
-		case THUMB::InstructionType::FMT9: THUMB_FMT9(THUMB::InstructionFormat9(opcode)); return;
-		case THUMB::InstructionType::FMT10: THUMB_FMT10(THUMB::InstructionFormat10(opcode)); return;
-		case THUMB::InstructionType::FMT11: THUMB_FMT11(THUMB::InstructionFormat11(opcode)); return;
-		case THUMB::InstructionType::FMT12: THUMB_FMT12(THUMB::InstructionFormat12(opcode)); return;
-		case THUMB::InstructionType::FMT13: THUMB_FMT13(THUMB::InstructionFormat13(opcode)); return;
-		case THUMB::InstructionType::FMT14: THUMB_FMT14(THUMB::InstructionFormat14(opcode)); return;
-		case THUMB::InstructionType::FMT15: THUMB_FMT15(THUMB::InstructionFormat15(opcode)); return;
-		case THUMB::InstructionType::FMT16: THUMB_FMT16(THUMB::InstructionFormat16(opcode)); return;
-		case THUMB::InstructionType::FMT17: THUMB_FMT17(THUMB::InstructionFormat17(opcode)); return;
-		case THUMB::InstructionType::FMT18: THUMB_FMT18(THUMB::InstructionFormat18(opcode)); return;
-		case THUMB::InstructionType::FMT19:
-			THUMB_FMT19(THUMB::InstructionFormat19(opcode));
+		case disarmv4t::thumb::InstructionType::FMT1: {
+			THUMB_FMT1(disarmv4t::thumb::instr::InstructionFormat1(opcode));
 			return;
-
-		BADOP(THUMB::InstructionType::UD9);
-		BADOP(THUMB::InstructionType::BKPT);
-		BADOP(THUMB::InstructionType::BLX9);
-
-		case THUMB::InstructionType::UD:
+		}
+		case disarmv4t::thumb::InstructionType::FMT2: {
+			THUMB_FMT2(disarmv4t::thumb::instr::InstructionFormat2(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT3: {
+			THUMB_FMT3(disarmv4t::thumb::instr::InstructionFormat3(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT4: {
+			THUMB_ALU(disarmv4t::thumb::instr::InstructionFormat4(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT5: {
+			THUMB_FMT5(disarmv4t::thumb::instr::InstructionFormat5(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT6: {
+			THUMB_FMT6(disarmv4t::thumb::instr::InstructionFormat6(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT7: {
+			THUMB_FMT7(disarmv4t::thumb::instr::InstructionFormat7(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT8: {
+			THUMB_FMT8(disarmv4t::thumb::instr::InstructionFormat8(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT9: {
+			THUMB_FMT9(disarmv4t::thumb::instr::InstructionFormat9(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT10: {
+			THUMB_FMT10(disarmv4t::thumb::instr::InstructionFormat10(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT11: {
+			THUMB_FMT11(disarmv4t::thumb::instr::InstructionFormat11(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT12: {
+			THUMB_FMT12(disarmv4t::thumb::instr::InstructionFormat12(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT13: {
+			THUMB_FMT13(disarmv4t::thumb::instr::InstructionFormat13(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT14: {
+			THUMB_FMT14(disarmv4t::thumb::instr::InstructionFormat14(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT15: {
+			THUMB_FMT15(disarmv4t::thumb::instr::InstructionFormat15(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT16: {
+			THUMB_FMT16(disarmv4t::thumb::instr::InstructionFormat16(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT17: {
+			THUMB_FMT17(disarmv4t::thumb::instr::InstructionFormat17(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT18: {
+			THUMB_FMT18(disarmv4t::thumb::instr::InstructionFormat18(opcode));
+			return;
+		}
+		case disarmv4t::thumb::InstructionType::FMT19: {
+			THUMB_FMT19(disarmv4t::thumb::instr::InstructionFormat19(opcode));
+			return;
+		}// clang-format off
+		BADOP(disarmv4t::thumb::InstructionType::UD9);
+		BADOP(disarmv4t::thumb::InstructionType::BKPT);
+		BADOP(disarmv4t::thumb::InstructionType::BLX9);
+		// clang-format on
+		case disarmv4t::thumb::InstructionType::UD:
 		default: {
 			log("Invalid THUMB opcode={:04x}", opcode);
 			dump_memory_around_pc();

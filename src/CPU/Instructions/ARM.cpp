@@ -1,8 +1,11 @@
+#include <disarmv4t/arm.hpp>
 #include "Bus/Common/BusInterface.hpp"
 #include "CPU/ARM7TDMI.hpp"
 #include "Emulator/Bits.hpp"
 
-void ARM7TDMI::B(ARM::BInstruction instr) {
+namespace arm = disarmv4t::arm::instr;
+
+void ARM7TDMI::B(arm::BInstruction instr) {
 	const auto old_pc = const_pc();
 
 	m_wait_cycles += mem_waits_access32(old_pc, AccessType::Seq);
@@ -15,7 +18,7 @@ void ARM7TDMI::B(ARM::BInstruction instr) {
 	                 mem_waits_access32(const_pc() + 4, AccessType::Seq);
 }
 
-void ARM7TDMI::BX(ARM::BXInstruction instr) {
+void ARM7TDMI::BX(arm::BXInstruction instr) {
 	const auto& reg = creg(instr.reg());
 	const bool is_thumb = reg & 1;
 
@@ -37,11 +40,11 @@ void ARM7TDMI::BX(ARM::BXInstruction instr) {
 	}
 }
 
-void ARM7TDMI::DPI(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::DPI(arm::DataProcessInstruction instr) {
 	/*
 	 *  Lookup table for data processing instructions
 	 */
-	typedef void (::ARM7TDMI::*DataProcessFunction)(::ARM::DataProcessInstruction);
+	typedef void (::ARM7TDMI::*DataProcessFunction)(::arm::DataProcessInstruction);
 	static const DataProcessFunction s_dp_instruction_lookup[16] {
 		&ARM7TDMI::AND, &ARM7TDMI::EOR, &ARM7TDMI::SUB, &ARM7TDMI::RSB, &ARM7TDMI::ADD, &ARM7TDMI::ADC,
 		&ARM7TDMI::SBC, &ARM7TDMI::RSC, &ARM7TDMI::TST, &ARM7TDMI::TEQ, &ARM7TDMI::CMP, &ARM7TDMI::CMN,
@@ -78,7 +81,7 @@ void ARM7TDMI::DPI(ARM::DataProcessInstruction instr) {
  *  Arithmetic operations
  */
 
-void ARM7TDMI::SUB(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::SUB(arm::DataProcessInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
 	uint32 operand2 = evaluate_operand2(instr, false);
@@ -88,7 +91,7 @@ void ARM7TDMI::SUB(ARM::DataProcessInstruction instr) {
 	destination = result;
 }
 
-void ARM7TDMI::RSB(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::RSB(arm::DataProcessInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
 	uint32 operand2 = evaluate_operand2(instr, false);
@@ -98,7 +101,7 @@ void ARM7TDMI::RSB(ARM::DataProcessInstruction instr) {
 	destination = result;
 }
 
-void ARM7TDMI::ADD(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::ADD(arm::DataProcessInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
 	uint32 operand2 = evaluate_operand2(instr, false);
@@ -108,7 +111,7 @@ void ARM7TDMI::ADD(ARM::DataProcessInstruction instr) {
 	destination = result;
 }
 
-void ARM7TDMI::ADC(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::ADC(arm::DataProcessInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
 	uint32 operand2 = evaluate_operand2(instr, false);
@@ -116,7 +119,7 @@ void ARM7TDMI::ADC(ARM::DataProcessInstruction instr) {
 	destination = _alu_adc(operand1, operand2, instr.should_set_condition());
 }
 
-void ARM7TDMI::SBC(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::SBC(arm::DataProcessInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
 	uint32 operand2 = evaluate_operand2(instr, false);
@@ -124,7 +127,7 @@ void ARM7TDMI::SBC(ARM::DataProcessInstruction instr) {
 	destination = _alu_sbc(operand1, operand2, instr.should_set_condition());
 }
 
-void ARM7TDMI::RSC(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::RSC(arm::DataProcessInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
 	uint32 operand2 = evaluate_operand2(instr, false);
@@ -132,7 +135,7 @@ void ARM7TDMI::RSC(ARM::DataProcessInstruction instr) {
 	destination = _alu_sbc(operand2, operand1, instr.should_set_condition());
 }
 
-void ARM7TDMI::CMP(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::CMP(arm::DataProcessInstruction instr) {
 	//  MRS - transfer PSR contents to reg
 	//  Source PSR = SPSR_current
 	if(!instr.should_set_condition()) {
@@ -154,7 +157,7 @@ void ARM7TDMI::CMP(ARM::DataProcessInstruction instr) {
 	(void)_alu_sub(operand1, operand2, true);
 }
 
-void ARM7TDMI::CMN(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::CMN(arm::DataProcessInstruction instr) {
 	//  MSR - transfer register contents to PSR
 	//  Destination PSR = SPSR_curr
 	if(!instr.should_set_condition()) {
@@ -192,7 +195,7 @@ void ARM7TDMI::CMN(ARM::DataProcessInstruction instr) {
  *  Logical operations
  */
 
-void ARM7TDMI::AND(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::AND(arm::DataProcessInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
 	uint32 operand2 = evaluate_operand2(instr, true);
@@ -201,7 +204,7 @@ void ARM7TDMI::AND(ARM::DataProcessInstruction instr) {
 	destination = _alu_and(operand1, operand2, instr.destination_reg() != 15 && S);
 }
 
-void ARM7TDMI::EOR(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::EOR(arm::DataProcessInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
 	uint32 operand2 = evaluate_operand2(instr, true);
@@ -210,7 +213,7 @@ void ARM7TDMI::EOR(ARM::DataProcessInstruction instr) {
 	destination = _alu_eor(operand1, operand2, S);
 }
 
-void ARM7TDMI::TST(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::TST(arm::DataProcessInstruction instr) {
 	//  MRS - transfer PSR contents to reg
 	//  Source PSR = CPSR
 	if(!instr.should_set_condition()) {
@@ -225,7 +228,7 @@ void ARM7TDMI::TST(ARM::DataProcessInstruction instr) {
 	(void)_alu_and(operand1, operand2, true);
 }
 
-void ARM7TDMI::TEQ(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::TEQ(arm::DataProcessInstruction instr) {
 	//  MSR - transfer register contents to PSR
 	//  Destination PSR = CPSR
 	if(!instr.should_set_condition()) {
@@ -243,7 +246,7 @@ void ARM7TDMI::TEQ(ARM::DataProcessInstruction instr) {
 	(void)_alu_eor(operand1, operand2, true);
 }
 
-void ARM7TDMI::ORR(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::ORR(arm::DataProcessInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
 	uint32 operand2 = evaluate_operand2(instr, true);
@@ -252,7 +255,7 @@ void ARM7TDMI::ORR(ARM::DataProcessInstruction instr) {
 	destination = _alu_or(operand1, operand2, S);
 }
 
-void ARM7TDMI::MOV(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::MOV(arm::DataProcessInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
 	uint32 operand2 = evaluate_operand2(instr, true);
 
@@ -262,7 +265,7 @@ void ARM7TDMI::MOV(ARM::DataProcessInstruction instr) {
 		_alu_set_flags_logical_op(operand2);
 }
 
-void ARM7TDMI::BIC(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::BIC(arm::DataProcessInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
 	const uint32 operand1 = evaluate_operand1(instr);
 	uint32 operand2 = evaluate_operand2(instr, true);
@@ -271,7 +274,7 @@ void ARM7TDMI::BIC(ARM::DataProcessInstruction instr) {
 	destination = _alu_and(operand1, _alu_not(operand2, S), S);
 }
 
-void ARM7TDMI::MVN(ARM::DataProcessInstruction instr) {
+void ARM7TDMI::MVN(arm::DataProcessInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
 	uint32 operand2 = evaluate_operand2(instr, true);
 	const bool S = instr.should_set_condition();
@@ -283,7 +286,7 @@ void ARM7TDMI::MVN(ARM::DataProcessInstruction instr) {
  *  Data transfer operations
  */
 
-void ARM7TDMI::HDT(ARM::HDTInstruction instr) {
+void ARM7TDMI::HDT(arm::HDTInstruction instr) {
 	const auto& base = creg(instr.base_reg());
 	const auto& target = creg(instr.target_reg());
 	auto offset = instr.is_offset_immediate() ? instr.immediate() : creg(instr.offset_reg_or_immediate_low());
@@ -368,12 +371,12 @@ void ARM7TDMI::HDT(ARM::HDTInstruction instr) {
 	}
 }
 
-void ARM7TDMI::SDT(ARM::SDTInstruction instr) {
+void ARM7TDMI::SDT(arm::SDTInstruction instr) {
 	uint32 offset;
 	if(instr.immediate_is_offset())
 		offset = instr.offset();
 	else {
-		const auto shift_instr = ARM::DataProcessInstruction(instr.offset());
+		const auto shift_instr = arm::DataProcessInstruction(instr.offset());
 		offset = evaluate_operand2(shift_instr);//  FIXME: Hacky hack z
 	}
 
@@ -447,7 +450,7 @@ void ARM7TDMI::SDT(ARM::SDTInstruction instr) {
 	}
 }
 
-void ARM7TDMI::SWP(ARM::SWPInstruction instr) {
+void ARM7TDMI::SWP(arm::SWPInstruction instr) {
 	const uint32 swap_address = creg(instr.base_reg());
 	const uint32 source = creg(instr.source_reg());
 	auto& dest = reg(instr.destination_reg());
@@ -472,11 +475,11 @@ void ARM7TDMI::SWP(ARM::SWPInstruction instr) {
 	}
 }
 
-void ARM7TDMI::SWI(ARM::SWIInstruction) {
+void ARM7TDMI::SWI(arm::SWIInstruction) {
 	enter_swi();
 }
 
-void ARM7TDMI::MLL(ARM::MultLongInstruction instr) {
+void ARM7TDMI::MLL(arm::MultLongInstruction instr) {
 	auto& lower = reg(instr.destLo_reg());
 	auto& higher = reg(instr.destHi_reg());
 
@@ -502,11 +505,11 @@ void ARM7TDMI::MLL(ARM::MultLongInstruction instr) {
 	}
 
 	m_wait_cycles += mem_waits_access32(const_pc() + 12, AccessType::Seq) +
-	                 (instr.is_signed() ? ARM::mult_m_cycles(m) : ARM::unsigned_mult_m_cycles(m)) + 1 +
+	                 (instr.is_signed() ? mult_m_cycles(m) : unsigned_mult_m_cycles(m)) + 1 +
 	                 (instr.should_accumulate() ? 1 : 0);
 }
 
-void ARM7TDMI::MUL(ARM::MultInstruction instr) {
+void ARM7TDMI::MUL(arm::MultInstruction instr) {
 	auto& destination = reg(instr.destination_reg());
 	const uint32 m = creg(instr.multiplicand_reg());
 	const uint32 s = creg(instr.source_reg());
@@ -521,11 +524,11 @@ void ARM7TDMI::MUL(ARM::MultInstruction instr) {
 		cspr().set(CSPR_REGISTERS::Carry, false);//  "is set to a meaningless value"
 	}
 
-	m_wait_cycles += mem_waits_access32(const_pc() + 12, AccessType::Seq) + ARM::mult_m_cycles(s) +
+	m_wait_cycles += mem_waits_access32(const_pc() + 12, AccessType::Seq) + mult_m_cycles(s) +
 	                 (instr.should_accumulate() ? 1 : 0);
 }
 
-void ARM7TDMI::BDT(ARM::BDTInstruction instr) {
+void ARM7TDMI::BDT(arm::BDTInstruction instr) {
 	const auto& base = creg(instr.base_reg());
 	uint32 address = base;
 

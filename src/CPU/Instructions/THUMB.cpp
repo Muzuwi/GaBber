@@ -2,11 +2,13 @@
 #include "CPU/ARM7TDMI.hpp"
 #include "Emulator/Bits.hpp"
 
-void ARM7TDMI::THUMB_ALU(THUMB::InstructionFormat4 instr) {
+namespace thumb = disarmv4t::thumb::instr;
+
+void ARM7TDMI::THUMB_ALU(thumb::InstructionFormat4 instr) {
 	/*
 	 *  Lookup table for THUMB format 4 instruction (ALU operations)
 	 */
-	typedef void (::ARM7TDMI::*ThumbAluOperation)(::THUMB::InstructionFormat4);
+	typedef void (::ARM7TDMI::*ThumbAluOperation)(::thumb::InstructionFormat4);
 	static const ThumbAluOperation s_thumb_alu_lookup[16] {
 		&ARM7TDMI::THUMB_AND, &ARM7TDMI::THUMB_EOR, &ARM7TDMI::THUMB_LSL, &ARM7TDMI::THUMB_LSR,
 		&ARM7TDMI::THUMB_ASR, &ARM7TDMI::THUMB_ADC, &ARM7TDMI::THUMB_SBC, &ARM7TDMI::THUMB_ROR,
@@ -19,7 +21,7 @@ void ARM7TDMI::THUMB_ALU(THUMB::InstructionFormat4 instr) {
 	(*this.*func)(instr);
 }
 
-void ARM7TDMI::THUMB_FMT1(THUMB::InstructionFormat1 instr) {
+void ARM7TDMI::THUMB_FMT1(thumb::InstructionFormat1 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& destination = reg(instr.destination_reg());
 	const auto offset = instr.immediate();
@@ -48,7 +50,7 @@ void ARM7TDMI::THUMB_FMT1(THUMB::InstructionFormat1 instr) {
 	m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 }
 
-void ARM7TDMI::THUMB_FMT2(THUMB::InstructionFormat2 instr) {
+void ARM7TDMI::THUMB_FMT2(thumb::InstructionFormat2 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& destination = reg(instr.destination_reg());
 
@@ -61,7 +63,7 @@ void ARM7TDMI::THUMB_FMT2(THUMB::InstructionFormat2 instr) {
 	m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 }
 
-void ARM7TDMI::THUMB_FMT3(THUMB::InstructionFormat3 instr) {
+void ARM7TDMI::THUMB_FMT3(thumb::InstructionFormat3 instr) {
 	switch(instr.opcode()) {
 		case 0: {//  MOV
 			auto& target_reg = reg(instr.target_reg());
@@ -90,7 +92,7 @@ void ARM7TDMI::THUMB_FMT3(THUMB::InstructionFormat3 instr) {
 	m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 }
 
-void ARM7TDMI::THUMB_FMT5(THUMB::InstructionFormat5 instr) {
+void ARM7TDMI::THUMB_FMT5(thumb::InstructionFormat5 instr) {
 	const auto& source = creg(instr.source_reg());
 
 	switch(instr.opcode()) {
@@ -150,7 +152,7 @@ void ARM7TDMI::THUMB_FMT5(THUMB::InstructionFormat5 instr) {
 	}
 }
 
-void ARM7TDMI::THUMB_FMT6(THUMB::InstructionFormat6 instr) {
+void ARM7TDMI::THUMB_FMT6(thumb::InstructionFormat6 instr) {
 	auto& destination = reg(instr.destination_reg());
 	const auto immediate_shifted = static_cast<uint16>(instr.immediate()) << 2u;
 	const auto aligned_pc = const_pc() & ~0x3;
@@ -160,7 +162,7 @@ void ARM7TDMI::THUMB_FMT6(THUMB::InstructionFormat6 instr) {
 	                 mem_waits_access32(aligned_pc + immediate_shifted, AccessType::NonSeq);
 }
 
-void ARM7TDMI::THUMB_FMT7(THUMB::InstructionFormat7 instr) {
+void ARM7TDMI::THUMB_FMT7(thumb::InstructionFormat7 instr) {
 	const auto& base = creg(instr.base_reg());
 	const auto& offset = creg(instr.offset_reg());
 
@@ -196,7 +198,7 @@ void ARM7TDMI::THUMB_FMT7(THUMB::InstructionFormat7 instr) {
 	}
 }
 
-void ARM7TDMI::THUMB_FMT8(THUMB::InstructionFormat8 instr) {
+void ARM7TDMI::THUMB_FMT8(thumb::InstructionFormat8 instr) {
 	const auto& base = creg(instr.base_reg());
 	const auto& offset = creg(instr.offset_reg());
 	const auto address = base + offset;
@@ -260,7 +262,7 @@ void ARM7TDMI::THUMB_FMT8(THUMB::InstructionFormat8 instr) {
 	}
 }
 
-void ARM7TDMI::THUMB_FMT9(THUMB::InstructionFormat9 instr) {
+void ARM7TDMI::THUMB_FMT9(thumb::InstructionFormat9 instr) {
 	const auto& base = creg(instr.base_reg());
 
 	auto offset = static_cast<uint16>(instr.offset());
@@ -300,7 +302,7 @@ void ARM7TDMI::THUMB_FMT9(THUMB::InstructionFormat9 instr) {
 	}
 }
 
-void ARM7TDMI::THUMB_FMT10(THUMB::InstructionFormat10 instr) {
+void ARM7TDMI::THUMB_FMT10(thumb::InstructionFormat10 instr) {
 	const auto& base = creg(instr.base_reg());
 	const auto offset = instr.offset() << 1u;
 	uint32 address = base + offset;
@@ -329,7 +331,7 @@ void ARM7TDMI::THUMB_FMT10(THUMB::InstructionFormat10 instr) {
 	}
 }
 
-void ARM7TDMI::THUMB_FMT11(THUMB::InstructionFormat11 instr) {
+void ARM7TDMI::THUMB_FMT11(thumb::InstructionFormat11 instr) {
 	const auto address = creg(13) + (static_cast<uint16>(instr.immediate()) << 2u);
 
 	if(instr.load_from_memory()) {
@@ -356,7 +358,7 @@ void ARM7TDMI::THUMB_FMT11(THUMB::InstructionFormat11 instr) {
 	}
 }
 
-void ARM7TDMI::THUMB_FMT12(THUMB::InstructionFormat12 instr) {
+void ARM7TDMI::THUMB_FMT12(thumb::InstructionFormat12 instr) {
 	auto& destination = reg(instr.destination_reg());
 
 	const auto offset = static_cast<uint16>(instr.immediate()) << 2u;
@@ -367,7 +369,7 @@ void ARM7TDMI::THUMB_FMT12(THUMB::InstructionFormat12 instr) {
 	m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 }
 
-void ARM7TDMI::THUMB_FMT13(THUMB::InstructionFormat13 instr) {
+void ARM7TDMI::THUMB_FMT13(thumb::InstructionFormat13 instr) {
 	const auto offset = static_cast<uint16>(instr.offset()) << 2u;
 
 	sp() = (instr.offset_is_negative()) ? sp() - offset : sp() + offset;
@@ -375,7 +377,7 @@ void ARM7TDMI::THUMB_FMT13(THUMB::InstructionFormat13 instr) {
 	m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 }
 
-void ARM7TDMI::THUMB_FMT14(THUMB::InstructionFormat14 instr) {
+void ARM7TDMI::THUMB_FMT14(thumb::InstructionFormat14 instr) {
 	unsigned n = 0;
 
 	//  POP {Rlist}
@@ -418,7 +420,7 @@ void ARM7TDMI::THUMB_FMT14(THUMB::InstructionFormat14 instr) {
 	}
 }
 
-void ARM7TDMI::THUMB_FMT15(THUMB::InstructionFormat15 instr) {
+void ARM7TDMI::THUMB_FMT15(thumb::InstructionFormat15 instr) {
 	if(instr.is_rlist_empty()) {
 		auto& base = reg(instr.base_reg());
 
@@ -476,7 +478,7 @@ void ARM7TDMI::THUMB_FMT15(THUMB::InstructionFormat15 instr) {
 	}
 }
 
-void ARM7TDMI::THUMB_FMT16(THUMB::InstructionFormat16 instr) {
+void ARM7TDMI::THUMB_FMT16(thumb::InstructionFormat16 instr) {
 	if(!cspr().evaluate_condition(instr.condition())) {
 		m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 		return;
@@ -493,11 +495,11 @@ void ARM7TDMI::THUMB_FMT16(THUMB::InstructionFormat16 instr) {
 	                 mem_waits_access16(const_pc() + 2, AccessType::Seq);
 }
 
-void ARM7TDMI::THUMB_FMT17(THUMB::InstructionFormat17) {
+void ARM7TDMI::THUMB_FMT17(thumb::InstructionFormat17) {
 	enter_swi();
 }
 
-void ARM7TDMI::THUMB_FMT18(THUMB::InstructionFormat18 instr) {
+void ARM7TDMI::THUMB_FMT18(thumb::InstructionFormat18 instr) {
 	m_wait_cycles += mem_waits_access16(const_pc(), AccessType::Seq);
 
 	auto new_pc = pc() + Bits::sign_extend<12>(instr.offset() << 1u);
@@ -507,7 +509,7 @@ void ARM7TDMI::THUMB_FMT18(THUMB::InstructionFormat18 instr) {
 	                 mem_waits_access16(const_pc() + 2, AccessType::Seq);
 }
 
-void ARM7TDMI::THUMB_FMT19(THUMB::InstructionFormat19 instr) {
+void ARM7TDMI::THUMB_FMT19(thumb::InstructionFormat19 instr) {
 	if(!instr.low()) {
 		auto offset = Bits::sign_extend<23>(static_cast<uint32>(instr.offset()) << 12u);
 		lr() = (const_pc() + offset);
@@ -525,49 +527,49 @@ void ARM7TDMI::THUMB_FMT19(THUMB::InstructionFormat19 instr) {
 	}
 }
 
-void ARM7TDMI::THUMB_AND(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_AND(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& target = reg(instr.target_reg());
 
 	target = _alu_and(target, source, true);
 }
 
-void ARM7TDMI::THUMB_EOR(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_EOR(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& target = reg(instr.target_reg());
 
 	target = _alu_eor(target, source, true);
 }
 
-void ARM7TDMI::THUMB_TST(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_TST(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	const auto& target = creg(instr.target_reg());
 
 	(void)_alu_and(target, source, true);
 }
 
-void ARM7TDMI::THUMB_ORR(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_ORR(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& target = reg(instr.target_reg());
 
 	target = _alu_or(target, source, true);
 }
 
-void ARM7TDMI::THUMB_BIC(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_BIC(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& target = reg(instr.target_reg());
 
 	target = _alu_and(target, _alu_not(source, true), true);
 }
 
-void ARM7TDMI::THUMB_MVN(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_MVN(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& target = reg(instr.target_reg());
 
 	target = _alu_not(source, true);
 }
 
-void ARM7TDMI::THUMB_LSL(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_LSL(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& target = reg(instr.target_reg());
 	const auto shift_count = source & 0x0ffu;
@@ -579,7 +581,7 @@ void ARM7TDMI::THUMB_LSL(THUMB::InstructionFormat4 instr) {
 	m_wait_cycles += 1 /*I*/;
 }
 
-void ARM7TDMI::THUMB_LSR(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_LSR(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& target = reg(instr.target_reg());
 	const auto shift_count = source & 0x0ffu;
@@ -591,7 +593,7 @@ void ARM7TDMI::THUMB_LSR(THUMB::InstructionFormat4 instr) {
 	m_wait_cycles += 1 /*I*/;
 }
 
-void ARM7TDMI::THUMB_ASR(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_ASR(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& target = reg(instr.target_reg());
 	const auto shift_count = source & 0x0ffu;
@@ -603,7 +605,7 @@ void ARM7TDMI::THUMB_ASR(THUMB::InstructionFormat4 instr) {
 	m_wait_cycles += 1 /*I*/;
 }
 
-void ARM7TDMI::THUMB_ROR(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_ROR(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& target = reg(instr.target_reg());
 	const auto shift_count = source & 0x0ffu;
@@ -615,48 +617,48 @@ void ARM7TDMI::THUMB_ROR(THUMB::InstructionFormat4 instr) {
 	m_wait_cycles += 1 /*I*/;
 }
 
-void ARM7TDMI::THUMB_ADC(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_ADC(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& target = reg(instr.target_reg());
 
 	target = _alu_adc(target, source, true);
 }
 
-void ARM7TDMI::THUMB_SBC(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_SBC(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& target = reg(instr.target_reg());
 
 	target = _alu_sbc(target, source, true);
 }
 
-void ARM7TDMI::THUMB_NEG(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_NEG(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& target = reg(instr.target_reg());
 
 	target = _alu_sub(0, source, true);
 }
 
-void ARM7TDMI::THUMB_CMP(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_CMP(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	const auto& target = creg(instr.target_reg());
 
 	(void)_alu_sub(target, source, true);
 }
 
-void ARM7TDMI::THUMB_CMN(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_CMN(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	const auto& target = creg(instr.target_reg());
 
 	(void)_alu_add(target, source, true);
 }
 
-void ARM7TDMI::THUMB_MUL(THUMB::InstructionFormat4 instr) {
+void ARM7TDMI::THUMB_MUL(thumb::InstructionFormat4 instr) {
 	const auto& source = creg(instr.source_reg());
 	auto& target = reg(instr.target_reg());
 
 	uint32 result = target * source;
 	_alu_set_flags_logical_op(result);//  FIXME
 
-	m_wait_cycles += ARM::mult_m_cycles(target) /*I*/;
+	m_wait_cycles += mult_m_cycles(target) /*I*/;
 	target = result;
 }
