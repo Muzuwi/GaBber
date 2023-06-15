@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.14)
 # External library imports
 add_subdirectory(catch2/)
 
+# Custom ImGui library target
+# Note: depends on SDL2 being found already (for SDL2_INCLUDE_DIRS)
 add_library(ImGui STATIC
     imgui/imgui.cpp
     imgui/imgui_demo.cpp
@@ -20,7 +22,6 @@ target_include_directories(ImGui
     PRIVATE ${SDL2_INCLUDE_DIRS}
     PUBLIC ${CMAKE_SOURCE_DIR}/extern/imgui/ ${CMAKE_SOURCE_DIR}/extern/imgui/backends/ ${CMAKE_SOURCE_DIR}/extern/imgui_club/imgui_memory_editor/
     )
-
 if (UNIX)
     target_link_libraries(ImGui
         PUBLIC dl
