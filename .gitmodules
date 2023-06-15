@@ -4,3 +4,6 @@
 [submodule "extern/imgui_club"]
 	path = extern/imgui_club
 	url = https://github.com/ocornut/imgui_club.git
+[submodule "extern/catch2"]
+	path = extern/catch2
+	url = https://github.com/catchorg/Catch2.git

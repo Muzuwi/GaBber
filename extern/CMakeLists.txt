@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 
+# External library imports
+add_subdirectory(catch2/)
+
 add_library(ImGui STATIC
     imgui/imgui.cpp
     imgui/imgui_demo.cpp
