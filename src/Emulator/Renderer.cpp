@@ -94,7 +94,7 @@ bool Renderer::initialize_platform() {
 	colors[ImGuiCol_TabUnfocused] = ImVec4(0.00f, 0.58f, 0.59f, 0.47f);
 	colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.03f, 0.70f, 0.71f, 0.47f);
 
-	ImGui::GetIO().Fonts->AddFontFromFileTTF("res/Roboto-Medium.ttf", 18);
+	ImGui::GetIO().Fonts->AddFontFromFileTTF("res/font.ttf", 18);
 
 	SDL_GL_SetSwapInterval(0);
 
